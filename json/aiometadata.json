@@ -1,0 +1,54 @@
+{
+  "name": "AIOMetadata",
+  "slug": "aiometadata",
+  "categories": [
+    13
+  ],
+  "date_created": "2026-09-14",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 3232,
+  "documentation": "https://github.com/cedya77/aiometadata/blob/dev/docs/ENVIRONMENT_VARIABLES.md",
+  "website": "https://github.com/cedya77/aiometadata",
+  "repository": "https://github.com/cedya77/aiometadata",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/aiometadata.webp",
+  "description": "AIOMetadata is a Stremio metadata addon that aggregates movie, series, and anime data from TMDB, TVDB, Fanart.tv, MyAnimeList/Jikan, AniList, Trakt, SimKL and others into one configurable catalog and metadata source, with per-user API keys, poster/art proxying, and background cache warming. This installs it with a local Redis cache and SQLite for config/auth storage; users bring their own provider API keys from the /configure dashboard.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/aiometadata.sh",
+      "config_path": "/opt/aiometadata_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": "No login by default. An ADMIN_KEY protecting the dashboard's admin endpoints is generated during installation, see /opt/aiometadata_data/.env"
+  },
+  "notes": [
+    {
+      "text": "No provider API keys are set by default. Add your own TMDB/TVDB/Fanart.tv/RPDB/etc. keys from the /configure page (per-user) or set the BUILT_IN_* variants in /opt/aiometadata_data/.env to fund keys for every user of this instance.",
+      "type": "warning"
+    },
+    {
+      "text": "TMDB_API_KEY, TVDB_API_KEY, FANART_API_KEY, RPDB_API_KEY, MDBLIST_API_KEY and GEMINI_API_KEY (if set directly, not as BUILT_IN_*) are served in full to any visitor via /api/config so the configure page can prefill them - this is intentional upstream behavior, not a bug, but means those specific variables are not appropriate secrets on a shared instance.",
+      "type": "warning"
+    },
+    {
+      "text": "Config/auth data lives in SQLite at /opt/aiometadata_data/db.sqlite by default; edit DATABASE_URI in the .env to point at PostgreSQL instead. Redis (local, password-protected) is used only as a cache - the app logs errors and keeps running if Redis is unreachable, it does not depend on it to start.",
+      "type": "info"
+    },
+    {
+      "text": "The public Jikan (MyAnimeList) API this addon uses by default is shut down by upstream on 2026-10-01. Self-host a Jikan instance and point JIKAN_API_BASE at it before that date to keep MAL/anime metadata working - see the project's self-hosted-jikan docs.",
+      "type": "warning"
+    }
+  ]
+}
