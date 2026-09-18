@@ -60,6 +60,8 @@ Type=simple
 User=root
 WorkingDirectory=/opt/aiometadata
 EnvironmentFile=/opt/aiometadata_data/.env
+Environment="UV_THREADPOOL_SIZE=16"
+Environment="DOTENV_CONFIG_QUIET=true"
 ExecStart=/usr/bin/node dist/server/server.js
 Restart=on-failure
 RestartSec=5
