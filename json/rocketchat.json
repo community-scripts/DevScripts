@@ -1,0 +1,74 @@
+{
+    "name": "Rocket.Chat",
+    "slug": "rocketchat",
+    "categories": [
+        22
+    ],
+    "date_created": "2026-09-09",
+    "type": "ct",
+    "updateable": true,
+    "privileged": false,
+    "architectures": [
+        "amd64",
+        "arm64"
+    ],
+    "interface_port": 3000,
+    "documentation": "https://docs.rocket.chat/docs/deploy-rocketchat",
+    "website": "https://www.rocket.chat/",
+    "repository": "https://github.com/RocketChat/Rocket.Chat",
+    "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/rocket-chat.webp",
+    "description": "Rocket.Chat is an open-source communications platform for team chat, channels, direct messages, file sharing, voice and video calls, and omnichannel customer support. This script performs a manual (non-Docker) install of the official prebuilt Meteor server bundle, backed by a local MongoDB.",
+    "install_methods": [
+        {
+            "type": "default",
+            "script": "ct/rocketchat.sh",
+            "config_path": "/etc/rocketchat/rocketchat.env",
+            "resources": {
+                "cpu": 2,
+                "ram": 4096,
+                "hdd": 20,
+                "os": "Debian",
+                "version": "13"
+            }
+        }
+    ],
+    "default_credentials": {
+        "username": "admin",
+        "password": null
+    },
+    "app_vars": [
+        {
+            "name": "var_admin_email",
+            "label": "Admin Email",
+            "type": "text",
+            "default": "admin@example.com",
+            "help": "Email address for the generated admin account. Rocket.Chat needs a valid address here; it is not used to send mail unless you configure SMTP."
+        }
+    ],
+    "notes": [
+        {
+            "text": "Log in at http://IP:3000 as `admin`; the generated password is in `~/rocketchat.creds` inside the container. The setup wizard is skipped deliberately: its final step mails a confirmation code, and a fresh install has no mail server configured, so the wizard cannot be completed and would lock you out of the admin account it just created.",
+            "type": "info"
+        },
+        {
+            "text": "The admin password is generated, not chosen. Change it, and review the admin email, before real use. If you kept the default admin@example.com, set a real address in Admin > Users.",
+            "type": "warning"
+        },
+        {
+            "text": "The install downloads the official prebuilt server bundle (~250 MB) and compiles native npm modules, so it takes several minutes. The service needs roughly 20-30 seconds after start before the web UI answers.",
+            "type": "info"
+        },
+        {
+            "text": "ROOT_URL in /etc/rocketchat/rocketchat.env is set to the container IP. Change it to the public URL and restart with `systemctl restart rocketchat` before putting Rocket.Chat behind a reverse proxy or domain, otherwise logins, uploads and OAuth redirects break.",
+            "type": "warning"
+        },
+        {
+            "text": "MongoDB runs as a single-node replica set (rs0), which Rocket.Chat 8.x requires: it dropped oplog tailing in 8.0 and relies on change streams and multi-document transactions. Do not convert mongod back to standalone.",
+            "type": "warning"
+        },
+        {
+            "text": "All chat data lives in the local MongoDB (database `rocketchat`, files in /var/lib/mongodb). Back that up together with /etc/rocketchat/rocketchat.env.",
+            "type": "warning"
+        }
+    ]
+}
