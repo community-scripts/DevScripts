@@ -1,0 +1,52 @@
+{
+  "name": "tinyMediaManager",
+  "slug": "tinymediamanager",
+  "categories": [13],
+  "date_created": "2026-09-20",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64"],
+  "interface_port": 6080,
+  "documentation": "https://www.tinymediamanager.org/docs/",
+  "website": "https://www.tinymediamanager.org/",
+  "repository": "https://gitlab.com/tinyMediaManager/tinyMediaManager",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/tinymediamanager.webp",
+  "description": "tinyMediaManager is a media library manager for organizing and scraping metadata, artwork, and NFO files for movies and TV shows, ready for Kodi, Plex, Jellyfin and Emby. Browser access is the desktop UI via noVNC.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/tinymediamanager.sh",
+      "config_path": "/opt/tinymediamanager_data",
+      "resources": {
+        "cpu": 4,
+        "ram": 4096,
+        "hdd": 12,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Access is via noVNC (desktop UI streamed to the browser), not a native web app. Open http://<IP>:6080/vnc.html?resize=scale&autoconnect=true. Direct VNC is available on port 5900 (no password by default).",
+      "type": "info"
+    },
+    {
+      "text": "Media defaults to /media/movies and /media/tvshows inside the LXC. After install, bind host storage with: pct set <CTID> -mp0 /path/on/host,mp=/media/movies and pct set <CTID> -mp1 /path/on/host,mp=/media/tvshows (or tools/pve/storage-share-helper.sh). On unprivileged LXCs, match host ownership/ACLs to the container UID mapping — do not chmod 777.",
+      "type": "info"
+    },
+    {
+      "text": "Defaults are 4 CPU / 4096 MiB RAM. Large TV libraries (many episodes) are CPU-heavy during source updates; increase resources further if scans stay saturated.",
+      "type": "info"
+    },
+    {
+      "text": "Application data (settings, cache, logs, backups) is persisted in /opt/tinymediamanager_data via launcher-extra.yml (-Dtmm.contentfolder). Program files live in /opt/tinymediamanager. Built-in auto-update is disabled so updates go through the helper script.",
+      "type": "info"
+    }
+  ]
+}
