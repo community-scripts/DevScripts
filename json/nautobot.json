@@ -1,0 +1,61 @@
+{
+  "name": "Nautobot",
+  "slug": "nautobot",
+  "categories": [
+    4,
+    19
+  ],
+  "date_created": "2026-09-10",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://docs.nautobot.com/projects/core/en/stable/",
+  "website": "https://www.nautobot.com/",
+  "repository": "https://github.com/nautobot/nautobot",
+  "platforms": [
+    "pve"
+  ],
+  "logo": "https://raw.githubusercontent.com/nautobot/nautobot/develop/nautobot/docs/assets/nautobot_logo.svg",
+  "description": "Nautobot is a Network Source of Truth and Network Automation Platform. This helper installs Nautobot with PostgreSQL, Redis, uWSGI, NGINX, and Celery worker/scheduler services.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/nautobot.sh",
+      "config_path": "/opt/nautobot/nautobot_config.py",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "Admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The Admin and PostgreSQL passwords are generated during installation and stored in /opt/nautobot/.env with root-only permissions.",
+      "type": "info"
+    },
+    {
+      "text": "HTTP is available on port 80. HTTPS is also configured on port 443 with a self-signed certificate that should be replaced for production use.",
+      "type": "info"
+    },
+    {
+      "text": "The updater intentionally remains on Nautobot 3.x (nautobot>=3.2,<4); review Nautobot's migration documentation before a future major-version upgrade.",
+      "type": "warning"
+    },
+    {
+      "text": "Nautobot requires its application files and services to run under a dedicated nautobot system account per upstream installation guidance.",
+      "type": "info"
+    },
+    {
+      "text": "ARM64 has not yet been verified, so var_arm64 is intentionally left unset in the CT script.",
+      "type": "info"
+    }
+  ]
+}
