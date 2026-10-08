@@ -1,0 +1,60 @@
+{
+  "name": "Anubis",
+  "slug": "anubis",
+  "categories": [21, 6],
+  "date_created": "2026-09-18",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8923,
+  "documentation": "https://anubis.techaro.lol/docs/",
+  "website": "https://anubis.techaro.lol/",
+  "repository": "https://github.com/TecharoHQ/anubis",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/anubis.webp",
+  "description": "Anubis is a reverse proxy that sits in front of a web service and stops AI scrapers and abusive bots with a proof-of-work challenge, while letting real browsers and well-behaved crawlers through.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/anubis.sh",
+      "config_path": "/etc/anubis/main.env",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_anubis_target",
+      "label": "Upstream URL to protect",
+      "type": "text",
+      "default": "http://localhost:3000",
+      "help": "The service Anubis proxies to, e.g. http://192.168.1.50:3000. Can be changed later in /etc/anubis/main.env"
+    }
+  ],
+  "notes": [
+    {
+      "text": "Set TARGET in /etc/anubis/main.env to the service you want to protect, then run `systemctl restart anubis@main`. Point your reverse proxy or DNS at this container on port 8923.",
+      "type": "warning"
+    },
+    {
+      "text": "The container is configured for direct exposure over plain HTTP (COOKIE_SECURE=false, USE_REMOTE_ADDRESS=true). When you put a TLS reverse proxy in front of it, set COOKIE_SECURE=true and remove USE_REMOTE_ADDRESS so client IPs come from X-Forwarded-For.",
+      "type": "info"
+    },
+    {
+      "text": "One Anubis instance protects one TARGET. For another service, copy /etc/anubis/main.env to /etc/anubis/<name>.env with its own BIND, METRICS_BIND and TARGET and run `systemctl enable --now anubis@<name>`. Alternatively point TARGET at a reverse proxy that routes by Host header and a single instance covers all its sites.",
+      "type": "info"
+    },
+    {
+      "text": "Bot policies live in /etc/anubis/main.botPolicies.yaml (a copy of the upstream default). Prometheus metrics are exposed on port 9090.",
+      "type": "info"
+    }
+  ]
+}
