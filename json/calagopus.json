@@ -1,0 +1,50 @@
+{
+    "name": "Calagopus",
+    "slug": "calagopus",
+    "categories": [
+        1
+    ],
+    "date_created": "2026-05-08",
+    "type": "ct",
+    "updateable": true,
+    "privileged": false,
+    "interface_port": 8000,
+    "documentation": "https://calagopus.com/docs",
+    "website": "https://calagopus.com",
+    "repository": "https://github.com/calagopus/panel",
+    "architectures": ["amd64", "arm64"],
+    "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/calagopus.webp",
+    "description": "Modern game server management panel built in Rust. Deploy, monitor, and manage Minecraft, Hytale, and other game servers with industry-leading performance.",
+    "install_methods": [
+        {
+            "type": "default",
+            "script": "ct/calagopus.sh",
+            "config_path": "/etc/calagopus/.env",
+            "resources": {
+                "cpu": 4,
+                "ram": 4096,
+                "hdd": 40,
+                "os": "Debian",
+                "version": "13"
+            }
+        }
+    ],
+    "default_credentials": {
+        "username": null,
+        "password": null
+    },
+    "notes": [
+        {
+            "text": "Installs the All-in-One (AIO) build, which bundles the Panel and Wings in a single binary for single-node deployments.",
+            "type": "info"
+        },
+        {
+            "text": "Docker is installed as a system dependency because Wings uses it to run the actual game server containers; the Panel and Wings processes themselves run natively, not inside Docker.",
+            "type": "info"
+        },
+        {
+            "text": "The encryption key is generated automatically and saved to /etc/calagopus/.env. Back it up, losing it will make existing data unreadable.",
+            "type": "warning"
+        }
+    ]
+}
