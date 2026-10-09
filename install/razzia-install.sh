@@ -28,10 +28,9 @@ msg_ok "Built Razzia"
 
 msg_info "Configuring Razzia"
 mkdir -p /opt/razzia-config
-cat <<EOF >/opt/razzia-config/game.json
-{
-  "managerPassword": "$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9' | cut -c1-13)"
-}
+cat <<EOF >/opt/razzia/.env
+MANAGER_PASSWORD=$(random_password 16)
+JWT_SECRET=$(openssl rand -hex 32)
 EOF
 msg_ok "Configured Razzia"
 
@@ -45,6 +44,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/razzia/packages/socket
+EnvironmentFile=/opt/razzia/.env
 Environment=NODE_ENV=production
 Environment=CONFIG_PATH=/opt/razzia-config
 ExecStart=/usr/bin/node /opt/razzia/packages/socket/dist/index.cjs
@@ -74,15 +74,37 @@ server {
     alias /opt/razzia-config/branding/;
   }
 
+  location /media/ {
+    alias /opt/razzia-config/media/;
+    types {
+      image/png png;
+      image/jpeg jpg;
+      image/webp webp;
+      image/gif gif;
+      audio/mpeg mp3;
+      audio/ogg ogg;
+      audio/wav wav;
+      video/mp4 mp4;
+      video/webm webm;
+    }
+    default_type application/octet-stream;
+    add_header X-Content-Type-Options nosniff;
+  }
+
+  location /api {
+    client_max_body_size 101m;
+    proxy_pass http://127.0.0.1:3001;
+    proxy_set_header Host \$host;
+    proxy_read_timeout 300s;
+    proxy_send_timeout 300s;
+  }
+
   location /ws {
     proxy_pass http://127.0.0.1:3001;
     proxy_http_version 1.1;
     proxy_set_header Upgrade \$http_upgrade;
     proxy_set_header Connection "upgrade";
     proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto \$scheme;
     proxy_read_timeout 3600s;
     proxy_send_timeout 3600s;
   }

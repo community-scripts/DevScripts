@@ -12,16 +12,13 @@
   "documentation": "https://github.com/Ralex91/Razzia/blob/main/docs/README.md",
   "website": "https://github.com/Ralex91/Razzia",
   "repository": "https://github.com/Ralex91/Razzia",
-  "architectures": [
-    "amd64"
-  ],
   "logo": "https://cdn.jsdelivr.net/gh/Ralex91/Razzia@main/packages/web/public/icon.svg",
   "description": "Razzia is a self-hosted, open-source quiz platform for smaller events. A manager hosts a live quiz from the browser while participants join with a room code from their own devices, with quizzes, results and custom branding stored as files in the config folder.",
   "install_methods": [
     {
       "type": "default",
       "script": "ct/razzia.sh",
-      "config_path": "/opt/razzia-config/game.json",
+      "config_path": "/opt/razzia/.env",
       "resources": {
         "cpu": 2,
         "ram": 3072,
@@ -37,15 +34,19 @@
   },
   "notes": [
     {
-      "text": "The manager password is generated during installation and stored in /opt/razzia-config/game.json. Open the manager interface at http://<IP>:3000/manager and log in with it. Manager access stays blocked while managerPassword is the upstream default value \"PASSWORD\".",
+      "text": "The manager password is generated during installation and stored as MANAGER_PASSWORD in /opt/razzia/.env. Open the manager interface at http://<IP>:3000/manager and log in with it. Manager access is refused until MANAGER_PASSWORD is set.",
       "type": "info"
     },
     {
-      "text": "Quizzes, saved results and optional branding live in /opt/razzia-config (quizz/, results/, branding/). An example quiz is created there on first start. Restart the service after editing game.json: systemctl restart razzia",
+      "text": "JWT_SECRET in /opt/razzia/.env signs the session tokens and is generated during installation. Leaving it empty makes the server generate a new secret at every start, which logs managers out and gives players a fresh identity on each restart. It must be at least 32 characters; a shorter value is ignored. Restart the service after editing the file: systemctl restart razzia",
       "type": "info"
     },
     {
-      "text": "Game state is kept in memory by the socket server, so only run a single instance. Behind a reverse proxy, WebSocket upgrade headers must be forwarded to port 3000 or clients stay stuck on connecting.",
+      "text": "Quizzes, saved results, uploaded media and optional branding live in /opt/razzia-config (quizz/, results/, media/, branding/). An example quiz is created there on first start.",
+      "type": "info"
+    },
+    {
+      "text": "Game state is kept in memory by the socket server, so only run a single instance. Behind a reverse proxy, WebSocket upgrade headers must be forwarded to port 3000 or clients stay stuck on connecting, and the upload limit must allow 100 MB media files.",
       "type": "warning"
     }
   ]
