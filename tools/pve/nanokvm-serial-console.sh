@@ -2,204 +2,153 @@
 
 # Copyright (c) 2021-2026 community-scripts ORG
 # Author: Gleb Pesin (dormancygrace)
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
 # Source: https://github.com/dormancygrace/NanoKVM-OS
-
-# NanoKVM USB serial console for a Proxmox VE or Proxmox Backup Server host.
 #
-# A NanoKVM plugged into the host offers a USB serial port (CDC ACM, USB
-# 3346:1009, /dev/ttyACMn). This sets up a login on it, so the host stays
-# reachable from the NanoKVM's browser terminal when its network is gone:
-# one udev rule bound to the NanoKVM's serial number starts
-# serial-getty@<port> whenever the port appears. The change is recorded with
-# backups under /var/backups/nanokvm-serial-console and reverted by "undo".
+# A login on the USB serial port of a NanoKVM running NanoKVM OS, plugged into
+# a Proxmox VE or Proxmox Backup Server host, so the host stays reachable from
+# the NanoKVM's browser terminal when its network is gone. NanoKVM OS's USB
+# serial function is a CDC ACM device (USB 3346:1009, /dev/ttyACMn); one udev
+# rule bound to its serial number starts serial-getty@<port> whenever the port
+# appears. (The stock Sipeed firmware has no USB serial function.)
+# The change is recorded with backups under /var/backups/nanokvm-serial-console
+# and reverted by undo.
 #
-# Usage: bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/nanokvm-serial-console.sh)"
-#        bash nanokvm-serial-console.sh plan|status|apply|undo [--serial SERIAL]   (no dialogs)
+# Usage: bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/DevScripts/main/tools/pve/nanokvm-serial-console.sh)"
+#        bash nanokvm-serial-console.sh plan|status|apply|undo [--yes]   (no prompts)
+#
+# Unattended via environment:
+#   NANOKVM_SERIAL  the NanoKVM's USB serial number (Settings > USB on the
+#                   NanoKVM), for a NanoKVM that is not plugged in yet
 
-function header_info {
-  clear
-  cat <<"EOF"
-    _   __                __ ___    ____  ___              _       __
-   / | / /___ _____  ____/ //_/ |  / /  |/  /  _______  __(_)___ _/ /
-  /  |/ / __ `/ __ \/ __  / ,<  | | / / /|_/ /  / ___/ _ \/ ___/ / __ `/ /
- / /|  / /_/ / / / / /_/ / /| | | |/ / /  / /  (__  )  __/ /  / / /_/ / /
-/_/ |_/\__,_/_/ /_/\____/_/ |_| |___/_/  /_/  /____/\___/_/  /_/\__,_/_/
+source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/core/core.func")
+source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/lib/tools.func")
+source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/core/error_handler.func")
+source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/api/api.func") 2>/dev/null || true
 
-                     USB serial console on this host
-EOF
-}
-
-YW="\033[33m"
-GN="\033[1;92m"
-RD="\033[01;31m"
-CL="\033[m"
-BFR="\\r\\033[K"
-HOLD="-"
-CM="${GN}✓${CL}"
-CROSS="${RD}✗${CL}"
-
-msg_info() { echo -ne " ${HOLD} ${YW}$1..."; }
-msg_ok() { echo -e "${BFR} ${CM} ${GN}$1${CL}"; }
-msg_error() { echo -e "${BFR} ${CROSS} ${RD}$1${CL}"; }
-msg_warn() { echo -e " ${YW}$1${CL}"; }
-
-# Telemetry
-# shellcheck disable=SC1090
-source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/api/api.func" 2>/dev/null) 2>/dev/null || true
+load_functions
+catch_errors
 declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "nanokvm-serial-console" "pve"
 
+# ==============================================================================
+# CONFIGURATION
+# ==============================================================================
+APP="NanoKVM Serial Console"
+APP_TYPE="tools"
 VID=3346
 PID=1009
 RULE_FILE=/etc/udev/rules.d/90-nanokvm-serial-console.rules
 BACKUP_DIR=/var/backups/nanokvm-serial-console
+SERIAL="${NANOKVM_SERIAL:-}"
 
-# Arguments: no dialogs.
-SERIAL=
-ACTION=
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  plan | status | apply | undo) ACTION=$1 ;;
-  --serial)
-    SERIAL=${2:-}
-    shift
-    ;;
-  --serial=*) SERIAL=${1#--serial=} ;;
-  -h | --help)
-    cat <<EOF
-NanoKVM USB serial console for a Proxmox VE or Proxmox Backup Server host.
+# ==============================================================================
+# HELPERS
+# ==============================================================================
+usage() {
+  cat <<EOF
+${APP}: a login on the NanoKVM's USB serial port, for a Proxmox VE or PBS host.
 
-  nanokvm-serial-console.sh                     menu (whiptail)
-  nanokvm-serial-console.sh status              what the host has; changes nothing
-  nanokvm-serial-console.sh plan                what apply would change; changes nothing
-  nanokvm-serial-console.sh apply [--serial S]  write the udev rule, start serial-getty@<port>
-  nanokvm-serial-console.sh undo                revert the last apply
+  nanokvm-serial-console.sh                 menu
+  nanokvm-serial-console.sh status          what the host has; changes nothing
+  nanokvm-serial-console.sh plan            what apply would change; changes nothing
+  nanokvm-serial-console.sh apply [--yes]   write the udev rule, start serial-getty@<port>
+  nanokvm-serial-console.sh undo            revert the last apply
 
---serial SERIAL  the NanoKVM's USB serial number (Settings > USB on the NanoKVM),
-                 for a NanoKVM that is not plugged in now.
+NANOKVM_SERIAL=<serial>  the NanoKVM's USB serial number (Settings > USB on the
+                         NanoKVM), for a NanoKVM that is not plugged in now.
 EOF
-    exit 0
-    ;;
-  *)
-    msg_error "Usage: $0 [plan|status|apply|undo] [--serial SERIAL]"
-    exit 1
-    ;;
-  esac
-  shift
-done
-if [[ $EUID -ne 0 ]]; then
-  msg_error "Run this as root on the Proxmox host."
-  exit 1
-fi
+}
 
-if command -v pveversion >/dev/null 2>&1; then
-  PRODUCT="Proxmox VE $(pveversion | sed -n 's|^pve-manager/\([0-9.]*\).*|\1|p')"
-elif command -v proxmox-backup-manager >/dev/null 2>&1; then
-  PRODUCT="Proxmox Backup Server $(proxmox-backup-manager versions 2>/dev/null | awk 'NR==1 {print $2}')"
-else
-  msg_error "No Proxmox VE or Proxmox Backup Server detected."
-  exit 1
-fi
-case "$(awk -F= '/^VERSION_CODENAME=/ {print $2}' /etc/os-release)" in
-bookworm | trixie) ;;
-bullseye) msg_warn "Debian 11 (Proxmox VE 7 / PBS 2) is past its support; the console setup still works on it." ;;
-*)
-  msg_error "Unsupported Debian release: $(awk -F= '/^PRETTY_NAME=/ {print $2}' /etc/os-release)"
-  exit 1
-  ;;
-esac
-if systemd-detect-virt -cq 2>/dev/null; then
-  msg_error "This is a container: udev and the USB device belong to the host; run this there."
-  exit 1
-fi
-
-# What is on the USB bus and in the configuration now. Everything below only
-# reads; apply and undo are the only writers.
+# What is on the USB bus and in the configuration now. Only reads.
 look() {
-  dev_serial=
-  dev_tty=
-  dev_path=
+  dev_serial="" dev_tty="" dev_path="" cdc_acm="" rule_serial="" foreign_rule="" getty_active=""
+  local d t f
   for d in /sys/bus/usb/devices/*; do
-    [[ -r $d/idVendor ]] || continue
-    if [[ $(<"$d/idVendor") == "$VID" && $(<"$d/idProduct") == "$PID" ]]; then
-      dev_path=$d
-      dev_serial=$(<"$d/serial")
-      for t in "$d"/*/tty/ttyACM*; do
-        [[ -e $t ]] && dev_tty=${t##*/} && break
-      done
-    fi
+    [[ -r $d/idVendor && -r $d/idProduct ]] || continue
+    [[ $(<"$d/idVendor") == "$VID" && $(<"$d/idProduct") == "$PID" ]] || continue
+    dev_path=$d
+    [[ -r $d/serial ]] && dev_serial=$(<"$d/serial")
+    for t in "$d"/*/tty/ttyACM*; do
+      [[ -e $t ]] || continue
+      dev_tty=${t##*/}
+      break
+    done
   done
   if [[ -n $SERIAL && -n $dev_serial && $SERIAL != "$dev_serial" ]]; then
-    msg_warn "--serial $SERIAL differs from the connected NanoKVM ($dev_serial); using the connected one"
+    msg_warn "NANOKVM_SERIAL=$SERIAL differs from the connected NanoKVM ($dev_serial); using the connected one"
   fi
-  [[ -n $dev_serial ]] && SERIAL=$dev_serial
+  if [[ -n $dev_serial ]]; then
+    SERIAL=$dev_serial
+  fi
 
-  cdc_acm=
   if [[ -d /sys/bus/usb/drivers/cdc_acm || -d /sys/module/cdc_acm ]]; then
     cdc_acm=loaded
-  elif modinfo -n cdc_acm >/dev/null 2>&1; then
+  elif modinfo -n cdc_acm &>/dev/null; then
     cdc_acm=module
   fi
 
-  rule_serial=
-  [[ -e $RULE_FILE ]] && rule_serial=$(sed -n 's/.*ATTRS{serial}=="\([^"]*\)".*/\1/p' "$RULE_FILE" | head -n 1)
+  if [[ -e $RULE_FILE ]]; then
+    rule_serial=$(sed -n 's/.*ATTRS{serial}=="\([^"]*\)".*/\1/p' "$RULE_FILE" | head -n 1)
+  fi
   # A login set up another way: someone else's udev rule that starts a getty
   # for this NanoKVM, or a getty running on its port that no rule started.
   # That setup is theirs; this script adds no second rule.
-  foreign_rule=
   for f in /etc/udev/rules.d/*.rules /lib/udev/rules.d/*.rules /usr/lib/udev/rules.d/*.rules; do
     [[ -r $f && $f != "$RULE_FILE" ]] || continue
-    if grep -q 'serial-getty@' "$f" && grep -qE "idVendor\"?\}?==\"$VID\"" "$f" && grep -qE "idProduct\"?\}?==\"$PID\"" "$f"; then
-      if [[ -z $SERIAL ]] || ! grep -q 'ATTRS{serial}==' "$f" || grep -q "ATTRS{serial}==\"$SERIAL\"" "$f"; then
-        foreign_rule=$f
-        break
-      fi
+    grep -q 'serial-getty@' "$f" || continue
+    grep -qE "idVendor\"?\}?==\"$VID\"" "$f" || continue
+    grep -qE "idProduct\"?\}?==\"$PID\"" "$f" || continue
+    if [[ -z $SERIAL ]] || ! grep -q 'ATTRS{serial}==' "$f" || grep -q "ATTRS{serial}==\"$SERIAL\"" "$f"; then
+      foreign_rule=$f
+      break
     fi
   done
-  getty_active=
-  [[ -n $dev_tty ]] && systemctl is-active --quiet "serial-getty@$dev_tty.service" && getty_active=yes
+  if [[ -n $dev_tty ]] && systemctl is-active --quiet "serial-getty@$dev_tty.service"; then
+    getty_active=yes
+  fi
 }
 
 report() {
   look
-  echo -e " ${YW}Host:${CL}     $PRODUCT, $(uname -r)"
+  echo -e "${TAB}${BL}Host:${CL}     $PRODUCT, kernel $(uname -r)"
   if [[ -n $dev_tty ]]; then
-    echo -e " ${YW}NanoKVM:${CL}  connected as /dev/$dev_tty (serial $dev_serial)"
+    echo -e "${TAB}${BL}NanoKVM:${CL}  connected as /dev/$dev_tty (serial $dev_serial)"
   elif [[ -n $dev_path ]]; then
-    echo -e " ${YW}NanoKVM:${CL}  connected at $dev_path but has no ttyACM: USB serial is not enabled on it, or cdc_acm is not loaded"
+    echo -e "${TAB}${BL}NanoKVM:${CL}  connected at $dev_path but has no ttyACM: USB serial is not enabled on it, or cdc_acm is not loaded"
   elif [[ -n $SERIAL ]]; then
-    echo -e " ${YW}NanoKVM:${CL}  not connected now; using serial $SERIAL"
+    echo -e "${TAB}${BL}NanoKVM:${CL}  not connected now; using serial $SERIAL"
   else
-    echo -e " ${YW}NanoKVM:${CL}  not connected now and no serial number given: the rule cannot be bound to it"
+    echo -e "${TAB}${BL}NanoKVM:${CL}  not connected now and no serial number given: the rule cannot be bound to it"
   fi
   case $cdc_acm in
-  loaded) echo -e " ${YW}Driver:${CL}   cdc_acm is loaded" ;;
-  module) echo -e " ${YW}Driver:${CL}   cdc_acm module is available (loads when the device appears)" ;;
-  *) echo -e " ${YW}Driver:${CL}   ${RD}no cdc_acm for $(uname -r): the port cannot appear${CL}" ;;
+  loaded) echo -e "${TAB}${BL}Driver:${CL}   cdc_acm is loaded" ;;
+  module) echo -e "${TAB}${BL}Driver:${CL}   cdc_acm module is available (loads when the device appears)" ;;
+  *) echo -e "${TAB}${BL}Driver:${CL}   ${RD}no cdc_acm for $(uname -r): the port cannot appear${CL}" ;;
   esac
   if [[ -n $rule_serial ]]; then
-    echo -e " ${YW}Login:${CL}    $RULE_FILE is present (serial $rule_serial)"
+    echo -e "${TAB}${BL}Login:${CL}    $RULE_FILE is present (serial $rule_serial)"
   elif [[ -n $foreign_rule ]]; then
-    echo -e " ${YW}Login:${CL}    already set up by $foreign_rule (not by this script)"
+    echo -e "${TAB}${BL}Login:${CL}    already set up by $foreign_rule (not by this script)"
   elif [[ -n $getty_active ]]; then
-    echo -e " ${YW}Login:${CL}    serial-getty@$dev_tty.service is running, started by something else"
+    echo -e "${TAB}${BL}Login:${CL}    serial-getty@$dev_tty.service is running, started by something else"
   else
-    echo -e " ${YW}Login:${CL}    not set up"
+    echo -e "${TAB}${BL}Login:${CL}    not set up"
   fi
-  [[ -n $dev_tty ]] && echo -e " ${YW}Getty:${CL}    serial-getty@$dev_tty.service is $(systemctl is-active "serial-getty@$dev_tty.service" 2>/dev/null)"
-  if command -v ModemManager >/dev/null 2>&1; then
-    echo -e " ${YW}Note:${CL}     ModemManager is installed; the rule marks the port so it is not probed"
+  if [[ -n $dev_tty ]]; then
+    echo -e "${TAB}${BL}Getty:${CL}    serial-getty@$dev_tty.service is $(systemctl is-active "serial-getty@$dev_tty.service" 2>/dev/null || true)"
+  fi
+  if command -v ModemManager &>/dev/null; then
+    echo -e "${TAB}${BL}Note:${CL}     ModemManager is installed; the rule marks the port so it is not probed"
   fi
 }
 
-# plan: what apply would do, or why it would not. Returns 1 when apply has
-# nothing to do.
+# What apply would do, or why it would not. Returns 1 when apply has nothing to do.
 plan() {
   if [[ -z $cdc_acm ]]; then
     msg_error "Without cdc_acm the port never appears; the Proxmox kernel ships it, so check the running kernel."
     return 1
   fi
-  if [[ -n $rule_serial && ( -z $SERIAL || $rule_serial == "$SERIAL" ) ]]; then
+  if [[ -n $rule_serial && (-z $SERIAL || $rule_serial == "$SERIAL") ]]; then
     msg_ok "Nothing to do: already set up"
     return 1
   fi
@@ -211,15 +160,14 @@ plan() {
     msg_error "The NanoKVM is not connected and no serial number was given: apply needs it to bind the rule (Settings > USB on the NanoKVM shows it)."
     return 1
   fi
-  echo -e " ${YW}Apply would:${CL}"
+  echo -e "${TAB}${BL}Apply would:${CL}"
   if [[ -n $rule_serial ]]; then
-    echo "   replace $RULE_FILE (now for serial $rule_serial) with the rule for serial $SERIAL, keeping a backup"
+    echo -e "${TAB3}replace $RULE_FILE (now for serial $rule_serial) with the rule for serial $SERIAL, keeping a backup"
   else
-    echo "   write $RULE_FILE: start serial-getty@<port> for NanoKVM serial $SERIAL, keep ModemManager off it"
+    echo -e "${TAB3}write $RULE_FILE: start serial-getty@<port> for NanoKVM serial $SERIAL, keep ModemManager off it"
   fi
-  echo "   udevadm control --reload, then trigger the add event for ${dev_tty:-the port when it appears}"
-  echo "   record the change in $BACKUP_DIR/<timestamp>/ for undo"
-  return 0
+  echo -e "${TAB3}udevadm control --reload, then trigger the add event for ${dev_tty:-the port when it appears}"
+  echo -e "${TAB3}record the change in $BACKUP_DIR/<timestamp>/ for undo"
 }
 
 udev_rule() {
@@ -236,6 +184,10 @@ EOF
 
 apply() {
   plan || return 0
+  if [[ -z $ASSUME_YES ]] && ! prompt_confirm "Write the udev rule and start the login on the NanoKVM's port?" "n" 120; then
+    msg_warn "Nothing changed"
+    return 0
+  fi
   local manifest
   manifest=$BACKUP_DIR/$(date +%Y%m%d-%H%M%S)
   while [[ -e $manifest ]]; do manifest=$manifest-1; done
@@ -264,9 +216,9 @@ apply() {
   # match flags, not a device path: old udevadm has no positional argument
   udevadm trigger --subsystem-match=tty "--sysname-match=$dev_tty" --action=add
   sleep 1
-  # systemd 247 (Debian 11) does not start the wanted unit on a repeated add
-  # event for a device that is already there; the rule covers the next plug
-  # and boot, so start it now.
+  # A repeated add event for a device that is already there does not always
+  # start the wanted unit (seen on systemd 247 after an undo); the rule covers
+  # the next plug and boot, so start it now.
   systemctl is-active --quiet "serial-getty@$dev_tty.service" || systemctl start "serial-getty@$dev_tty.service"
   sleep 1
   if systemctl is-active --quiet "serial-getty@$dev_tty.service"; then
@@ -277,7 +229,7 @@ apply() {
 }
 
 undo() {
-  local last=
+  local last="" d kind path
   for d in "$BACKUP_DIR"/*/; do
     [[ -r $d/manifest ]] && last=${d%/}
   done
@@ -294,59 +246,99 @@ undo() {
   done <"$last/manifest"
   mv "$last/manifest" "$last/manifest.undone"
   udevadm control --reload
-  [[ -n $dev_tty ]] && systemctl stop "serial-getty@$dev_tty.service"
+  if [[ -n $dev_tty ]]; then
+    systemctl stop "serial-getty@$dev_tty.service"
+  fi
   msg_ok "Undone $(basename "$last"); the backups stay in $last"
 }
+
+# ==============================================================================
+# MAIN
+# ==============================================================================
+ACTION=""
+ASSUME_YES=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+  plan | status | apply | undo) ACTION=$1 ;;
+  --yes | -y) ASSUME_YES=yes ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    msg_error "Usage: nanokvm-serial-console.sh [plan|status|apply|undo] [--yes]"
+    exit 1
+    ;;
+  esac
+  shift
+done
+if [[ -z $ACTION ]] && is_unattended; then
+  ACTION=plan
+fi
+[[ -n $ACTION ]] || header_info "$APP"
+root_check
+
+if on_pve_host; then
+  PVE_VER=$(_pve_version)
+  PRODUCT="Proxmox VE $PVE_VER"
+  # pve_check also wants /etc/pve mounted; a console for a host in trouble
+  # must not depend on that, so only the version policy is kept.
+  [[ $PVE_VER =~ ^(8|9)\. ]] || {
+    msg_error "Proxmox VE $PVE_VER is not supported (8.x and 9.x are)."
+    exit 1
+  }
+elif command -v proxmox-backup-manager &>/dev/null; then
+  PRODUCT="Proxmox Backup Server $(proxmox-backup-manager versions 2>/dev/null | awk 'NR==1 {print $2}')"
+  case "$(awk -F= '/^VERSION_CODENAME=/ {print $2}' /etc/os-release)" in
+  bookworm | trixie) ;;
+  *)
+    msg_error "Unsupported Debian release for Proxmox Backup Server: $(awk -F= '/^PRETTY_NAME=/ {print $2}' /etc/os-release)"
+    exit 1
+    ;;
+  esac
+else
+  msg_error "This script must be run on a Proxmox VE or Proxmox Backup Server host."
+  exit 232
+fi
+if systemd-detect-virt -cq 2>/dev/null; then
+  msg_error "This is a container: udev and the USB device belong to the host; run this there."
+  exit 1
+fi
 
 if [[ -n $ACTION ]]; then
   report
   echo
   case $ACTION in
-  status) exit 0 ;;
-  plan) plan ;;
+  status) ;;
+  plan) plan || true ;;
   apply) apply ;;
   undo) undo ;;
   esac
   exit 0
 fi
 
-header_info
 echo
 report
-echo
 while true; do
-  CHOICE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "NanoKVM USB serial console" --menu \
-    "The report above says what this host has. What now?" 16 72 5 \
-    "plan" "Show what Apply would change (changes nothing)" \
-    "apply" "Set the login up (udev rule, serial-getty@<port>)" \
-    "undo" "Remove what Apply added" \
-    "serial" "Enter the NanoKVM's USB serial number (not plugged in yet)" \
-    "quit" "Leave" 3>&1 1>&2 2>&3) || exit 0
+  echo
+  CHOICE=$(prompt_select "What now? plan: what Apply would change (changes nothing) | apply: set the login up | undo: remove what Apply added | serial: enter the serial number of a NanoKVM that is not plugged in | quit" 1 300 plan apply undo serial quit)
+  echo
   case $CHOICE in
   plan)
-    echo
     look
     plan || true
     ;;
   apply)
-    if whiptail --backtitle "Proxmox VE Helper Scripts" --title "Apply" --yesno \
-      "Write the udev rule and start the login on the NanoKVM's port?\n\nBackups and a manifest go to $BACKUP_DIR; Undo reverts it." 12 72; then
-      echo
-      look
-      apply
-    fi
+    look
+    apply
     ;;
   undo)
-    echo
     look
     undo
     ;;
   serial)
-    SERIAL=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "NanoKVM serial number" --inputbox \
-      "The USB serial number shown on the NanoKVM's USB settings page (Settings > USB), for a NanoKVM that is not plugged in now." 10 72 "${SERIAL:-}" 3>&1 1>&2 2>&3) || true
+    SERIAL=$(prompt_input "NanoKVM USB serial number (Settings > USB on the NanoKVM):" "$SERIAL" 300)
     ;;
-  quit) exit 0 ;;
+  *) exit 0 ;;
   esac
-  echo
-  read -r -p "Press Enter to return to the menu " _ || true
 done
