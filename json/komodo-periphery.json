@@ -5,13 +5,9 @@
     3
   ],
   "date_created": "2026-10-14",
-  "type": "addon",
+  "type": "ct",
   "updateable": true,
   "privileged": false,
-  "architectures": [
-    "amd64",
-    "arm64"
-  ],
   "platforms": [
     "pve"
   ],
@@ -20,18 +16,18 @@
   "website": "https://komo.do/",
   "repository": "https://github.com/moghtech/komodo",
   "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/komodo.webp",
-  "description": "Komodo Periphery is the agent that connects a Docker host to an existing Komodo Core server for centralized container and Compose stack management. This addon installs the official native Linux binary as a systemd service and uses outbound authentication. It does not install Komodo Core, a database, or Docker.",
+  "description": "A Docker LXC with the native Komodo Periphery agent, connecting to an existing Core for centralized container and Compose stack management.",
   "install_methods": [
     {
       "type": "default",
-      "script": "tools/addon/komodo-periphery.sh",
+      "script": "ct/komodo-periphery.sh",
       "config_path": "/etc/komodo/periphery.config.json",
       "resources": {
-        "cpu": null,
-        "ram": null,
-        "hdd": null,
-        "os": null,
-        "version": null
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
       }
     }
   ],
@@ -45,13 +41,13 @@
       "label": "Komodo Core URL",
       "type": "text",
       "required": true,
-      "help": "A Core v2 URL reachable from the guest, such as https://komodo.example.com or http://192.168.1.10:9120. HTTPS requires a certificate trusted by the guest."
+      "help": "Reachable HTTP or HTTPS Core URL, such as https://komodo.example.com."
     },
     {
       "name": "var_komodo_server_name",
       "label": "Komodo Server Name",
       "type": "text",
-      "help": "A unique server name to register in Core. Defaults to the guest hostname when omitted."
+      "help": "Server name in Core; defaults to the guest hostname."
     },
     {
       "name": "var_komodo_onboarding_key",
@@ -59,65 +55,30 @@
       "type": "password",
       "secret": true,
       "required": true,
-      "help": "Create a Server Onboarding Key in Komodo Core before installation. It is different from the Core public key."
+      "help": "Create a Server Onboarding Key in Komodo Core before installation."
     },
     {
       "name": "var_komodo_core_public_key",
       "label": "Core Public Key",
       "type": "text",
-      "help": "Optional explicit Core public-key pin. By default, the first Core is trusted and its public key is stored in /etc/komodo/keys/core.pub."
-    },
-    {
-      "name": "var_komodo_agent_version",
-      "label": "Periphery Version",
-      "type": "text",
-      "default": "latest",
-      "help": "Use latest or a published stable v2 release compatible with your Core, with or without the v prefix. The selected policy is retained for subsequent updates."
+      "help": "Optional Core public key; defaults to trusting and pinning the first Core in /etc/komodo/keys/core.pub."
     }
   ],
   "notes": [
     {
-      "text": "Run this addon as root inside an existing Debian or Ubuntu Docker LXC or VM, with Docker Compose available. For a new host, first create a Docker LXC using the existing Docker script. Alpine is not supported by this systemd addon.",
+      "text": "Run the CT creator on Proxmox VE. It creates a Debian LXC, installs Docker/Compose and runs Periphery natively under systemd.",
       "type": "info"
     },
     {
-      "text": "The installer asks for the Core URL, a server name and an onboarding key; secret input is masked. Supply the corresponding var_komodo_* variables before launching for unattended installation. Confirm that the server is connected in Komodo Core after installation: a running systemd service alone does not confirm registration.",
+      "text": "Create an onboarding key in Core before installation, then confirm the server is connected. See the linked documentation for onboarding and authentication.",
       "type": "info"
     },
     {
-      "text": "Periphery connects outbound to Core. Its inbound server is disabled, so there is no Periphery web interface or listener on port 8120. The Docker socket stays local. Periphery manages this guest's Docker containers and stacks, not Proxmox LXC or VM resources.",
+      "text": "Run update_komodo_periphery for the latest stable agent. Configuration, keys and stack data are retained under /etc/komodo; the guest's existing update command is preserved.",
       "type": "info"
     },
     {
-      "text": "By default, the first Core public key is pinned in /etc/komodo/keys/core.pub. Use var_komodo_core_public_key to trust a known Core key from the start. The onboarding key can be removed from the configuration and revoked in Core after successful registration; preserve the private keys for later connections.",
-      "type": "info"
-    },
-    {
-      "text": "Configuration is stored in /etc/komodo/periphery.config.json with root-only permissions. Keys, repositories and stack data live under /etc/komodo. The native binary is /opt/komodo-periphery/periphery. Updates retain the configuration, keys and data.",
-      "type": "info"
-    },
-    {
-      "text": "Update the agent with update_komodo_periphery, or rerun the addon. To select a version, run var_komodo_agent_version=v2.X.Y update_komodo_periphery, replacing v2.X.Y with a published release compatible with Core. Use var_komodo_agent_version=latest update_komodo_periphery to resume tracking the latest stable v2 release. The choice is persisted.",
-      "type": "info"
-    },
-    {
-      "text": "Downloads finish before the agent is stopped. The previous binary and release cache are backed up under /opt/komodo-periphery.backup and restored if replacement or startup fails. To troubleshoot, run systemctl status periphery --no-pager and journalctl -u periphery -n 100 --no-pager.",
-      "type": "info"
-    },
-    {
-      "text": "The addon updates Periphery only. Existing guest update commands are retained for Docker/system maintenance, and application container updates remain managed in Komodo. On a guest dedicated to Periphery, you can choose the shorter command with ln -sf /usr/local/bin/update_komodo_periphery /usr/local/bin/update; verify command -v update resolves to this link.",
-      "type": "info"
-    },
-    {
-      "text": "For a fork or test branch, export COMMUNITY_SCRIPTS_URL=https://raw.githubusercontent.com/YOUR_USER/DevScripts/YOUR_BRANCH before running the addon from that URL. The generated updater retains this source. The addon can also run from a local checkout; COMMUNITY_SCRIPTS_CORE_DIR can point to a local community-scripts/core checkout.",
-      "type": "info"
-    },
-    {
-      "text": "The addon refuses to overwrite a Periphery configuration or service installed by another method. An installation already using /opt/komodo-periphery/periphery and /etc/komodo/periphery.config.json can enter update mode without replacing configuration; review those paths before adopting it.",
-      "type": "info"
-    },
-    {
-      "text": "Upstream publishes x86_64 and aarch64 Linux binaries. ARM64 asset selection was verified, but ARM64 execution has not been tested by the contributor.",
+      "text": "ARM64 has not been tested. The installer asks for confirmation before attempting it.",
       "type": "warning"
     }
   ]
