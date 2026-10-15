@@ -1,0 +1,49 @@
+{
+  "name": "Libre Closet",
+  "slug": "libre-closet",
+  "categories": [0],
+  "date_created": "2026-10-14",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3000,
+  "documentation": "https://github.com/Lazztech/Libre-Closet",
+  "website": "https://librecloset.lazz.tech",
+  "repository": "https://github.com/Lazztech/Libre-Closet",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://raw.githubusercontent.com/Lazztech/Libre-Closet/main/public/assets/lazztech_icon.png",
+  "description": "Libre Closet is a free, open-source, self-hosted wardrobe organizer. Catalog your clothes, upload photos, build outfits on a calendar, and open everything from your phone as an offline-ready PWA. It defaults to SQLite and local file storage, so there is no separate database to run. This script builds the Node.js app from source and runs it directly on the container without Docker.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/libre-closet.sh",
+      "config_path": "/opt/libre-closet_data/.env",
+      "resources": {
+        "cpu": 1,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "There is no login by default. Open http://<IP>:3000 and start cataloging. To require accounts, set AUTH_ENABLED=true in /opt/libre-closet_data/.env, set a long random ACCESS_TOKEN_SECRET, and restart the service.",
+      "type": "warning"
+    },
+    {
+      "text": "The SQLite database and uploaded photos live in /opt/libre-closet_data. Back that directory up to preserve your wardrobe across reinstalls.",
+      "type": "info"
+    },
+    {
+      "text": "This install builds from source with Node.js 22, so the first install and each update need a few minutes of CPU; at least 2 GB RAM is required for the build (1 GB is not enough).",
+      "type": "warning"
+    }
+  ]
+}
