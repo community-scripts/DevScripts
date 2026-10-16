@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+_CS_DEFAULT_URL="https://raw.githubusercontent.com/community-scripts/DevScripts/main"
+_cs_boot="${COMMUNITY_SCRIPTS_CORE_DIR:-$(dirname "${BASH_SOURCE[0]}")/../../core}/core/build.func"
+source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/core/build.func")
+
+# Copyright (c) 2021-2026 community-scripts ORG
+# Author: aashishvanand
+# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# Source: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-mesh/
+
+APP="Cloudflare-Mesh"
+var_tags="${var_tags:-network;cloudflare;vpn}"
+var_cpu="${var_cpu:-2}"
+var_ram="${var_ram:-1024}"
+var_disk="${var_disk:-4}"
+var_os="${var_os:-debian}"
+var_version="${var_version:-13}"
+var_arm64="${var_arm64:-yes}"
+var_unprivileged="${var_unprivileged:-1}"
+var_tun="${var_tun:-yes}"
+export var_mesh_token="${var_mesh_token:-}"
+
+header_info "$APP"
+variables
+color
+catch_errors
+
+function update_script() {
+  header_info
+  check_container_storage
+  check_container_resources
+  if [[ ! -f /usr/bin/warp-cli ]]; then
+    msg_error "No ${APP} Installation Found!"
+    exit
+  fi
+  msg_info "Updating Cloudflare One Client"
+  apt_update_safe
+  $STD apt install -y --only-upgrade cloudflare-warp
+  msg_ok "Updated Cloudflare One Client"
+  msg_ok "Updated successfully!"
+  exit
+}
+
+start
+build_container
+description
+
+msg_ok "Completed successfully!\n"
+echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
+echo -e "${INFO}${YW}Check the node status inside the container with:${CL}"
+echo -e "${GATEWAY}${BGN}warp-cli status${CL}"

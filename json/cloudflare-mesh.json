@@ -1,0 +1,58 @@
+{
+  "name": "Cloudflare Mesh",
+  "slug": "cloudflare-mesh",
+  "categories": [4],
+  "date_created": "2026-10-14",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-mesh/",
+  "website": "https://www.cloudflare.com/",
+  "repository": null,
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/cloudflare.webp",
+  "description": "Cloudflare Mesh (formerly WARP Connector) runs the Cloudflare One Client headless as a Mesh node. It gives the container a private Mesh IP and can advertise LAN subnets, providing bidirectional TCP, UDP and ICMP connectivity between sites and enrolled devices through Cloudflare.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/cloudflare-mesh.sh",
+      "config_path": "/var/lib/cloudflare-warp",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_mesh_token",
+      "label": "Mesh node token",
+      "type": "password",
+      "secret": true,
+      "help": "From Zero Trust > Networking > Mesh > Add node > Linux. Leave empty to enroll later with warp-cli."
+    }
+  ],
+  "notes": [
+    {
+      "text": "The Mesh node device profile must use MASQUE and route only 100.96.0.0/12 (Include mode). The dashboard wizard sets this up for new accounts.",
+      "type": "warning"
+    },
+    {
+      "text": "Do not run this in the same container or host as cloudflared: the Mesh node captures outbound traffic and can break cloudflared's connections.",
+      "type": "warning"
+    },
+    {
+      "text": "To reach a LAN subnet through this node, add a CIDR route to the node in the dashboard and point the LAN's return route for 100.96.0.0/12 at this container's IP.",
+      "type": "info"
+    }
+  ]
+}
