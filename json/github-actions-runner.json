@@ -1,0 +1,99 @@
+{
+  "name": "GitHub Actions Runner",
+  "slug": "github-actions-runner",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-10-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "interface_port": null,
+  "documentation": "https://docs.github.com/en/actions/hosting-your-own-runners",
+  "website": "https://github.com/actions/runner",
+  "repository": "https://github.com/actions/runner",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/github.webp",
+  "description": "GitHub Actions Runner is the agent that executes self-hosted jobs. One Debian container registers several runner processes per repository, so a personal account can run concurrent jobs without sharing one registration across repos.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/github-actions-runner.sh",
+      "config_path": "/opt/actions-runners",
+      "resources": {
+        "cpu": 4,
+        "ram": 12288,
+        "hdd": 40,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_gh_owner",
+      "label": "GitHub owner",
+      "type": "text",
+      "required": true,
+      "help": "User or organization that owns the repositories. A repository in var_gh_repos may also be written as owner/repo."
+    },
+    {
+      "name": "var_gh_repos",
+      "label": "Repositories",
+      "type": "text",
+      "required": true,
+      "help": "Comma-separated repository names, or owner/repo when a repo belongs to another account."
+    },
+    {
+      "name": "var_gh_token",
+      "label": "GitHub token",
+      "type": "password",
+      "secret": true,
+      "required": true,
+      "help": "Classic PAT with the repo scope, or a fine-grained token with Administration read and write on each repository. Used to mint registration tokens and then discarded."
+    },
+    {
+      "name": "var_runner_count",
+      "label": "Runners per repository",
+      "type": "number",
+      "default": "2",
+      "help": "How many runner processes to register for each repository. A runner executes one job at a time."
+    },
+    {
+      "name": "var_runner_name",
+      "label": "Runner name prefix",
+      "type": "text",
+      "default": "github-runner",
+      "help": "GitHub shows each process as <prefix>-1, <prefix>-2, and so on."
+    }
+  ],
+  "notes": [
+    {
+      "text": "Debian 13 only. Defaults are 4 cores, 12 GB RAM, and 40 GB disk because a single job such as govulncheck can use several gigabytes.",
+      "type": "info"
+    },
+    {
+      "text": "Docker is installed so workflow jobs can run containers. The runner itself is installed from the upstream tarball. Nested virtualization has to stay enabled.",
+      "type": "info"
+    },
+    {
+      "text": "The service runs as root with RUNNER_ALLOW_RUNASROOT=1. Workflow code from the registered repositories has root inside this container.",
+      "type": "info"
+    },
+    {
+      "text": "Every job on this container shares one network namespace. Two jobs that publish the same host port, such as Postgres on 5432, will attach to each other's services.",
+      "type": "info"
+    },
+    {
+      "text": "The GitHub token is not written to disk. Updates replace the binaries under /opt/actions-runner and copy them onto the existing registrations. They do not ask for the token again.",
+      "type": "info"
+    }
+  ]
+}
