@@ -1,0 +1,44 @@
+{
+  "name": "Antigravity",
+  "slug": "antigravity",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-10-17",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "interface_port": null,
+  "documentation": "https://antigravity.google/docs",
+  "website": "https://antigravity.google/",
+  "repository": "https://antigravity.google/",
+  "logo": "https://antigravity.google/assets/image/antigravity-logo.png",
+  "description": "Antigravity is Google's agentic AI coding development platform and CLI (agy) for autonomous software engineering workflows.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/antigravity.sh",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Antigravity is a terminal CLI tool. Access the container shell or connect via SSH and run 'agy' to initialize.",
+      "type": "info"
+    }
+  ]
+}
