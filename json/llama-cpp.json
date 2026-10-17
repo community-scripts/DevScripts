@@ -43,17 +43,22 @@
       "options": [
         "auto",
         "cpu",
-        "vulkan"
+        "vulkan",
+        "cuda",
+        "rocm",
+        "sycl-fp16",
+        "sycl-fp32",
+        "openvino"
       ],
       "default": "auto",
-      "help": "auto takes vulkan for any passed-through GPU (AMD via RADV, NVIDIA and Intel too), cpu otherwise. Upstream ships no Linux ROCm or CUDA build."
+      "help": "auto takes vulkan for any passed-through GPU, cpu otherwise. cuda picks the CUDA 12 or 13 build from the host driver; rocm, sycl-fp16/fp32 and openvino are x64 only."
     },
     {
       "name": "var_model_repo",
       "label": "Model Repository",
       "type": "text",
-      "default": "ggml-org/gemma-3-1b-it-GGUF",
-      "help": "GGUF repo on HuggingFace, downloaded on first service start"
+      "default": "ggml-org/gemma-4-E2B-it-GGUF:Q4_0",
+      "help": "GGUF repo on HuggingFace, optionally with :QUANT, downloaded on first service start"
     },
     {
       "name": "var_ctx_size",
@@ -96,11 +101,11 @@
       "type": "warning"
     },
     {
-      "text": "The first start downloads a small default model (about 800 MB). Set LLAMA_ARG_HF_REPO to another GGUF repo, or LLAMA_ARG_MODEL to a local file, then run systemctl restart llama-cpp.",
+      "text": "The first start downloads gemma-4-E2B-it Q4_0 (about 3.5 GB). Set LLAMA_ARG_HF_REPO to another GGUF repo, or LLAMA_ARG_MODEL to a local file, then run systemctl restart llama-cpp.",
       "type": "info"
     },
     {
-      "text": "GPUs run on the Vulkan build, as upstream ships no Linux CUDA or ROCm build. NVIDIA cards need the driver's Vulkan libraries in the container.",
+      "text": "Pick the build with var_backend: Vulkan works on any GPU, or use CUDA, ROCm, SYCL or OpenVINO. NVIDIA on Vulkan needs the driver's Vulkan libraries in the container.",
       "type": "info"
     }
   ]
