@@ -1,0 +1,47 @@
+{
+  "name": "tinyMediaManager",
+  "slug": "tinymediamanager",
+  "categories": [13],
+  "date_created": "2026-09-20",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 6080,
+  "documentation": "https://www.tinymediamanager.org/docs/",
+  "website": "https://www.tinymediamanager.org/",
+  "repository": "https://gitlab.com/tinyMediaManager/tinyMediaManager",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/tinymediamanager.webp",
+  "description": "tinyMediaManager is a media library manager for organizing and scraping metadata, artwork, and NFO files for movies and TV shows, ready for Kodi, Plex, Jellyfin and Emby. Browser access is the desktop UI via noVNC.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/tinymediamanager.sh",
+      "config_path": "/opt/tinymediamanager_data",
+      "resources": {
+        "cpu": 4,
+        "ram": 4096,
+        "hdd": 12,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Access is via VNC on http://<IP>:6080/vnc.html?resize=scale&autoconnect=true or on port 5900 with a VNC client.",
+      "type": "info"
+    },
+    {
+      "text": "Empty /media/movies and /media/tvshows folders are created as optional bind-mount targets (e.g. pct set <CTID> -mp0 /path/on/host,mp=/media/movies). On unprivileged LXCs, match host ownership to the container UID mapping.",
+      "type": "info"
+    },
+    {
+      "text": "App data lives in /opt/tinymediamanager_data (-Dtmm.contentfolder) so CLEAN_INSTALL updates can replace /opt/tinymediamanager without wiping settings or the library. Built-in auto-update is disabled; use the helper script.",
+      "type": "info"
+    }
+  ]
+}
