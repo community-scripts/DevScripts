@@ -18,6 +18,7 @@ var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 
 export var_admin_email="${var_admin_email:-}"
+export var_admin_pass="${var_admin_pass:-}"
 
 header_info "$APP"
 variables
