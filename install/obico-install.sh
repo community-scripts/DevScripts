@@ -90,7 +90,10 @@ Type=simple
 User=root
 WorkingDirectory=/opt/obico/ml_api
 EnvironmentFile=/opt/obico/.env
-ExecStart=/opt/obico/ml_api/.venv/bin/gunicorn --bind 127.0.0.1:3333 --workers 1 --timeout 120 wsgi
+# Bound to 0.0.0.0 because external clients (e.g. Bambuddy's Obico integration)
+# call the ML API directly; ML_API_TOKEN from /opt/obico/.env gates every
+# endpoint but the health check.
+ExecStart=/opt/obico/ml_api/.venv/bin/gunicorn --bind 0.0.0.0:3333 --workers 1 --timeout 120 wsgi
 Restart=on-failure
 RestartSec=5
 

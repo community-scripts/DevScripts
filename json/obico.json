@@ -42,7 +42,7 @@
       "type": "info"
     },
     {
-      "text": "Email notifications need SMTP settings in /opt/obico/.env (see dotenv.example), then restart the services.",
+      "text": "For Bambuddy's AI failure detection, enter http://<IP>:3333 as the Obico ML URL and the ML_API_TOKEN from /opt/obico/.env.",
       "type": "info"
     }
   ]
