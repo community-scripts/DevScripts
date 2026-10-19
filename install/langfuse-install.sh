@@ -13,6 +13,15 @@ setting_up_container
 network_check
 update_os
 
+if [[ -z "${var_admin_email:-}" ]]; then
+  var_admin_email=$(prompt_input "Langfuse admin email:" "admin@example.com" 60)
+fi
+var_admin_email="${var_admin_email:-admin@example.com}"
+if [[ ! "$var_admin_email" =~ ^[A-Za-z0-9_+-]+(\.[A-Za-z0-9_+-]+)*@([A-Za-z0-9][A-Za-z0-9-]*\.)+[A-Za-z]{2,}$ ]]; then
+  msg_warn "Invalid email '${var_admin_email}', falling back to admin@example.com"
+  var_admin_email="admin@example.com"
+fi
+
 msg_info "Installing Dependencies"
 $STD apt install -y build-essential redis-server
 msg_ok "Installed Dependencies"
@@ -29,7 +38,7 @@ fetch_and_deploy_gh_release "seaweedfs" "seaweedfs/seaweedfs" "prebuild" "latest
 msg_info "Building Langfuse"
 cd /opt/langfuse
 HUSKY=0 $STD pnpm install --frozen-lockfile
-# Same build environment as upstream's Dockerfiles; DOCKER_BUILD=1 only skips env validation while compiling.
+# DOCKER_BUILD=1 only skips Langfuse's runtime env validation while compiling; no container is involved.
 DOCKER_BUILD=1 NEXT_TELEMETRY_DISABLED=1 CI=true pnpm_config_verify_deps_before_run=false $STD pnpm turbo run build --filter=web... --filter=worker... --concurrency=1
 cp -r web/.next/static web/.next/standalone/web/.next/
 cp -r web/public web/.next/standalone/web/
@@ -41,9 +50,11 @@ chmod 700 /opt/langfuse_data
 REDIS_PASS=$(random_password 32)
 CLICKHOUSE_PASS=$(random_password 32)
 S3_SECRET=$(random_password 48)
+ADMIN_PASS=$(random_password 24)
+PUBLIC_KEY="pk-lf-$(random_password 32)"
+SECRET_KEY="sk-lf-$(random_password 32)"
 cat <<EOF >/opt/langfuse_data/.env
 NODE_ENV=production
-DOCKER_BUILD=0
 NEXTAUTH_URL=http://${LOCAL_IP}:3000
 NEXTAUTH_SECRET=$(random_password 48)
 SALT=$(random_password 48)
@@ -66,8 +77,18 @@ LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT=http://127.0.0.1:8333
 LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID=langfuse
 LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=${S3_SECRET}
 LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE=true
+AUTH_DISABLE_SIGNUP=true
 TELEMETRY_ENABLED=false
 NEXT_TELEMETRY_DISABLED=1
+LANGFUSE_INIT_ORG_ID=default-org
+LANGFUSE_INIT_ORG_NAME=Default
+LANGFUSE_INIT_PROJECT_ID=default-project
+LANGFUSE_INIT_PROJECT_NAME=Default
+LANGFUSE_INIT_PROJECT_PUBLIC_KEY=${PUBLIC_KEY}
+LANGFUSE_INIT_PROJECT_SECRET_KEY=${SECRET_KEY}
+LANGFUSE_INIT_USER_EMAIL=${var_admin_email}
+LANGFUSE_INIT_USER_NAME=Admin
+LANGFUSE_INIT_USER_PASSWORD=${ADMIN_PASS}
 EOF
 chmod 600 /opt/langfuse_data/.env
 cat <<EOF >/etc/redis/langfuse.conf
@@ -139,7 +160,7 @@ cat <<EOF >/etc/systemd/system/langfuse-migrate.service
 [Unit]
 Description=Langfuse Database Migrations
 After=network.target postgresql.service clickhouse-server.service redis-server.service langfuse-storage.service
-Requires=postgresql.service clickhouse-server.service redis-server.service langfuse-storage.service
+Wants=postgresql.service clickhouse-server.service redis-server.service langfuse-storage.service
 Before=langfuse-web.service langfuse-worker.service
 
 [Service]
@@ -207,6 +228,22 @@ systemctl enable -q --now langfuse-web langfuse-worker
 $STD curl --retry 60 --retry-delay 2 --retry-connrefused -fsS http://127.0.0.1:3000/api/public/ready
 $STD curl --retry 30 --retry-delay 2 --retry-connrefused -fsS http://127.0.0.1:3030/api/health
 msg_ok "Created Services"
+
+msg_info "Saving Credentials"
+# The first start created the admin, project and API keys; later restarts must not re-create them.
+sed -i '/^LANGFUSE_INIT_/d' /opt/langfuse_data/.env
+cat <<EOF >>~/langfuse.creds
+
+Langfuse Admin
+Email: ${var_admin_email}
+Password: ${ADMIN_PASS}
+
+Langfuse API Keys (project Default)
+Public Key: ${PUBLIC_KEY}
+Secret Key: ${SECRET_KEY}
+EOF
+chmod 600 ~/langfuse.creds
+msg_ok "Saved Credentials"
 
 motd_ssh
 customize

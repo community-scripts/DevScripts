@@ -33,13 +33,22 @@
     }
   ],
   "default_credentials": {
-    "username": null,
+    "username": "admin@example.com",
     "password": null
   },
+  "app_vars": [
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com",
+      "help": "Login for the generated admin account. Langfuse only uses it to send mail when SMTP is configured."
+    }
+  ],
   "notes": [
     {
-      "text": "There is no default account. Create your account in the web interface, then set AUTH_DISABLE_SIGNUP=true in /opt/langfuse_data/.env and restart langfuse-web.",
-      "type": "warning"
+      "text": "The admin login and the Default project's API keys are saved to ~/langfuse.creds inside the container. Sign-up is off, invited users included; set AUTH_DISABLE_SIGNUP=false in /opt/langfuse_data/.env and restart langfuse-web while adding users.",
+      "type": "info"
     },
     {
       "text": "Behind a reverse proxy, set NEXTAUTH_URL in /opt/langfuse_data/.env to the external URL and restart langfuse-web.",
