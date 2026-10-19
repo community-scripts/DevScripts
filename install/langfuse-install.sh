@@ -21,6 +21,14 @@ if [[ ! "$var_admin_email" =~ ^[A-Za-z0-9_+-]+(\.[A-Za-z0-9_+-]+)*@([A-Za-z0-9][
   msg_warn "Invalid email '${var_admin_email}', falling back to admin@example.com"
   var_admin_email="admin@example.com"
 fi
+var_admin_pass="${var_admin_pass:-}"
+if [[ -n "$var_admin_pass" ]] && [[ ${#var_admin_pass} -lt 8 || "$var_admin_pass" == *[[:space:][:cntrl:]\"\'\\]* ]]; then
+  msg_warn "Admin password needs at least 8 characters and no spaces, quotes or backslashes, generating one"
+  var_admin_pass=""
+fi
+if [[ -z "$var_admin_pass" ]]; then
+  var_admin_pass=$(random_password 24)
+fi
 
 msg_info "Installing Dependencies"
 $STD apt install -y build-essential redis-server
@@ -50,7 +58,6 @@ chmod 700 /opt/langfuse_data
 REDIS_PASS=$(random_password 32)
 CLICKHOUSE_PASS=$(random_password 32)
 S3_SECRET=$(random_password 48)
-ADMIN_PASS=$(random_password 24)
 PUBLIC_KEY="pk-lf-$(random_password 32)"
 SECRET_KEY="sk-lf-$(random_password 32)"
 cat <<EOF >/opt/langfuse_data/.env
@@ -88,7 +95,7 @@ LANGFUSE_INIT_PROJECT_PUBLIC_KEY=${PUBLIC_KEY}
 LANGFUSE_INIT_PROJECT_SECRET_KEY=${SECRET_KEY}
 LANGFUSE_INIT_USER_EMAIL=${var_admin_email}
 LANGFUSE_INIT_USER_NAME=Admin
-LANGFUSE_INIT_USER_PASSWORD=${ADMIN_PASS}
+LANGFUSE_INIT_USER_PASSWORD=${var_admin_pass}
 EOF
 chmod 600 /opt/langfuse_data/.env
 cat <<EOF >/etc/redis/langfuse.conf
@@ -236,7 +243,7 @@ cat <<EOF >>~/langfuse.creds
 
 Langfuse Admin
 Email: ${var_admin_email}
-Password: ${ADMIN_PASS}
+Password: ${var_admin_pass}
 
 Langfuse API Keys (project Default)
 Public Key: ${PUBLIC_KEY}

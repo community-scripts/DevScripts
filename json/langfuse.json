@@ -43,6 +43,13 @@
       "type": "text",
       "default": "admin@example.com",
       "help": "Login for the generated admin account. Langfuse only uses it to send mail when SMTP is configured."
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty. At least 8 characters, without spaces, quotes or backslashes."
     }
   ],
   "notes": [
