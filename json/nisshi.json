@@ -1,0 +1,57 @@
+{
+  "name": "Nisshi",
+  "slug": "nisshi",
+  "categories": [
+    18
+  ],
+  "date_created": "2026-10-03",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://docs.nisshi.io/",
+  "website": "https://nisshi.io/",
+  "repository": "https://github.com/nisshi-io/nisshi",
+  "logo": "https://github.com/nisshi-io.png",
+  "description": "Nisshi (formerly Tansu) is a stateless, Apache Kafka compatible broker with pluggable storage. This script installs the single binary with the embedded SQLite storage engine.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/nisshi.sh",
+      "config_path": "/opt/nisshi_data/.env",
+      "resources": {
+        "cpu": 1,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "There is no web interface. Kafka clients connect to the container on port 9092.",
+      "type": "info"
+    },
+    {
+      "text": "The broker advertises the container IP it had during the install. If that IP changes, update ADVERTISED_LISTENER_URL in /opt/nisshi_data/.env and run systemctl restart nisshi, otherwise clients cannot connect.",
+      "type": "warning"
+    },
+    {
+      "text": "No authentication or TLS is configured: anyone who can reach port 9092 can read and write topics.",
+      "type": "warning"
+    },
+    {
+      "text": "All data is in /opt/nisshi_data/nisshi.db. Updates replace /opt/nisshi and leave /opt/nisshi_data untouched.",
+      "type": "info"
+    },
+    {
+      "text": "Nisshi can also store its data in S3 or PostgreSQL, write topics to an Apache Iceberg lakehouse and export OpenTelemetry metrics. None of that is set up by this script - see the documentation and configure it in /opt/nisshi_data/.env, then run systemctl restart nisshi.",
+      "type": "info"
+    }
+  ]
+}
