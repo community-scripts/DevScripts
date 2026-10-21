@@ -1,0 +1,53 @@
+{
+  "name": "Bemmoly",
+  "slug": "bemmoly",
+  "categories": [
+    25
+  ],
+  "date_created": "2026-10-21",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://bemmoly.com/self-hosting",
+  "website": "https://bemmoly.com/",
+  "repository": "https://github.com/bemmoly/bemmoly",
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "logo": "https://cdn.jsdelivr.net/gh/bemmoly/bemmoly@main/packages/ui/assets/brand/generated/icon-512.png",
+  "description": "Bemmoly is self-hosted issues and docs for a whole team: projects, Kanban and Scrum boards, sprints and a roadmap next to a live collaborative wiki, with Jira and Confluence import, OIDC/SAML single sign-on, SCIM, webhooks, an MCP server and optional bring-your-own-model AI. MIT licensed with no paid edition.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/bemmoly.sh",
+      "config_path": "/opt/bemmoly_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open the URL and the setup wizard creates the first admin account.",
+      "type": "info"
+    },
+    {
+      "text": "Behind a reverse proxy or domain, set BEMMOLY_PUBLIC_URL and BEMMOLY_TRUST_PROXY=true in /opt/bemmoly_data/.env, then run systemctl restart bemmoly.",
+      "type": "info"
+    },
+    {
+      "text": "Updates go through this script's update command; the in-app updater is for the Docker install and does not apply here.",
+      "type": "info"
+    }
+  ]
+}
