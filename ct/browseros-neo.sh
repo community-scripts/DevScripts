@@ -86,7 +86,17 @@ if [[ -n "$TS_NAME" ]]; then
   echo -e "${TAB}${GATEWAY}${BGN}https://${TS_NAME}:8443${CL}  (viewer)"
   echo -e "${TAB}${GATEWAY}${BGN}https://${TS_NAME}/mcp${CL}  (MCP)"
 fi
-echo -e "${INFO}${YW} The viewer password and MCP token are in /opt/browseros-neo_data/.env${CL}"
+VIEWER_PASS=$(pct exec "$CTID" -- sed -n 's/^VIEWER_PASSWORD=//p' /opt/browseros-neo_data/.env)
+MCP_TOKEN=$(pct exec "$CTID" -- sed -n 's/^MCP_TOKEN=//p' /opt/browseros-neo_data/.env)
+echo -e "${INFO}${YW} Credentials (also in /opt/browseros-neo_data/.env):${CL}"
+echo -e "${TAB}Viewer:     ${BGN}neo${CL} / ${BGN}${VIEWER_PASS}${CL}"
+echo -e "${TAB}MCP token:  ${BGN}${MCP_TOKEN}${CL}"
 if [[ -n "$ROOT_PW_GENERATED" && "${var_pw:-}" == "$ROOT_PW_GENERATED" ]]; then
-  echo -e "${INFO}${YW} Generated root password (save it now):${CL} ${BGN}${ROOT_PW_GENERATED}${CL}"
+  echo -e "${TAB}Root:       ${BGN}${ROOT_PW_GENERATED}${CL}  (generated, save it now)"
+fi
+echo -e "${INFO}${YW} Add it to Claude Code:${CL}"
+if [[ -n "$TS_NAME" ]]; then
+  echo -e "${TAB}claude mcp add --transport http browseros-neo https://${TS_NAME}/mcp --header \"Authorization: Bearer ${MCP_TOKEN}\""
+else
+  echo -e "${TAB}claude mcp add --transport http browseros-neo http://${IP}:9010/mcp --header \"Authorization: Bearer ${MCP_TOKEN}\""
 fi
