@@ -259,6 +259,20 @@ EOF
   fi
 fi
 
+msg_info "Configuring Login Hints"
+cat <<'EOF' >/etc/profile.d/browseros-neo-hint.sh
+if [ "$(id -u)" -eq 0 ]; then
+  echo "  BrowserOS Neo viewer: http://$(hostname -I | awk '{print $1}'):6080 (user neo)"
+  echo "  BrowserOS Neo MCP:    http://$(hostname -I | awk '{print $1}'):9010/mcp"
+  if command -v tailscale >/dev/null 2>&1 && [ -n "$(tailscale status --json 2>/dev/null | jq -r '.Self.DNSName // empty')" ]; then
+    echo "  On your tailnet:      https://$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//'):8443 (viewer), /mcp on port 443"
+  fi
+  echo "  Viewer password and MCP token: cat /opt/browseros-neo_data/.env"
+  echo ""
+fi
+EOF
+msg_ok "Configured Login Hints"
+
 motd_ssh
 customize
 cleanup_lxc
