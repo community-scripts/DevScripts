@@ -143,6 +143,16 @@ user=root
 logfile=/var/log/browseros-neo/supervisord.log
 pidfile=/run/browseros-neo/supervisord.pid
 
+[unix_http_server]
+file=/run/browseros-neo/supervisor.sock
+chmod=0700
+
+[supervisorctl]
+serverurl=unix:///run/browseros-neo/supervisor.sock
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory=supervisor.rpcinterface:make_main_rpcinterface
+
 [program:xvnc]
 command=/usr/bin/Xvnc :1 -geometry 1600x1000 -depth 24 -SecurityTypes None -localhost -rfbport 5900 -AlwaysShared -nolisten tcp
 priority=100
