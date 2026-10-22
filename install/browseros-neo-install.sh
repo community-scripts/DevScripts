@@ -255,7 +255,10 @@ EOF
     $STD tailscale serve --bg --https=8443 http://127.0.0.1:6080
     msg_ok "Serving BrowserOS Neo over HTTPS on your tailnet"
   else
-    msg_warn "Tailscale login did not complete; run 'tailscale up' in the container to finish it"
+    msg_warn "Tailscale login did not complete. Once the device is approved, run in the container:"
+    echo -e "${TAB}tailscale serve --bg --https=443 http://127.0.0.1:9010"
+    echo -e "${TAB}tailscale serve --bg --https=8443 http://127.0.0.1:6080"
+    echo -e "${TAB}(and 'tailscale up' first if you never opened the login URL)"
   fi
 fi
 
