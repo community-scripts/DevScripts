@@ -50,6 +50,15 @@ function update_script() {
   exit
 }
 
+# The container holds logged-in browser sessions, so it always gets a root
+# password; with var_pw set the engine also leaves console autologin off.
+ROOT_PW_GENERATED=""
+if [[ -z "${var_pw:-}" ]] && command -v pveversion >/dev/null 2>&1; then
+  ROOT_PW_GENERATED=$(random_password 16)
+  var_pw=$(prompt_password "Root password for the BrowserOS Neo container, Enter to generate one" "$ROOT_PW_GENERATED" 120 5)
+  export var_pw
+fi
+
 # Decided before the container exists: Tailscale needs the TUN device (var_tun).
 if [[ -z "$var_tailscale" ]] && command -v pveversion >/dev/null 2>&1; then
   if [[ -n "$var_ts_authkey" ]] || prompt_confirm "Add BrowserOS Neo to your Tailscale tailnet for HTTPS access?" "n" 120; then
@@ -78,3 +87,6 @@ if [[ -n "$TS_NAME" ]]; then
   echo -e "${TAB}${GATEWAY}${BGN}https://${TS_NAME}/mcp${CL}  (MCP)"
 fi
 echo -e "${INFO}${YW} The viewer password and MCP token are in /opt/browseros-neo_data/.env${CL}"
+if [[ -n "$ROOT_PW_GENERATED" && "${var_pw:-}" == "$ROOT_PW_GENERATED" ]]; then
+  echo -e "${INFO}${YW} Generated root password (save it now):${CL} ${BGN}${ROOT_PW_GENERATED}${CL}"
+fi
