@@ -265,14 +265,21 @@ fi
 msg_info "Configuring Login Hints"
 cat <<'EOF' >/etc/profile.d/browseros-neo-hint.sh
 if [ "$(id -u)" -eq 0 ]; then
-  echo "  BrowserOS Neo viewer: http://$(hostname -I | awk '{print $1}'):6080 (user neo)"
-  echo "  BrowserOS Neo MCP:    http://$(hostname -I | awk '{print $1}'):9010/mcp"
-  if command -v tailscale >/dev/null 2>&1 && [ -n "$(tailscale status --json 2>/dev/null | jq -r '.Self.DNSName // empty')" ]; then
-    echo "  Tailnet viewer:       https://$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//'):8443"
-    echo "  Tailnet MCP:          https://$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//')/mcp"
+  _bn_ip=$(hostname -I | awk '{print $1}')
+  _bn_ts=""
+  command -v tailscale >/dev/null 2>&1 && _bn_ts=$(tailscale status --json 2>/dev/null | jq -r '.Self.DNSName // empty' | sed 's/\.$//')
+  _bn_mcp="http://${_bn_ip}:9010/mcp"
+  echo "  BrowserOS Neo viewer: http://${_bn_ip}:6080 (user neo)"
+  echo "  BrowserOS Neo MCP:    ${_bn_mcp}"
+  if [ -n "$_bn_ts" ]; then
+    _bn_mcp="https://${_bn_ts}/mcp"
+    echo "  Tailnet viewer:       https://${_bn_ts}:8443"
+    echo "  Tailnet MCP:          ${_bn_mcp}"
   fi
   echo "  Viewer password and MCP token: cat /opt/browseros-neo_data/.env"
+  echo "  Claude Code: claude mcp add --transport http browseros-neo ${_bn_mcp} --header \"Authorization: Bearer <MCP_TOKEN>\""
   echo ""
+  unset _bn_ip _bn_ts _bn_mcp
 fi
 EOF
 msg_ok "Configured Login Hints"
