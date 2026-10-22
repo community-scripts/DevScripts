@@ -29,6 +29,12 @@
       }
     }
   ],
+  "app_vars": [
+    { "name": "var_tailscale", "label": "Join Tailscale Tailnet", "type": "boolean", "default": "no",
+      "help": "Adds HTTPS addresses on your tailnet; without an auth key the install prints a login URL" },
+    { "name": "var_ts_authkey", "label": "Tailscale Auth Key", "type": "password", "secret": true,
+      "help": "Optional; joins the tailnet without the login URL" }
+  ],
   "default_credentials": {
     "username": null,
     "password": null

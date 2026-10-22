@@ -17,6 +17,9 @@ var_version="${var_version:-13}"
 var_arm64="${var_arm64:-no}" # GitHub releases ship an amd64 .deb only
 var_unprivileged="${var_unprivileged:-1}"
 
+export var_tailscale="${var_tailscale:-}"
+export var_ts_authkey="${var_ts_authkey:-}"
+
 header_info "$APP"
 variables
 color
@@ -47,6 +50,16 @@ function update_script() {
   exit
 }
 
+# Decided before the container exists: Tailscale needs the TUN device (var_tun).
+if [[ -z "$var_tailscale" ]] && command -v pveversion >/dev/null 2>&1; then
+  if [[ -n "$var_ts_authkey" ]] || prompt_confirm "Add BrowserOS Neo to your Tailscale tailnet for HTTPS access?" "n" 120; then
+    var_tailscale="yes"
+  else
+    var_tailscale="no"
+  fi
+fi
+[[ "$var_tailscale" == "yes" ]] && export var_tun="yes"
+
 start
 build_container
 description
@@ -57,4 +70,11 @@ echo -e "${INFO}${YW} Open the browser viewer (user: neo) using the following UR
 echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:6080${CL}"
 echo -e "${INFO}${YW} Connect MCP clients to the following URL with an Authorization: Bearer header:${CL}"
 echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:9010/mcp${CL}"
+TS_NAME=""
+[[ "$var_tailscale" == "yes" ]] && TS_NAME=$(pct exec "$CTID" -- bash -c "tailscale status --json 2>/dev/null | jq -r '.Self.DNSName // empty'" | sed 's/\.$//')
+if [[ -n "$TS_NAME" ]]; then
+  echo -e "${INFO}${YW} On your tailnet:${CL}"
+  echo -e "${TAB}${GATEWAY}${BGN}https://${TS_NAME}:8443${CL}  (viewer)"
+  echo -e "${TAB}${GATEWAY}${BGN}https://${TS_NAME}/mcp${CL}  (MCP)"
+fi
 echo -e "${INFO}${YW} The viewer password and MCP token are in /opt/browseros-neo_data/.env${CL}"

@@ -223,6 +223,42 @@ curl -fsS -X PUT http://127.0.0.1:19010/api/v1/settings/agent \
   -H 'Content-Type: application/json' -d '{"humanHelpEnabled":false}' >/dev/null
 msg_ok "BrowserOS Neo is ready"
 
+if [[ "${var_tailscale:-no}" == "yes" ]]; then
+  setup_deb822_repo \
+    "tailscale" \
+    "https://pkgs.tailscale.com/stable/$(get_os_info id)/$(get_os_info codename).noarmor.gpg" \
+    "https://pkgs.tailscale.com/stable/$(get_os_info id)/" \
+    "$(get_os_info codename)"
+  msg_info "Installing Tailscale"
+  $STD apt install -y tailscale
+  msg_ok "Installed Tailscale"
+
+  # A Tailscale failure must not fail the install: BrowserOS Neo already works on the LAN.
+  if [[ -n "${var_ts_authkey:-}" ]]; then
+    # The key goes through a mode-600 file so it never shows up in the process list.
+    (
+      umask 077
+      cat <<EOF >/root/.ts-authkey
+${var_ts_authkey}
+EOF
+    )
+    tailscale up --auth-key=file:/root/.ts-authkey --hostname="$(hostname)" || true
+    rm -f /root/.ts-authkey
+  else
+    echo -e "${INFO}${YW} Open the URL below and approve the device to add BrowserOS Neo to your tailnet:${CL}"
+    tailscale up --hostname="$(hostname)" --timeout=10m || true
+  fi
+
+  if [[ "$(tailscale status --json 2>/dev/null | jq -r '.BackendState')" == "Running" ]]; then
+    msg_info "Serving BrowserOS Neo over HTTPS on your tailnet"
+    $STD tailscale serve --bg --https=443 http://127.0.0.1:9010
+    $STD tailscale serve --bg --https=8443 http://127.0.0.1:6080
+    msg_ok "Serving BrowserOS Neo over HTTPS on your tailnet"
+  else
+    msg_warn "Tailscale login did not complete; run 'tailscale up' in the container to finish it"
+  fi
+fi
+
 motd_ssh
 customize
 cleanup_lxc
