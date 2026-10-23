@@ -34,20 +34,27 @@ function update_script() {
   fi
 
   if check_for_gh_release "agentgateway" "agentgateway/agentgateway"; then
+    cp -a /opt/agentgateway/agentgateway /opt/agentgateway/agentgateway.bak
+    cp -a ~/.agentgateway ~/.agentgateway.bak
+
     msg_info "Stopping Service"
     systemctl stop agentgateway
     msg_ok "Stopped Service"
 
-    fetch_and_deploy_gh_release "agentgateway" "agentgateway/agentgateway" "singlefile" "latest" "/opt/agentgateway" "agentgateway-linux-$(arch_resolve "amd64" "arm64")"
-
-    msg_info "Verifying agentgateway Checksum"
-    AGW_SUM=$(curl -fsSL "https://github.com/agentgateway/agentgateway/releases/download/v$(cat ~/.agentgateway)/agentgateway-linux-$(arch_resolve "amd64" "arm64").sha256" | awk '{print $1}')
-    if [[ -z "$AGW_SUM" || "$AGW_SUM" != "$(sha256sum /opt/agentgateway/agentgateway | awk '{print $1}')" ]]; then
-      msg_error "agentgateway checksum does not match the release"
+    # Any failure from here on puts the previous binary back and restarts it.
+    if fetch_and_deploy_gh_release "agentgateway" "agentgateway/agentgateway" "singlefile" "latest" "/opt/agentgateway" "agentgateway-linux-$(arch_resolve "amd64" "arm64")" &&
+      AGW_SUM=$(curl -fsSL "https://github.com/agentgateway/agentgateway/releases/download/v$(cat ~/.agentgateway)/agentgateway-linux-$(arch_resolve "amd64" "arm64").sha256" | awk '{print $1}') &&
+      [[ -n "$AGW_SUM" && "$AGW_SUM" == "$(sha256sum /opt/agentgateway/agentgateway | awk '{print $1}')" ]]; then
+      chmod +x /opt/agentgateway/agentgateway
+      rm -f /opt/agentgateway/agentgateway.bak ~/.agentgateway.bak
+      msg_ok "Verified agentgateway Checksum"
+    else
+      mv /opt/agentgateway/agentgateway.bak /opt/agentgateway/agentgateway
+      mv ~/.agentgateway.bak ~/.agentgateway
+      systemctl start agentgateway
+      msg_error "agentgateway update failed (download or checksum); the previous version was restored and restarted"
       exit 1
     fi
-    chmod +x /opt/agentgateway/agentgateway
-    msg_ok "Verified agentgateway Checksum"
 
     msg_info "Starting Service"
     systemctl start agentgateway
