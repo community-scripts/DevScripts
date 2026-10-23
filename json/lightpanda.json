@@ -1,0 +1,43 @@
+{
+  "name": "Lightpanda",
+  "slug": "lightpanda",
+  "categories": [20],
+  "date_created": "2026-10-23",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 9222,
+  "documentation": "https://lightpanda.io/docs",
+  "website": "https://lightpanda.io/",
+  "repository": "https://github.com/lightpanda-io/browser",
+  "logo": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/lightpanda.webp",
+  "description": "Lightpanda is a headless browser built from scratch for AI agents and automation. It runs JavaScript and speaks the Chrome DevTools Protocol, so Puppeteer and Playwright scripts work against it, and it has a built-in MCP server for AI agents.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/lightpanda.sh",
+      "config_path": "",
+      "resources": {
+        "cpu": 1,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Neither server has authentication. Anyone who can reach ports 9222 and 9223 can browse the web through this container, so keep it on a trusted network.",
+      "type": "warning"
+    },
+    {
+      "text": "Connect Puppeteer or Playwright to ws://<IP>:9222. Add http://<IP>:9223/mcp to your AI agent as an HTTP MCP server.",
+      "type": "info"
+    }
+  ]
+}
