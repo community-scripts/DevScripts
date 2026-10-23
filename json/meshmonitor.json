@@ -1,0 +1,47 @@
+{
+  "name": "MeshMonitor",
+  "slug": "meshmonitor",
+  "categories": [9, 18],
+  "date_created": "2026-10-20",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3001,
+  "documentation": "https://meshmonitor.org/deployment/PROXMOX_LXC_GUIDE.html",
+  "website": "https://meshmonitor.org/",
+  "repository": "https://github.com/Yeraze/meshmonitor",
+  "logo": "https://raw.githubusercontent.com/Yeraze/meshmonitor/main/public/logo.png",
+  "description": "MeshMonitor is a web application for monitoring and managing Meshtastic and MeshCore networks. It provides maps, messaging, telemetry, and notifications for connected mesh nodes.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/meshmonitor.sh",
+      "config_path": "/etc/meshmonitor/meshmonitor.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": "changeme"
+  },
+  "notes": [
+    {
+      "text": "Change the default admin password immediately after the first login.",
+      "type": "warning"
+    },
+    {
+      "text": "Add your Meshtastic or MeshCore node through the web UI. The container must be able to reach your node over the network.",
+      "type": "info"
+    },
+    {
+      "text": "When using a reverse proxy or a different access URL, update ALLOWED_ORIGINS in /etc/meshmonitor/meshmonitor.env and restart MeshMonitor.",
+      "type": "info"
+    }
+  ]
+}
