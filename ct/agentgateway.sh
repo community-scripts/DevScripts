@@ -41,24 +41,23 @@ function update_script() {
     systemctl stop agentgateway
     msg_ok "Stopped Service"
 
-    # Any failure from here on puts the previous binary back and restarts it.
+    # Any failure from here on, including a new version that will not start, puts the
+    # previous binary back and restarts it.
     if fetch_and_deploy_gh_release "agentgateway" "agentgateway/agentgateway" "singlefile" "latest" "/opt/agentgateway" "agentgateway-linux-$(arch_resolve "amd64" "arm64")" &&
       AGW_SUM=$(curl -fsSL "https://github.com/agentgateway/agentgateway/releases/download/v$(cat ~/.agentgateway)/agentgateway-linux-$(arch_resolve "amd64" "arm64").sha256" | awk '{print $1}') &&
-      [[ -n "$AGW_SUM" && "$AGW_SUM" == "$(sha256sum /opt/agentgateway/agentgateway | awk '{print $1}')" ]]; then
-      chmod +x /opt/agentgateway/agentgateway
+      [[ -n "$AGW_SUM" && "$AGW_SUM" == "$(sha256sum /opt/agentgateway/agentgateway | awk '{print $1}')" ]] &&
+      chmod +x /opt/agentgateway/agentgateway &&
+      systemctl start agentgateway && sleep 5 && systemctl is-active -q agentgateway; then
       rm -f /opt/agentgateway/agentgateway.bak ~/.agentgateway.bak
-      msg_ok "Verified agentgateway Checksum"
+      msg_ok "Started agentgateway $(cat ~/.agentgateway)"
     else
+      systemctl stop agentgateway 2>/dev/null
       mv /opt/agentgateway/agentgateway.bak /opt/agentgateway/agentgateway
       mv ~/.agentgateway.bak ~/.agentgateway
       systemctl start agentgateway
-      msg_error "agentgateway update failed (download or checksum); the previous version was restored and restarted"
+      msg_error "agentgateway update failed (download, checksum or start); the previous version was restored and restarted"
       exit 1
     fi
-
-    msg_info "Starting Service"
-    systemctl start agentgateway
-    msg_ok "Started Service"
     msg_ok "Updated successfully!"
   fi
   exit
