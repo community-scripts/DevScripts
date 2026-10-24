@@ -25,7 +25,7 @@ After=network.target
 Type=simple
 User=root
 Environment=LIGHTPANDA_DISABLE_TELEMETRY=true
-ExecStart=/usr/bin/lightpanda serve --host 0.0.0.0 --advertise-host ${LOCAL_IP} --port 9222 --log-level info
+ExecStart=/usr/bin/lightpanda serve --host 0.0.0.0 --advertise-host ${LOCAL_IP} --port 9222 --log-level info --block-private-networks
 Restart=on-failure
 RestartSec=5
 
@@ -41,7 +41,7 @@ After=network.target
 Type=simple
 User=root
 Environment=LIGHTPANDA_DISABLE_TELEMETRY=true
-ExecStart=/usr/bin/lightpanda mcp --host 0.0.0.0 --port 9223
+ExecStart=/usr/bin/lightpanda mcp --host 0.0.0.0 --port 9223 --block-private-networks
 Restart=on-failure
 RestartSec=5
 

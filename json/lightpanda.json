@@ -38,6 +38,10 @@
     {
       "text": "Connect Puppeteer or Playwright to ws://<IP>:9222. Add http://<IP>:9223/mcp to your AI agent as an HTTP MCP server.",
       "type": "info"
+    },
+    {
+      "text": "Requests to private and internal IPs are blocked so an agent can't be steered into your LAN. Remove --block-private-networks from both service files to browse internal sites.",
+      "type": "info"
     }
   ]
 }
