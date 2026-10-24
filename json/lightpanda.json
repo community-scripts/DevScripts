@@ -10,6 +10,8 @@
   "documentation": "https://lightpanda.io/docs",
   "website": "https://lightpanda.io/",
   "repository": "https://github.com/lightpanda-io/browser",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
   "logo": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/lightpanda.webp",
   "description": "Lightpanda is a headless browser built from scratch for AI agents and automation. It runs JavaScript and speaks the Chrome DevTools Protocol, so Puppeteer and Playwright scripts work against it, and it has a built-in MCP server for AI agents.",
   "install_methods": [
