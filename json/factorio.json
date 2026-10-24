@@ -1,0 +1,36 @@
+{
+  "name": "Factorio",
+  "slug": "factorio",
+  "categories": [24],
+  "date_created": "2026-10-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://wiki.factorio.com/Multiplayer",
+  "website": "https://factorio.com/",
+  "repository": "",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/factorio.webp",
+  "description": "Factorio headless multiplayer server using the current stable Linux x64 release.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/factorio.sh",
+      "config_path": "/opt/factorio/server-settings.json",
+      "resources": {
+        "cpu": 1,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {"username": null, "password": null},
+  "notes": [
+    {"text": "Connect using the Factorio client to <container IP>:34197. Clients need the same Factorio version and mods as the server.", "type": "info"},
+    {"text": "Saves are stored in /opt/factorio/saves. The service loads the most recent save on restart.", "type": "info"}
+  ]
+}
