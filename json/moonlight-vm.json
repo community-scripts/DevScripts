@@ -1,0 +1,56 @@
+{
+  "name": "Moonlight",
+  "slug": "moonlight-vm",
+  "categories": [
+    24,
+    13
+  ],
+  "date_created": "2026-10-27",
+  "type": "vm",
+  "updateable": false,
+  "privileged": false,
+  "architectures": [
+    "amd64"
+  ],
+  "interface_port": null,
+  "documentation": "https://github.com/moonlight-stream/moonlight-docs/wiki",
+  "website": "https://moonlight-stream.org/",
+  "logo": "https://cdn.jsdelivr.net/gh/moonlight-stream/moonlight-qt@master/app/res/moonlight.svg",
+  "description": "Moonlight is an open-source game-streaming client for Sunshine hosts. It supports hardware video decoding, gamepads, and keyboard and mouse input.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "vm/moonlight-vm.sh",
+      "config_path": "",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 16,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "debian",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Wait for moonlight-setup.service, then reboot the guest. Sign in with your Cloud-Init user; desktop autologin is optional.",
+      "type": "info"
+    },
+    {
+      "text": "Connect the display to the selected GPU. Its output is unavailable in noVNC; selected USB ports are dedicated to this VM.",
+      "type": "info"
+    },
+    {
+      "text": "Add the Sunshine host in Moonlight and enter the PIN displayed by Moonlight on Sunshine's PIN page.",
+      "type": "info"
+    }
+  ],
+  "platforms": [
+    "pve"
+  ],
+  "repository": "https://github.com/moonlight-stream/moonlight-qt"
+}

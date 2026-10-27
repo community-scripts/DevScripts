@@ -6,11 +6,13 @@ on:
     paths:
       - "vm/**.sh"
       - ".github/workflows/scripts/vm-*.sh"
+      - ".github/workflows/scripts/vm-game-streaming-test.py"
       - ".github/workflows/vm-wizard.yml"
   pull_request:
     paths:
       - "vm/**.sh"
       - ".github/workflows/scripts/vm-*.sh"
+      - ".github/workflows/scripts/vm-game-streaming-test.py"
       - ".github/workflows/vm-wizard.yml"
   workflow_dispatch:
 
@@ -51,3 +53,5 @@ jobs:
         run: bash .github/workflows/scripts/vm-wizard-test.sh
       - name: Run VM lifecycle regressions
         run: bash .github/workflows/scripts/vm-lifecycle-test.sh
+      - name: Check game streaming device selection
+        run: python3 .github/workflows/scripts/vm-game-streaming-test.py

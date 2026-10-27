@@ -61,7 +61,7 @@ df() {
 ip() { printf '1: vmbr0: <UP>\n2: vmbr1: <UP>\n'; }
 whiptail() { echo "Unexpected interactive dialog: $*" >&2; return 2; }
 vm_prompt_cloud_init() {
-  USE_CLOUD_INIT=yes CLOUDINIT_USER="$1" CLOUDINIT_PASSWORD=test-password
+  USE_CLOUD_INIT=yes CLOUDINIT_USER="${CLOUDINIT_USER:-$1}" CLOUDINIT_PASSWORD=test-password
   CLOUDINIT_NETWORK_MODE=dhcp
   if [[ "$FAILURE" == ssh ]]; then
     CLOUDINIT_SSH_KEYS="$CASE_DIR/keys.pub"
@@ -80,11 +80,21 @@ vm_release_asset() {
   IceWhaleTech/ZimaOS) tag="1.8.0-beta2" asset="zimaos-x86_64-1.8.0-beta2_installer.iso" ;;
   home-assistant/operating-system) tag="${4:-16.0}" asset="haos_generic-aarch64-${4:-16.0}.qcow2.xz" ;;
   derailed/k9s) tag="v0.50.0" asset="k9s_Linux_amd64.tar.gz" ;;
+  LizardByte/Sunshine) tag="v2026.914.233613" asset="sunshine_2026.914.233613-1+debiantrixie_amd64.deb" ;;
+  moonlight-stream/moonlight-qt) tag="v6.2.0" asset="Moonlight-6.2.0-x86_64.AppImage" ;;
+  mmatyas/pegasus-frontend) tag="continuous" asset="pegasus-frontend_0.16.109_amd64.deb" ;;
   *) echo "Unexpected release repository: $2" >&2; return 2 ;;
   esac
   [[ "$asset" =~ $3 ]] || { echo "Release pattern $3 does not match $asset" >&2; return 2; }
   VM_RELEASE_TAG="$tag" VM_RELEASE_VERSION="${tag#v}" VM_RELEASE_ASSET="$asset"
   VM_RELEASE_URL="https://example.invalid/$asset" VM_RELEASE_SHA256=""
+  case "$2" in
+  LizardByte/Sunshine | moonlight-stream/moonlight-qt | mmatyas/pegasus-frontend)
+    VM_RELEASE_SHA256="$(printf 'a%.0s' {1..64})"
+    ;;
+  esac
+  [[ "$FAILURE" != digest ]] || VM_RELEASE_SHA256=""
+  return 0
 }
 setup_cloud_init() {
   echo "provision $*" >>"$EVENTS"
@@ -117,7 +127,11 @@ vm_image_cache_path() {
   if [[ "$FAILURE" == cache ]]; then (exit 7); fi
   echo "$CASE_DIR/cache-$(basename "$1")"
 }
-vm_fetch_image() { printf 'mock-image' >"$2"; echo "fetch $1" >>"$EVENTS"; }
+vm_fetch_image() {
+  if [[ "$FAILURE" == download && "$1" == https://example.invalid/* ]]; then return 7; fi
+  printf 'mock-image' >"$2"
+  echo "fetch $1" >>"$EVENTS"
+}
 vm_extract_image() {
   local target="${2:-$CASE_DIR/extracted-$(basename "${1%.*}")}"
   printf 'mock-image' >"$target"
@@ -133,6 +147,21 @@ set_description() {
 }
 virt-customize() {
   echo "customize $*" >>"$EVENTS"
+  local argument previous="" upload
+  for argument in "$@"; do
+    if [[ "$previous" == --upload && "$argument" == *:/usr/local/sbin/* ]]; then
+      upload="${argument%%:*}"
+      bash -n "$upload" || return 1
+      cp "$upload" "$CASE_DIR/firstboot.sh"
+    fi
+    if [[ "$previous" == --upload && "$argument" == *:/etc/systemd/system/*.service ]]; then
+      upload="${argument%%:*}"
+      if grep -q 'After=.*cloud-final.service' "$upload"; then
+        echo "firstboot-after-cloud-final" >>"$EVENTS"
+      fi
+    fi
+    previous="$argument"
+  done
   [[ "$FAILURE" != customize ]] || return 7
 }
 qemu-img() { echo "image $*" >>"$EVENTS"; }
@@ -199,7 +228,7 @@ curl() {
     printf '\nsource %q\n' "$MOCK"
     return
     ;;
-  */home-assistant/version/*) payload='{"ova":"16.0"}' ;;
+  */home-assistant/version/*) payload='{"ova":"16.0","hassos":{"generic-aarch64":"16.0"}}' ;;
   *blissos-x86*) payload='Bliss-v16.9.7-x86_64-OFFICIAL-foss-20261001.iso' ;;
   *cachyos-arch*) payload='desktop/261001/' ;;
   *api.umbrel.com*) payload='{"version":"1.7.4"}' ;;
@@ -279,6 +308,13 @@ for script in "$ROOT"/vm/*.sh; do
         imported="$(grep -nE '^qm (importdisk|disk import) [0-9]' "$EVENTS" | cut -d: -f1)"
         ((last_custom < imported)) || fail "K3s customized after import"
       fi
+      case "$slug" in
+      sunshine-vm | moonlight-vm)
+        [[ -s "$CASE_DIR/firstboot.sh" ]] || fail "$slug did not stage a parseable first-boot installer"
+        grep -q '^firstboot-after-cloud-final$' "$EVENTS" || fail "$slug first boot is not ordered after Cloud-Init"
+        ! grep -Eq 'qm set .*--(hostpci|usb)[0-9]' "$EVENTS" || fail "$slug assigned devices without an explicit selection"
+        ;;
+      esac
       ! grep -q '10\.88\.0\.1' "$CASE_DIR/output" || fail "$slug reported a container bridge address as the VM IP"
       if awk '$1 == "ip-lookup" && NF < 4' "$EVENTS" | grep -q .; then
         fail "$slug looked up the IP without the VM's MAC"
@@ -292,7 +328,7 @@ for script in "$ROOT"/vm/*.sh; do
   done
   failures=(description start cache)
   case "$slug" in
-  k3s-vm | netbird-server | ubuntu-vm | unifi-os-server-vm | waydroid-vm) failures+=(ssh) ;;
+  k3s-vm | netbird-server | ubuntu-vm | unifi-os-server-vm | waydroid-vm | sunshine-vm | moonlight-vm) failures+=(ssh) ;;
   esac
   case "$slug" in
   blissos-vm | cachyos-vm | nextcloud-vm | owncloud-vm | umbrel-os-vm | zimaos-vm) ;;
@@ -322,6 +358,34 @@ for script in "$ROOT"/vm/*.sh; do
     echo "PASS $slug $failure failure does not report success"
     failures_checked=$((failures_checked + 1))
   done
+  case "$slug" in
+  sunshine-vm | moonlight-vm)
+    for invalid in gpu machine user digest download customize; do
+      CASE_DIR="$TEST_DIR/$slug-invalid-$invalid"
+      mkdir "$CASE_DIR"
+      EVENTS="$CASE_DIR/events"
+      export CASE_DIR EVENTS
+      overrides=()
+      case "$invalid" in
+      gpu) overrides=(VM_GPU_PCI=not-a-pci-address) ;;
+      machine) overrides=(VM_MACHINE=i440fx) ;;
+      user) overrides=(CLOUDINIT_USER=root) ;;
+      digest) overrides=(FAILURE=digest) ;;
+      download) overrides=(FAILURE=download) ;;
+      customize) overrides=(FAILURE=customize) ;;
+      esac
+      rc=0
+      env BASH_ENV="$MOCK" VM_UNATTENDED=1 VM_START=no VM_ARCH=amd64 \
+        STORAGE_KIND=dir FAILURE=none "${overrides[@]}" \
+        bash "$script" >"$CASE_DIR/output" 2>&1 || rc=$?
+      [[ "$rc" != 0 ]] || fail "$slug accepted invalid $invalid"
+      ! grep -q '^qm create ' "$EVENTS" || fail "$slug created a VM despite invalid $invalid"
+      ! grep -q '^api done ' "$EVENTS" || fail "$slug reported completion despite invalid $invalid"
+      failures_checked=$((failures_checked + 1))
+      echo "PASS $slug rejects invalid $invalid before creation"
+    done
+    ;;
+  esac
   checked=$((checked + 1))
 done
 echo "All $checked VM scripts: $runs_checked complete mocked runs and $failures_checked failure cases passed."
