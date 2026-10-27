@@ -34,10 +34,6 @@
   },
   "notes": [
     {
-      "text": "Neither server has authentication. Anyone who can reach ports 9222 and 9223 can browse the web through this container, so keep it on a trusted network.",
-      "type": "warning"
-    },
-    {
       "text": "Connect Puppeteer or Playwright to ws://<IP>:9222. Add http://<IP>:9223/mcp to your AI agent as an HTTP MCP server.",
       "type": "info"
     },
