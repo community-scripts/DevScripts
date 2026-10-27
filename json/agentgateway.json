@@ -1,0 +1,54 @@
+{
+  "name": "agentgateway",
+  "slug": "agentgateway",
+  "categories": [
+    20,
+    21
+  ],
+  "date_created": "2026-10-23",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 4000,
+  "documentation": "https://agentgateway.dev/docs/",
+  "website": "https://agentgateway.dev/",
+  "repository": "https://github.com/agentgateway/agentgateway",
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/agentgateway.webp",
+  "description": "agentgateway is an open-source proxy for AI agents, from the Linux Foundation. It sits in front of MCP servers, LLM providers and HTTP APIs, and adds authentication, authorization, rate limits and observability, so agents can reach tools without holding the upstream credentials.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/agentgateway.sh",
+      "config_path": "/etc/agentgateway/config.yaml",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 2,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open http://<IP>:4000/ui and the Welcome to Agentgateway wizard guides the first setup.",
+      "type": "info"
+    },
+    {
+      "text": "The UI and gateway on port 4000 have no login until you add policies (ui.policies: basicAuth, OIDC, JWT). See https://agentgateway.dev/docs/standalone/latest/documentation/setup/ui/secure-ui/",
+      "type": "warning"
+    },
+    {
+      "text": "Config: /etc/agentgateway/config.yaml, data: /opt/agentgateway_data. The admin interface stays on 127.0.0.1:15000, as upstream ships it.",
+      "type": "info"
+    }
+  ]
+}
