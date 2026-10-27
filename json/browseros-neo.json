@@ -1,0 +1,56 @@
+{
+  "name": "BrowserOS Neo",
+  "slug": "browseros-neo",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-10-22",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64"],
+  "interface_port": 6080,
+  "documentation": "https://docs.browseros.com/",
+  "website": "https://www.browseros.com/",
+  "repository": "https://github.com/browseros-ai/BrowserOS",
+  "logo": "https://cdn.jsdelivr.net/gh/browseros-ai/BrowserOS@main/packages/browseros-agent/apps/app/assets/browserclaw_logo.png",
+  "description": "BrowserOS Neo is an open-source Chromium-based browser built for AI agents. Agents such as Claude Code or Codex drive it over its MCP server using the accounts you signed in with, while you watch or take over in a browser tab.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/browseros-neo.sh",
+      "config_path": "/opt/browseros-neo_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "app_vars": [
+    { "name": "var_tailscale", "label": "Join Tailscale Tailnet", "type": "boolean", "default": "no",
+      "help": "Adds HTTPS addresses on your tailnet; without an auth key the install prints a login URL" },
+    { "name": "var_ts_authkey", "label": "Tailscale Auth Key", "type": "password", "secret": true,
+      "help": "Optional; joins the tailnet without the login URL" }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The viewer (port 6080, user neo) password and the MCP token for port 9010 are in /opt/browseros-neo_data/.env. Send the token as an Authorization: Bearer header.",
+      "type": "info"
+    },
+    {
+      "text": "Open the viewer once and sign in to the sites your agents should use; logins persist across updates.",
+      "type": "info"
+    },
+    {
+      "text": "Anyone with the MCP token or viewer password controls a browser signed in to your accounts, over plain HTTP. Keep it on a trusted network or behind HTTPS.",
+      "type": "warning"
+    }
+  ]
+}
