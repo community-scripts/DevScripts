@@ -1,0 +1,73 @@
+{
+  "name": "Komodo Periphery",
+  "slug": "komodo-periphery",
+  "categories": [
+    3
+  ],
+  "date_created": "2026-10-14",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "platforms": [
+    "pve"
+  ],
+  "interface_port": null,
+  "documentation": "https://komo.do/docs/setup/connect-servers",
+  "website": "https://komo.do/",
+  "repository": "https://github.com/moghtech/komodo",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/komodo.webp",
+  "description": "A Docker LXC with the native Komodo Periphery agent, connecting to an existing Core for centralized container and Compose stack management.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/komodo-periphery.sh",
+      "config_path": "/etc/komodo/periphery.config.json",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_komodo_core_address",
+      "label": "Komodo Core URL",
+      "type": "text",
+      "required": true,
+      "help": "Reachable HTTP or HTTPS Core URL, such as https://komodo.example.com."
+    },
+    {
+      "name": "var_komodo_server_name",
+      "label": "Komodo Server Name",
+      "type": "text",
+      "help": "Server name in Core; defaults to the guest hostname."
+    },
+    {
+      "name": "var_komodo_onboarding_key",
+      "label": "Server Onboarding Key",
+      "type": "password",
+      "secret": true,
+      "required": true,
+      "help": "Create a Server Onboarding Key in Komodo Core before installation."
+    },
+    {
+      "name": "var_komodo_core_public_key",
+      "label": "Core Public Key",
+      "type": "text",
+      "help": "Optional Core public key; defaults to trusting and pinning the first Core in /etc/komodo/keys/core.pub."
+    }
+  ],
+  "notes": [
+    {
+      "text": "Create an onboarding key in Komodo Core before installation, then confirm the server is connected.",
+      "type": "info"
+    }
+  ]
+}
