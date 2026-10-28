@@ -1,0 +1,81 @@
+{
+  "name": "Shopware",
+  "slug": "shopware",
+  "categories": [
+    25
+  ],
+  "date_created": "2026-10-28",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "interface_port": 80,
+  "documentation": "https://developer.shopware.com/docs/",
+  "website": "https://www.shopware.com/",
+  "repository": "https://github.com/shopware/shopware",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/shopware.webp",
+  "description": "Shopware is an open-source e-commerce platform built on Symfony and Vue.js. It offers a headless Store API, a Twig storefront, rule-based pricing and promotions, and an extension system for plugins, apps and themes.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/shopware.sh",
+      "config_path": "/opt/shopware/.env.local",
+      "resources": {
+        "cpu": 2,
+        "ram": 6144,
+        "hdd": 20,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The admin login is saved to ~/shopware.creds inside the container. The Administration is at /admin.",
+      "type": "info"
+    },
+    {
+      "text": "If the shop moves to a domain or sits behind a reverse proxy, update APP_URL in /opt/shopware/.env.local and the sales channel domain in the Administration.",
+      "type": "info"
+    },
+    {
+      "text": "Major Shopware upgrades (e.g. 6.7 to 6.8) are not applied by the update and must follow the official upgrade guide.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    },
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_opensearch",
+      "label": "Install OpenSearch",
+      "type": "boolean",
+      "default": "yes",
+      "help": "OpenSearch for storefront and admin search; without it search runs on MariaDB"
+    }
+  ]
+}
