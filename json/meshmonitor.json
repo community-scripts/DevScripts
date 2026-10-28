@@ -34,14 +34,6 @@
     {
       "text": "Change the default admin password immediately after the first login.",
       "type": "warning"
-    },
-    {
-      "text": "Add your Meshtastic or MeshCore node through the web UI. The container must be able to reach your node over the network.",
-      "type": "info"
-    },
-    {
-      "text": "When using a reverse proxy or a different access URL, update ALLOWED_ORIGINS in /etc/meshmonitor/meshmonitor.env and restart MeshMonitor.",
-      "type": "info"
     }
   ]
 }
