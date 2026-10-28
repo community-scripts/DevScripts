@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 _CS_DEFAULT_URL="https://raw.githubusercontent.com/community-scripts/DevScripts/main"
 _cs_boot="${COMMUNITY_SCRIPTS_CORE_DIR:-$(dirname "${BASH_SOURCE[0]}")/../../core}/core/build.func"
-# shellcheck source=/dev/null
 source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/core/build.func")
 
 # Copyright (c) 2026 community-scripts ORG
@@ -38,24 +37,12 @@ function update_script() {
     exit 233
   fi
 
-  if ! var_komodo_addon_script="$(_cs_fetch_text "tools/addon/komodo-periphery.sh")" ||
-    [[ -z "$var_komodo_addon_script" ]]; then
-    msg_error "Could not load the Komodo Periphery addon."
-    exit 115
-  fi
-  mkdir -p /usr/local/lib/komodo-periphery
-  addon_file=$(mktemp /usr/local/lib/komodo-periphery/.addon.XXXXXX)
-  cat <<EOF >"$addon_file"
-$var_komodo_addon_script
-EOF
-  chmod 755 "$addon_file"
-  mv -f "$addon_file" /usr/local/lib/komodo-periphery/addon.sh
-  type=update bash /usr/local/lib/komodo-periphery/addon.sh
+  addon_script=$(curl -fsSL "${COMMUNITY_SCRIPTS_URL}/tools/addon/komodo-periphery.sh")
+  type=update bash -c "$addon_script"
   exit
 }
 
 if on_pve_host; then
-  root_check
   if is_unattended && [[ -z "$var_komodo_core_address" || -z "$var_komodo_onboarding_key" ]]; then
     msg_error "Supply var_komodo_core_address and var_komodo_onboarding_key before creating the Komodo Periphery LXC."
     exit 1
@@ -76,13 +63,6 @@ if on_pve_host; then
 fi
 
 start
-# Forward the local candidate to the guest, including before the PR is published.
-if ! var_komodo_addon_script="$(_cs_fetch_text "tools/addon/komodo-periphery.sh")" ||
-  [[ -z "$var_komodo_addon_script" ]]; then
-  msg_error "Could not load the Komodo Periphery addon."
-  exit 115
-fi
-export var_komodo_addon_script
 build_container
 description
 

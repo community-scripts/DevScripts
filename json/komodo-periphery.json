@@ -66,20 +66,8 @@
   ],
   "notes": [
     {
-      "text": "Run the CT creator on Proxmox VE. It creates a Debian LXC, installs Docker/Compose and runs Periphery natively under systemd.",
+      "text": "Create an onboarding key in Komodo Core before installation, then confirm the server is connected.",
       "type": "info"
-    },
-    {
-      "text": "Create an onboarding key in Core before installation, then confirm the server is connected. See the linked documentation for onboarding and authentication.",
-      "type": "info"
-    },
-    {
-      "text": "Run update_komodo_periphery for the latest stable agent. Configuration, keys and stack data are retained under /etc/komodo; the guest's existing update command is preserved.",
-      "type": "info"
-    },
-    {
-      "text": "ARM64 has not been tested. The installer asks for confirmation before attempting it.",
-      "type": "warning"
     }
   ]
 }
