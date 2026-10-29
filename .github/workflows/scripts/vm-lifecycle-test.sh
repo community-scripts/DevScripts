@@ -80,16 +80,14 @@ vm_release_asset() {
   IceWhaleTech/ZimaOS) tag="1.8.0-beta2" asset="zimaos-x86_64-1.8.0-beta2_installer.iso" ;;
   home-assistant/operating-system) tag="${4:-16.0}" asset="haos_generic-aarch64-${4:-16.0}.qcow2.xz" ;;
   derailed/k9s) tag="v0.50.0" asset="k9s_Linux_amd64.tar.gz" ;;
-  LizardByte/Sunshine) tag="v2026.914.233613" asset="sunshine_2026.914.233613-1+debiantrixie_amd64.deb" ;;
   moonlight-stream/moonlight-qt) tag="v6.2.0" asset="Moonlight-6.2.0-x86_64.AppImage" ;;
-  mmatyas/pegasus-frontend) tag="continuous" asset="pegasus-frontend_0.16.109_amd64.deb" ;;
   *) echo "Unexpected release repository: $2" >&2; return 2 ;;
   esac
   [[ "$asset" =~ $3 ]] || { echo "Release pattern $3 does not match $asset" >&2; return 2; }
   VM_RELEASE_TAG="$tag" VM_RELEASE_VERSION="${tag#v}" VM_RELEASE_ASSET="$asset"
   VM_RELEASE_URL="https://example.invalid/$asset" VM_RELEASE_SHA256=""
   case "$2" in
-  LizardByte/Sunshine | moonlight-stream/moonlight-qt | mmatyas/pegasus-frontend)
+  moonlight-stream/moonlight-qt)
     VM_RELEASE_SHA256="$(printf 'a%.0s' {1..64})"
     ;;
   esac
@@ -129,6 +127,7 @@ vm_image_cache_path() {
 }
 vm_fetch_image() {
   if [[ "$FAILURE" == download && "$1" == https://example.invalid/* ]]; then return 7; fi
+  if [[ "$FAILURE" == bashitdownload && "$1" == *Bash-it/bash-it/archive/* ]]; then return 7; fi
   printf 'mock-image' >"$2"
   echo "fetch $1" >>"$EVENTS"
 }
@@ -223,6 +222,9 @@ curl() {
     previous="$arg"
   done
   case "$url" in
+  https://github.com/Bash-it/bash-it/releases/latest)
+    [[ "$FAILURE" != bashit ]] || return 7
+    payload='/Bash-it/bash-it/releases/tag/v3.2.0' ;;
   */pve/vm-core.func)
     cat "$CORE"
     printf '\nsource %q\n' "$MOCK"
@@ -309,7 +311,7 @@ for script in "$ROOT"/vm/*.sh; do
         ((last_custom < imported)) || fail "K3s customized after import"
       fi
       case "$slug" in
-      sunshine-vm | moonlight-vm)
+      moonlight-vm)
         [[ -s "$CASE_DIR/firstboot.sh" ]] || fail "$slug did not stage a parseable first-boot installer"
         grep -q '^firstboot-after-cloud-final$' "$EVENTS" || fail "$slug first boot is not ordered after Cloud-Init"
         ! grep -Eq 'qm set .*--(hostpci|usb)[0-9]' "$EVENTS" || fail "$slug assigned devices without an explicit selection"
@@ -328,7 +330,7 @@ for script in "$ROOT"/vm/*.sh; do
   done
   failures=(description start cache)
   case "$slug" in
-  k3s-vm | netbird-server | ubuntu-vm | unifi-os-server-vm | waydroid-vm | sunshine-vm | moonlight-vm) failures+=(ssh) ;;
+  k3s-vm | netbird-server | ubuntu-vm | unifi-os-server-vm | waydroid-vm | moonlight-vm) failures+=(ssh) ;;
   esac
   case "$slug" in
   blissos-vm | cachyos-vm | nextcloud-vm | owncloud-vm | umbrel-os-vm | zimaos-vm) ;;
@@ -359,8 +361,8 @@ for script in "$ROOT"/vm/*.sh; do
     failures_checked=$((failures_checked + 1))
   done
   case "$slug" in
-  sunshine-vm | moonlight-vm)
-    for invalid in gpu machine user digest download customize; do
+  moonlight-vm)
+    for invalid in gpu machine user digest download customize bashit bashitdownload resetguard; do
       CASE_DIR="$TEST_DIR/$slug-invalid-$invalid"
       mkdir "$CASE_DIR"
       EVENTS="$CASE_DIR/events"
@@ -373,6 +375,8 @@ for script in "$ROOT"/vm/*.sh; do
       digest) overrides=(FAILURE=digest) ;;
       download) overrides=(FAILURE=download) ;;
       customize) overrides=(FAILURE=customize) ;;
+      bashit | bashitdownload) overrides=(FAILURE="$invalid") ;;
+      resetguard) overrides=(VM_RAVEN_RESET_GUARD=yes) ;;
       esac
       rc=0
       env BASH_ENV="$MOCK" VM_UNATTENDED=1 VM_START=no VM_ARCH=amd64 \

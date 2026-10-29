@@ -23,7 +23,7 @@
       "script": "vm/moonlight-vm.sh",
       "config_path": "",
       "resources": {
-        "cpu": 2,
+        "cpu": 4,
         "ram": 2048,
         "hdd": 16,
         "os": "Debian",
