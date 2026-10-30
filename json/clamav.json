@@ -1,0 +1,45 @@
+{
+  "name": "ClamAV",
+  "slug": "clamav",
+  "categories": [
+    6
+  ],
+  "date_created": "2026-10-30",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://docs.clamav.net/",
+  "website": "https://www.clamav.net/",
+  "repository": "https://github.com/Cisco-Talos/clamav",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/clamav.webp",
+  "description": "ClamAV is an open-source antivirus engine for detecting trojans, viruses, malware and other threats. The clamd daemon serves scan requests over the network, so mail servers, Nextcloud, Paperless-ngx and other apps can use it as their virus scanner, while freshclam keeps the signatures up to date.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/clamav.sh",
+      "config_path": "/etc/clamav/clamd.conf",
+      "resources": {
+        "cpu": 2,
+        "ram": 3072,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "clamd accepts unauthenticated connections on TCP port 3310. Only expose it to trusted networks.",
+      "type": "warning"
+    },
+    {
+      "text": "To scan host storage, bind-mount it into the container and run `clamdscan --multiscan --fdpass /path`.",
+      "type": "info"
+    }
+  ]
+}
