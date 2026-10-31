@@ -17,7 +17,6 @@ msg_info "Installing ClamAV"
 echo "clamav-daemon clamav-daemon/TcpOrLocal select TCP" | debconf-set-selections
 echo "clamav-daemon clamav-daemon/TCPSocket string 3310" | debconf-set-selections
 echo "clamav-daemon clamav-daemon/TCPAddr string 0.0.0.0" | debconf-set-selections
-# clamd is socket-activated on Debian and only listens where clamav-daemon.socket tells it to
 mkdir -p /etc/systemd/system/clamav-daemon.socket.d
 cat <<EOF >/etc/systemd/system/clamav-daemon.socket.d/tcp.conf
 [Socket]
