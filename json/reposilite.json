@@ -1,0 +1,130 @@
+{
+  "name": "reposilite",
+  "slug": "reposilite",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-10-31",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "platforms": [
+    "pve"
+  ],
+  "interface_port": 8080,
+  "documentation": "https://reposilite.com/guide/general",
+  "website": "https://reposilite.com",
+  "repository": "https://github.com/dzikoysk/reposilite",
+  "logo": "https://avatars.githubusercontent.com/u/88636591",
+  "description": "Reposilite is a lightweight Maven repository manager for hosting release, snapshot, and private artifacts. It provides a web dashboard, access tokens, and proxy repositories.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/reposilite.sh",
+      "config_path": "/etc/conf.d/reposilite",
+      "resources": {
+        "cpu": 1,
+        "ram": 1024,
+        "hdd": 8,
+        "os": "Alpine",
+        "version": "3.24"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "type": "info",
+      "text": "The initial manager token defaults to admin. Its name and random secret are stored in /etc/conf.d/reposilite inside the container."
+    },
+    {
+      "type": "info",
+      "text": "Create a persistent manager token with token-generate administrator m in the dashboard console, then clear bootstrap_secret in /etc/conf.d/reposilite and restart Reposilite."
+    },
+    {
+      "type": "warning",
+      "text": "The dashboard uses HTTP (default port 8080). Configure HTTPS with your reverse proxy before exposing it outside a trusted network."
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_port",
+      "label": "HTTP port",
+      "type": "number",
+      "default": 8080
+    },
+    {
+      "name": "var_data_dir",
+      "label": "Data directory",
+      "type": "text",
+      "default": "/var/lib/reposilite",
+      "help": "Absolute path below /var/lib or /srv; holds SQLite, repositories and local configuration."
+    },
+    {
+      "name": "var_java_heap",
+      "label": "Java maximum heap (MiB)",
+      "type": "number",
+      "default": 256
+    },
+    {
+      "name": "var_admin_user",
+      "label": "Initial manager token name",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_public_repositories",
+      "label": "Public repository names",
+      "type": "text",
+      "default": "releases,snapshots",
+      "help": "Comma-separated unique IDs; use - for none."
+    },
+    {
+      "name": "var_private_repositories",
+      "label": "Private repository names",
+      "type": "text",
+      "default": "private",
+      "help": "Comma-separated unique IDs; use - for none."
+    },
+    {
+      "name": "var_repository_quota",
+      "label": "Quota per repository (%)",
+      "type": "number",
+      "default": 100,
+      "help": "1-100 percent of available storage, applied separately to each repository; does not reserve disk space."
+    },
+    {
+      "name": "var_redeployment",
+      "label": "Allow artifact redeployment",
+      "type": "boolean",
+      "default": "no"
+    },
+    {
+      "name": "var_preserve_snapshots",
+      "label": "Preserve timestamped snapshots",
+      "type": "boolean",
+      "default": "no"
+    },
+    {
+      "name": "var_dashboard_title",
+      "label": "Dashboard title",
+      "type": "text",
+      "default": "Reposilite Repository"
+    },
+    {
+      "name": "var_dashboard_description",
+      "label": "Dashboard description",
+      "type": "text",
+      "default": "Public Maven repository hosted through Reposilite"
+    },
+    {
+      "name": "var_repositories_json",
+      "label": "Advanced repository definitions (JSON)",
+      "type": "text",
+      "help": "Optional Reposilite repositories array. Overrides repository names, quotas and switches. Requires unique IDs, visibility and fs storageProvider; accepts per-repository mount/proxied settings."
+    }
+  ]
+}
