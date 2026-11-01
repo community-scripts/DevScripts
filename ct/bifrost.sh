@@ -50,8 +50,6 @@ function update_script() {
 
     BACKUP_DIR="/opt/bifrost-backup-$(date +%Y%m%d-%H%M%S)" create_backup /opt/bifrost_data /opt/bifrost/bifrost-http ~/.bifrost
 
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "bifrost" "maximhq/bifrost" "tarball" "$CHECK_UPDATE_RELEASE"
-
     msg_info "Installing Bifrost Gateway"
     install -m 755 /opt/bifrost-update/bifrost-http /opt/bifrost/bifrost-http
     cd /opt/bifrost || exit 1
@@ -62,8 +60,16 @@ function update_script() {
     systemctl start bifrost
     $STD curl --fail --silent --show-error --retry 30 --retry-connrefused --retry-delay 2 --retry-max-time 120 --max-time 5 http://127.0.0.1:8080/health
     systemctl is-active --quiet bifrost
+    cat <<EOF >~/.bifrost
+${CHECK_UPDATE_RELEASE}
+EOF
     msg_ok "Started Bifrost"
     msg_ok "Updated Bifrost successfully!"
+  else
+    RELEASE_CHECK_STATUS=$?
+    if [[ "$RELEASE_CHECK_STATUS" -ne 1 ]]; then
+      exit "$RELEASE_CHECK_STATUS"
+    fi
   fi
   exit
 }

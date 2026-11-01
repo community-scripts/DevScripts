@@ -13,13 +13,15 @@ setting_up_container
 network_check
 update_os
 
-# The monorepo also releases SDKs and plugins; select only stable gateway releases.
-fetch_and_deploy_gh_release "bifrost" "maximhq/bifrost" "tarball" "latest" "/opt/bifrost" "" "transports/v"
+# Gateway binaries live on the upstream CDN; GitHub also releases unrelated SDKs and plugins.
+if ! check_for_gh_release "bifrost" "maximhq/bifrost" "${var_appversion:-}" "" "transports/v"; then
+  msg_error "Could not select a Bifrost gateway release"
+  exit 1
+fi
 
 msg_info "Installing Bifrost Gateway"
-BIFROST_VERSION=$(cat ~/.bifrost)
-BIFROST_URL="https://downloads.getmaxim.ai/bifrost/${BIFROST_VERSION##*/}/linux/$(arch_resolve)"
-mkdir -p /opt/bifrost-update
+BIFROST_URL="https://downloads.getmaxim.ai/bifrost/${CHECK_UPDATE_RELEASE##*/}/linux/$(arch_resolve)"
+mkdir -p /opt/bifrost /opt/bifrost-update
 chmod 700 /opt/bifrost-update
 curl_with_retry "${BIFROST_URL}/bifrost-http" /opt/bifrost-update/bifrost-http
 curl_with_retry "${BIFROST_URL}/bifrost-http.sha256" /opt/bifrost-update/bifrost-http.sha256
@@ -81,6 +83,9 @@ EOF
 systemctl enable -q --now bifrost
 $STD curl --fail --silent --show-error --retry 30 --retry-connrefused --retry-delay 2 --retry-max-time 120 --max-time 5 http://127.0.0.1:8080/health
 systemctl is-active --quiet bifrost
+cat <<EOF >~/.bifrost
+${CHECK_UPDATE_RELEASE}
+EOF
 msg_ok "Created Bifrost Service"
 
 motd_ssh
