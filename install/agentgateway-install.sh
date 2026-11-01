@@ -17,10 +17,7 @@ fetch_and_deploy_gh_release "agentgateway" "agentgateway/agentgateway" "singlefi
 
 msg_info "Verifying agentgateway Checksum"
 AGW_SUM=$(curl -fsSL "https://github.com/agentgateway/agentgateway/releases/download/v$(cat ~/.agentgateway)/agentgateway-linux-$(arch_resolve "amd64" "arm64").sha256" | awk '{print $1}')
-if [[ -z "$AGW_SUM" || "$AGW_SUM" != "$(sha256sum /opt/agentgateway/agentgateway | awk '{print $1}')" ]]; then
-  msg_error "agentgateway checksum does not match the release"
-  exit 1
-fi
+echo "${AGW_SUM}  /opt/agentgateway/agentgateway" | sha256sum -c --status
 chmod +x /opt/agentgateway/agentgateway
 msg_ok "Verified agentgateway Checksum"
 
