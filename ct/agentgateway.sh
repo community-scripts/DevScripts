@@ -28,7 +28,7 @@ function update_script() {
   check_container_storage
   check_container_resources
 
-  if [[ ! -f /opt/agentgateway/agentgateway ]]; then
+  if [[ ! -f /etc/agentgateway/config.yaml ]]; then
     msg_error "No agentgateway Installation Found!"
     exit
   fi
@@ -45,8 +45,8 @@ function update_script() {
     restore_backup
 
     msg_info "Verifying agentgateway Checksum"
-    AGW_SUM=$(curl -fsSL "https://github.com/agentgateway/agentgateway/releases/download/v$(cat ~/.agentgateway)/agentgateway-linux-$(arch_resolve "amd64" "arm64").sha256" | awk '{print $1}')
-    echo "${AGW_SUM}  /opt/agentgateway/agentgateway" | sha256sum -c --status
+    AGW_SUM=$(curl -fsSL "https://github.com/agentgateway/agentgateway/releases/download/v$(cat ~/.agentgateway)/agentgateway-linux-$(arch_resolve "amd64" "arm64").sha256" | awk '{print $1}') || AGW_SUM=""
+    echo "${AGW_SUM}  /opt/agentgateway/agentgateway" | sha256sum -c --status || { rm -f /opt/agentgateway/agentgateway ~/.agentgateway; msg_error "agentgateway checksum missing or wrong - removed the downloaded binary"; exit 1; }
     chmod +x /opt/agentgateway/agentgateway
     msg_ok "Verified agentgateway Checksum"
 
