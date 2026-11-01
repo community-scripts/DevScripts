@@ -16,8 +16,8 @@ update_os
 fetch_and_deploy_gh_release "agentgateway" "agentgateway/agentgateway" "singlefile" "latest" "/opt/agentgateway" "agentgateway-linux-$(arch_resolve "amd64" "arm64")"
 
 msg_info "Verifying agentgateway Checksum"
-AGW_SUM=$(curl -fsSL "https://github.com/agentgateway/agentgateway/releases/download/v$(cat ~/.agentgateway)/agentgateway-linux-$(arch_resolve "amd64" "arm64").sha256" | awk '{print $1}')
-echo "${AGW_SUM}  /opt/agentgateway/agentgateway" | sha256sum -c --status
+AGW_SUM=$(curl -fsSL "https://github.com/agentgateway/agentgateway/releases/download/v$(cat ~/.agentgateway)/agentgateway-linux-$(arch_resolve "amd64" "arm64").sha256" | awk '{print $1}') || AGW_SUM=""
+echo "${AGW_SUM}  /opt/agentgateway/agentgateway" | sha256sum -c --status || { rm -f /opt/agentgateway/agentgateway ~/.agentgateway; msg_error "agentgateway checksum missing or wrong - removed the downloaded binary"; exit 1; }
 chmod +x /opt/agentgateway/agentgateway
 msg_ok "Verified agentgateway Checksum"
 
