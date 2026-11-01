@@ -11,6 +11,8 @@ on:
       - ".github/workflows/scripts/fedora-image-test.sh"
       - ".github/workflows/scripts/unifi-vm-test.sh"
       - ".github/workflows/scripts/zima-release-test.sh"
+      - ".github/workflows/scripts/initiative-test.sh"
+      - "docs/guides/initiative.md"
       - "json/unifi-os-server-vm.json"
   push:
     branches: [main]
@@ -23,6 +25,8 @@ on:
       - ".github/workflows/scripts/fedora-image-test.sh"
       - ".github/workflows/scripts/unifi-vm-test.sh"
       - ".github/workflows/scripts/zima-release-test.sh"
+      - ".github/workflows/scripts/initiative-test.sh"
+      - "docs/guides/initiative.md"
       - "json/unifi-os-server-vm.json"
 
 # The engine moved to community-scripts/core, which syntax-checks its own
@@ -64,3 +68,7 @@ jobs:
       - name: ZimaOS release and ISO selection
         if: ${{ hashFiles('vm/zimaos-vm.sh') != '' }}
         run: bash .github/workflows/scripts/zima-release-test.sh
+
+      - name: Initiative installer and update failure boundaries
+        if: ${{ hashFiles('ct/initiative.sh') != '' }}
+        run: bash .github/workflows/scripts/initiative-test.sh

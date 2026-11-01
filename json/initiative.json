@@ -1,0 +1,45 @@
+{
+  "name": "Initiative",
+  "slug": "initiative",
+  "categories": [25, 12],
+  "date_created": "2026-10-30",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 443,
+  "documentation": "https://beyonders-studio.github.io/initiative/running-a-server/native-packages/",
+  "website": "https://beyonders-studio.github.io/initiative/",
+  "repository": "https://github.com/beyonders-studio/initiative",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://raw.githubusercontent.com/beyonders-studio/initiative/main/frontend/public/icons/logo.svg",
+  "description": "Initiative is a shared workspace for communities, with tasks, projects, documents, calendars and dashboards. Live collaboration and configurable permissions let a household or team organize its work in one place.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/initiative.sh",
+      "config_path": "/etc/initiative/server.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open https://CONTAINER-IP and accept the self-signed certificate. Create your first account immediately: it becomes the owner; subsequent public registration is disabled.",
+      "type": "warning"
+    },
+    {
+      "text": "After an IP or domain change, update APP_URL in /etc/initiative/server.env and restart initiative-server. Use a trusted HTTPS reverse proxy for a public domain.",
+      "type": "info"
+    }
+  ]
+}
