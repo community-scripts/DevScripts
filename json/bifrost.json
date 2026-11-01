@@ -1,0 +1,48 @@
+{
+  "name": "Bifrost",
+  "slug": "bifrost",
+  "categories": [20],
+  "date_created": "2026-11-01",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 8080,
+  "documentation": "https://docs.getbifrost.ai/",
+  "website": "https://www.getmaxim.ai/bifrost",
+  "repository": "https://github.com/maximhq/bifrost",
+  "logo": "https://raw.githubusercontent.com/maximhq/bifrost/dev/docs/media/bifrost-logo.png",
+  "description": "Bifrost is an AI gateway with a unified API for multiple model providers. It provides a web dashboard, virtual keys, usage budgets, request logs, load balancing, and automatic fallbacks.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/bifrost.sh",
+      "config_path": "/opt/bifrost_data/config.json",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Find the generated BIFROST_ADMIN_PASSWORD in /opt/bifrost_data/.env inside the container. Add provider credentials and create virtual keys in the dashboard.",
+      "type": "info"
+    },
+    {
+      "text": "Use an HTTPS reverse proxy for access beyond a trusted network. Authentication is enabled for both the dashboard and inference API.",
+      "type": "warning"
+    },
+    {
+      "text": "Keep a backup of /opt/bifrost_data, including .env. Losing or changing BIFROST_ENCRYPTION_KEY makes stored provider credentials unreadable.",
+      "type": "warning"
+    }
+  ]
+}
