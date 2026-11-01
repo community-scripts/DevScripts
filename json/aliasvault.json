@@ -23,7 +23,7 @@
             "resources": {
                 "cpu": 4,
                 "ram": 6144,
-                "hdd": 12,
+                "hdd": 24,
                 "os": "Debian",
                 "version": "13"
             }
@@ -35,15 +35,23 @@
     },
     "notes": [
         {
-            "text": "The initial installation builds AliasVault from source and takes 15–30 minutes. Do not interrupt the process.",
+            "text": "The installation builds AliasVault from source (Rust core, React web client, .NET services) and takes 15–30 minutes. Do not interrupt the process.",
             "type": "warning"
         },
         {
-            "text": "The admin password is auto-generated during installation and displayed in the installation output. Save it immediately.",
-            "type": "warning"
+            "text": "The admin password is auto-generated during installation. Show it with: cat ~/aliasvault.creds",
+            "type": "info"
         },
         {
-            "text": "To receive alias emails, configure your domain's MX record to point to this server and update PRIVATE_EMAIL_DOMAINS in /opt/aliasvault/.env.",
+            "text": "All settings live in /opt/aliasvault/.env (same option names as upstream .env.example). Apply changes with: systemctl restart aliasvault.target",
+            "type": "info"
+        },
+        {
+            "text": "Behind a reverse proxy with TLS termination: set FORCE_HTTPS_REDIRECT=false and TRUSTED_PROXIES=<proxy IP> in /opt/aliasvault/.env, then point the proxy at http://<container-ip>:80.",
+            "type": "info"
+        },
+        {
+            "text": "To receive alias emails, point your domain MX record to this server (ports 25/587) and set PRIVATE_EMAIL_DOMAINS in /opt/aliasvault/.env.",
             "type": "info"
         }
     ]
