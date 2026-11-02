@@ -13,6 +13,15 @@ setting_up_container
 network_check
 update_os
 
+if [[ -z "${var_scan_dir:-}" ]]; then
+  var_scan_dir=$(prompt_input "ClamAV folder to scan (inside the container):" "/mnt/scan" 60)
+fi
+var_scan_dir="${var_scan_dir:-/mnt/scan}"
+if [[ "$var_scan_dir" != /* ]]; then
+  msg_error "var_scan_dir must be an absolute path, got: ${var_scan_dir}"
+  exit 1
+fi
+
 msg_info "Installing ClamAV"
 $STD apt install -y \
   clamav \
@@ -30,10 +39,10 @@ systemctl enable -q --now clamav-daemon
 msg_ok "Downloaded ClamAV Signatures"
 
 msg_info "Creating Scan Timer"
-mkdir -p /mnt/scan
+mkdir -p "$var_scan_dir"
 cat <<EOF >/etc/systemd/system/clamav-scan.service
 [Unit]
-Description=ClamAV scan of /mnt/scan
+Description=ClamAV scan of ${var_scan_dir}
 After=clamav-daemon.service
 Requires=clamav-daemon.service
 
@@ -41,11 +50,11 @@ Requires=clamav-daemon.service
 Type=oneshot
 Nice=19
 IOSchedulingClass=idle
-ExecStart=/usr/bin/clamdscan --multiscan --fdpass --infected --log=/var/log/clamav/scan.log /mnt/scan
+ExecStart=/usr/bin/clamdscan --multiscan --fdpass --infected --log=/var/log/clamav/scan.log "${var_scan_dir}"
 EOF
 cat <<EOF >/etc/systemd/system/clamav-scan.timer
 [Unit]
-Description=Daily ClamAV scan of /mnt/scan
+Description=Daily ClamAV scan of ${var_scan_dir}
 
 [Timer]
 OnCalendar=daily

@@ -17,6 +17,8 @@ var_version="${var_version:-26.04}"
 #var_arm64="${var_arm64:-no}" # unset = ask the user; set yes/no only when verified
 var_unprivileged="${var_unprivileged:-1}"
 
+export var_scan_dir="${var_scan_dir:-}"
+
 header_info "$APP"
 variables
 color
@@ -46,6 +48,6 @@ description
 
 msg_ok "Completed Successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
-echo -e "${INFO}${YW}Bind-mount the folders to scan to /mnt/scan, e.g. on the host:${CL}"
-echo -e "${TAB}${BGN}pct set <CTID> -mp0 /path/on/host,mp=/mnt/scan,ro=1${CL}"
+echo -e "${INFO}${YW}Bind-mount the folders to scan to the scan folder you chose (default /mnt/scan), e.g. on the host:${CL}"
+echo -e "${TAB}${BGN}pct set <CTID> -mp0 /path/on/host,mp=${var_scan_dir:-/mnt/scan},ro=1${CL}"
 echo -e "${INFO}${YW}Daily scan results: /var/log/clamav/scan.log${CL}"

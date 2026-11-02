@@ -32,9 +32,18 @@
         "username": null,
         "password": null
     },
+    "app_vars": [
+        {
+            "name": "var_scan_dir",
+            "label": "Scan Folder",
+            "type": "text",
+            "default": "/mnt/scan",
+            "help": "Absolute path inside the container that the daily scan checks; bind-mount host folders here"
+        }
+    ],
     "notes": [
         {
-            "text": "Bind-mount the folders to scan to /mnt/scan (pct set <CTID> -mp0 /path,mp=/mnt/scan,ro=1). A daily timer scans it and logs to /var/log/clamav/scan.log.",
+            "text": "Bind-mount the folders to scan to the scan folder (default /mnt/scan): pct set <CTID> -mp0 /path,mp=/mnt/scan,ro=1. A daily timer scans it and logs to /var/log/clamav/scan.log.",
             "type": "info"
         },
         {
