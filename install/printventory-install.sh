@@ -70,7 +70,7 @@ msg_info "Installing Printventory (Patience)"
 cd /opt/printventory
 $STD npm install --ignore-scripts
 # Match upstream Dockerfile: rebuild native modules for the bundled Electron ABI.
-$STD npx --yes @electron/rebuild --version="$(node -p 'require(\"electron/package.json\").version')" || $STD npx electron-builder install-app-deps
+$STD npx --yes @electron/rebuild --version="$(node -p 'require("electron/package.json").version')" || $STD npx electron-builder install-app-deps
 chmod +x /opt/printventory/scripts/run-server.sh
 mkdir -p /root/.config/printventory
 msg_ok "Installed Printventory"

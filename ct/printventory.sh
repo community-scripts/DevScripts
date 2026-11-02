@@ -42,7 +42,7 @@ function update_script() {
     msg_info "Updating Printventory Dependencies (Patience)"
     cd /opt/printventory
     $STD npm install --ignore-scripts
-    $STD npx --yes @electron/rebuild --version="$(node -p 'require(\"electron/package.json\").version')" || $STD npx electron-builder install-app-deps
+    $STD npx --yes @electron/rebuild --version="$(node -p 'require("electron/package.json").version')" || $STD npx electron-builder install-app-deps
     chmod +x /opt/printventory/scripts/run-server.sh
     msg_ok "Updated Printventory Dependencies"
 
