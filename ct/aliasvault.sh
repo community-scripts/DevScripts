@@ -3,7 +3,7 @@ _CS_DEFAULT_URL="https://raw.githubusercontent.com/community-scripts/DevScripts/
 _cs_boot="${COMMUNITY_SCRIPTS_CORE_DIR:-$(dirname "${BASH_SOURCE[0]}")/../../core}/core/build.func"
 source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/core/build.func")
 # Copyright (c) 2021-2026 community-scripts ORG
-# Author: community-scripts ORG
+# Author: MickLesk (CanbiZ) | Co-Author: Jan Wiebe Klijnsma (jwklijnsma)
 # License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
 # Source: https://aliasvault.net
 
@@ -14,7 +14,7 @@ var_ram="${var_ram:-6144}"
 var_disk="${var_disk:-24}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
-#var_arm64="${var_arm64:-no}" # unset = ask the user; set yes/no only when verified
+var_arm64="${var_arm64:-no}" # wasm-pack prebuild and the Microsoft .NET apt repo are pinned to amd64
 var_unprivileged="${var_unprivileged:-1}"
 var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/1827}"
 
@@ -32,52 +32,51 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+  if [[ ! -x /usr/local/bin/aliasvault-configure ]]; then
+    msg_error "This container was created by the pre-0.31 AliasVault script (Blazor client). Export your vaults and recreate the container."
+    exit
+  fi
 
   if check_for_gh_release "aliasvault" "aliasvault/aliasvault"; then
-    RELEASE=$(get_latest_github_release "aliasvault/aliasvault")
-
-    msg_info "Stopping Services"
+    msg_info "Stopping AliasVault"
     systemctl stop aliasvault-api aliasvault-admin aliasvault-smtp aliasvault-taskrunner
-    msg_ok "Stopped Services"
+    msg_ok "Stopped AliasVault"
 
-    create_backup /opt/aliasvault/.env /opt/aliasvault/certificates
+    create_backup /opt/aliasvault/.env
 
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "aliasvault" "aliasvault/aliasvault" "tarball"
 
-    msg_info "Building Core Libraries (Patience)"
+    restore_backup
+
+    msg_info "Building AliasVault Core Libraries"
     source "$HOME/.cargo/env"
     $STD rustup target add wasm32-unknown-unknown
     cd /opt/aliasvault/core
-    $STD bash build-and-distribute.sh --browser
-    msg_ok "Built Core Libraries"
+    $STD bash build-and-distribute.sh --web
+    msg_ok "Built AliasVault Core Libraries"
 
-    msg_info "Building AliasVault Applications (Patience)"
+    msg_info "Building AliasVault Web Client"
+    cd /opt/aliasvault/apps/web
+    $STD npm ci --no-audit --no-fund
+    $STD npm run build
+    cp -r /opt/aliasvault/apps/web/dist /opt/aliasvault/www
+    msg_ok "Built AliasVault Web Client"
+
+    msg_info "Building AliasVault Server"
     cd /opt/aliasvault/apps/server
-    $STD dotnet workload install wasm-tools
     $STD dotnet restore aliasvault.sln
-    $STD dotnet publish AliasVault.Api/AliasVault.Api.csproj -c Release -o /opt/aliasvault/api --no-restore
-    $STD dotnet build AliasVault.Client/AliasVault.Client.csproj -c Release --no-restore
-    $STD dotnet publish AliasVault.Client/AliasVault.Client.csproj -c Release -o /opt/aliasvault/client --no-restore
-    python3 -c "
-import json, pathlib
-p = pathlib.Path('/opt/aliasvault/client/wwwroot/appsettings.json')
-c = json.loads(p.read_text()); c['ApiUrl'] = ''; p.write_text(json.dumps(c, indent=2))
-for ext in ['.gz', '.br']:
-    q = pathlib.Path(str(p) + ext)
-    if q.exists(): q.unlink()
-"
-    mkdir -p /opt/certificates/app
-    $STD dotnet publish AliasVault.Admin/AliasVault.Admin.csproj -c Release -o /opt/aliasvault/admin --no-restore
-    $STD dotnet publish Services/AliasVault.SmtpService/AliasVault.SmtpService.csproj -c Release -o /opt/aliasvault/smtp --no-restore
-    $STD dotnet publish Services/AliasVault.TaskRunner/AliasVault.TaskRunner.csproj -c Release -o /opt/aliasvault/taskrunner --no-restore
-    msg_ok "Built AliasVault Applications"
+    $STD dotnet publish AliasVault.Api/AliasVault.Api.csproj -c Release -o /opt/aliasvault/api --no-restore /p:UseAppHost=false
+    $STD dotnet publish AliasVault.Admin/AliasVault.Admin.csproj -c Release -o /opt/aliasvault/admin --no-restore /p:UseAppHost=false
+    $STD dotnet publish AliasVault.SmtpService/AliasVault.SmtpService.csproj -c Release -o /opt/aliasvault/smtp --no-restore /p:UseAppHost=false
+    $STD dotnet publish AliasVault.TaskRunner/AliasVault.TaskRunner.csproj -c Release -o /opt/aliasvault/taskrunner --no-restore /p:UseAppHost=false
+    $STD dotnet publish Utilities/AliasVault.InstallCli/AliasVault.InstallCli.csproj -c Release -o /opt/aliasvault/installcli --no-restore /p:UseAppHost=false
+    msg_ok "Built AliasVault Server"
 
-    restore_backup
-
-    msg_info "Starting Services"
-    systemctl start aliasvault-api aliasvault-admin aliasvault-smtp aliasvault-taskrunner
-    msg_ok "Started Services"
-    msg_ok "Updated successfully to ${RELEASE}!"
+    msg_info "Starting AliasVault"
+    systemctl restart nginx
+    systemctl start aliasvault.target
+    msg_ok "Started AliasVault"
+    msg_ok "Updated successfully!"
   fi
   exit
 }
@@ -91,4 +90,4 @@ echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW}Access it using the following URL:${CL}"
 echo -e "${GATEWAY}${BGN}https://${IP}${CL}"
 echo -e "${INFO}${YW} Admin Panel:${CL} ${GATEWAY}${BGN}https://${IP}/admin${CL}"
-echo -e "${INFO}${YW} Admin credentials were shown in the installation output above.${CL}"
+echo -e "${INFO}${YW} Admin credentials:${CL} ${BGN}cat ~/aliasvault.creds${CL}"
