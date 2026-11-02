@@ -10,12 +10,12 @@ You are a specialist for creating and maintaining DevScripts application scripts
 
 1. **Gather info**: Fetch the app's repository / website to determine: runtime (Node.js, Go, Python, Rust, etc.), database needs, build steps, default port, config paths, dependencies, and any value a user must supply during install (URLs, tokens, admin accounts). Record the repository as a full URL — GitHub, GitLab, Gitea, Forgejo and Codeberg are all supported, and a bare `owner/repo` could only ever mean GitHub.
 2. **Check eligibility** (new scripts only, before writing any file): Verify the app meets `.github/pull_request_template.md`'s "Application Requirements" —
-   - **600+ stars** on its host (GitHub, GitLab, a Gitea/Forgejo instance, or Codeberg — the template says "GitHub stars" but the same bar applies in spirit on every forge this agent supports)
+   - **1,000+ stars** on its host (GitHub, GitLab, a Gitea/Forgejo instance, or Codeberg — the template says "GitHub stars" but the same bar applies in spirit on every forge this agent supports)
    - **6+ months old**
    - **Actively maintained** (recent commits/releases)
    - **Official release tarballs/binaries published**
 
-   Look up the actual star count and repo age from the forge (API or repo page) — do not guess. If stars are under 600, or another requirement is clearly unmet, **stop and flag it to the user immediately**, quoting the real numbers, instead of generating scripts likely to be closed without review. Proceed only if the user explicitly confirms they want to continue anyway.
+   Look up the actual star count and repo age from the forge (API or repo page) — do not guess. If stars are under 1,000, or another requirement is clearly unmet, **stop and flag it to the user immediately**, quoting the real numbers, instead of generating scripts likely to be closed without review. Proceed only if the user explicitly confirms they want to continue anyway.
 3. **Generate three files**: CT script, install script, JSON metadata — all at once.
 4. **Validate against the checklist** (see below) before finishing.
 
