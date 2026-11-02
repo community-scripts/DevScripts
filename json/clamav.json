@@ -1,0 +1,49 @@
+{
+    "name": "ClamAV",
+    "slug": "clamav",
+    "categories": [
+        6
+    ],
+    "date_created": "2026-11-02",
+    "type": "ct",
+    "updateable": true,
+    "privileged": false,
+    "interface_port": null,
+    "documentation": "https://docs.clamav.net/",
+    "website": "https://www.clamav.net/",
+    "repository": "https://github.com/Cisco-Talos/clamav",
+    "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/clamav.webp",
+    "description": "ClamAV is an open-source antivirus engine for detecting trojans, viruses, malware and other malicious threats. It runs as a local scanning daemon with automatic signature updates and can scan files, archives and mailboxes.",
+    "install_methods": [
+        {
+            "type": "default",
+            "script": "ct/clamav.sh",
+            "config_path": "/etc/clamav/clamd.conf",
+            "resources": {
+                "cpu": 2,
+                "ram": 4096,
+                "hdd": 8,
+                "os": "Ubuntu",
+                "version": "26.04"
+            }
+        }
+    ],
+    "default_credentials": {
+        "username": null,
+        "password": null
+    },
+    "notes": [
+        {
+            "text": "Bind-mount the folders to scan to /mnt/scan (pct set <CTID> -mp0 /path,mp=/mnt/scan,ro=1). A daily timer scans it and logs to /var/log/clamav/scan.log.",
+            "type": "info"
+        },
+        {
+            "text": "In an unprivileged container, only files readable by others on the host can be scanned. Use a privileged container to scan everything.",
+            "type": "warning"
+        },
+        {
+            "text": "Infected files are only reported, not moved or deleted. On-access scanning is not available inside an LXC.",
+            "type": "info"
+        }
+    ]
+}
