@@ -55,20 +55,6 @@ Link: #
 
 ---
 
-## 🤖 AI Assistance (**X** in brackets)
-
-> If you used an AI tool (GitHub Copilot, Claude, ChatGPT, etc.) to write or generate any scripts in this PR, you **must** confirm compliance below.  
-> Select exactly one option.
-
-- [ ] **No AI used** – Scripts were written without AI assistance.
-- [ ] **AI was used** – I confirm the scripts were built using [`AGENTS.md`](https://github.com/community-scripts/DevScripts/blob/main/AGENTS.md) and [`.github/agents/pve-script-creator.agent.md`](https://github.com/community-scripts/DevScripts/blob/main/.github/agents/pve-script-creator.agent.md) as guidance, and the output has been reviewed and corrected to match those guidelines.
-
-**Please describe to which degree, if any, an LLM was used in creating this pull request.** Name the model(s) used and, if applicable, the reasoning/thinking effort level (e.g. *"Claude Sonnet 4.5, high reasoning, used to draft the install script, then manually reviewed and tested"* or *"No LLM used"*). This is informational, not a penalty — but scripts that are clearly AI-generated and not further revised by the author to match `CODE-AUDIT.md` / `CONTRIBUTING.md` may be closed without review.
-
-<!-- Your answer here -->
-
----
-
 ## 📋 Additional Information (optional)  
 <!-- Add any extra context, screenshots, or references. -->  
 
@@ -84,9 +70,23 @@ Link: #
 > Pull requests that do not meet these requirements may be closed without review.
 - [ ] The application is **at least 6 months old**
 - [ ] The application is **actively maintained**
-- [ ] The application has **600+ GitHub stars**
+- [ ] The application has **1,000+ GitHub stars**
 - [ ] Official **release tarballs** are published
 - [ ] I understand that not all scripts will be accepted due to various reasons and criteria by the community-scripts ORG
 
 ## 🌐 Source
 <!-- Add any sources and github links. -->  
+
+---
+
+## 🤖 AI Assistance (**X** in brackets)
+
+> If you used an AI tool (GitHub Copilot, Claude, ChatGPT, etc.) to write or generate any scripts in this PR, you **must** confirm compliance below.  
+> Select exactly one option.
+
+- [ ] **No AI used** – Scripts were written without AI assistance.
+- [ ] **AI was used** – I confirm the scripts were built using [`AGENTS.md`](https://github.com/community-scripts/DevScripts/blob/main/AGENTS.md) and [`.github/agents/pve-script-creator.agent.md`](https://github.com/community-scripts/DevScripts/blob/main/.github/agents/pve-script-creator.agent.md) as guidance, and the output has been reviewed and corrected to match those guidelines.
+
+**Please describe to which degree, if any, an LLM was used in creating this pull request.** Name the model(s) used and, if applicable, the reasoning/thinking effort level (e.g. *"Claude Sonnet 4.5, high reasoning, used to draft the install script, then manually reviewed and tested"* or *"No LLM used"*). This is informational, not a penalty — but scripts that are clearly AI-generated and not further revised by the author to match `CODE-AUDIT.md` / `CONTRIBUTING.md` may be closed without review.
+
+<!-- Your answer here -->

@@ -107,7 +107,7 @@ jobs:
                 const requirements = [
                   "The application is **at least 6 months old**",
                   "The application is **actively maintained**",
-                  "The application has **600+ GitHub stars**",
+                  "The application has **1,000+ GitHub stars**",
                   "Official **release tarballs** are published",
                   "I understand that not all scripts will be accepted"
                 ];
