@@ -38,10 +38,6 @@
   },
   "notes": [
     {
-      "text": "One script serves both variants: the installer asks for the container OS, or pass var_os=alpine to pick Alpine unattended.",
-      "type": "info"
-    },
-    {
       "text": "The admin password is generated during the installation and saved to /root/openlist.creds inside the container. Change it with `/opt/openlist/openlist --data /opt/openlist_data admin set <password>`.",
       "type": "info"
     },
