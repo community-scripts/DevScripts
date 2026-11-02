@@ -30,18 +30,6 @@
         "os": "Debian",
         "version": "13"
       }
-    },
-    {
-      "type": "alpine",
-      "script": "ct/openlist.sh",
-      "config_path": "/opt/openlist_data/config.json",
-      "resources": {
-        "cpu": 1,
-        "ram": 512,
-        "hdd": 4,
-        "os": "Alpine",
-        "version": "3.24"
-      }
     }
   ],
   "default_credentials": {
