@@ -17,8 +17,18 @@ if [[ -z "${var_scan_dir:-}" ]]; then
   var_scan_dir=$(prompt_input "ClamAV folder to scan (inside the container):" "/mnt/scan" 60)
 fi
 var_scan_dir="${var_scan_dir:-/mnt/scan}"
-if [[ "$var_scan_dir" != /* ]]; then
-  msg_error "var_scan_dir must be an absolute path, got: ${var_scan_dir}"
+# The path is written into systemd units, where quotes, % and $ have special meaning
+if [[ "$var_scan_dir" != /* || "$var_scan_dir" =~ [\'\"%\$\\] ]]; then
+  msg_error "var_scan_dir must be an absolute path without quotes, %, \$ or backslashes, got: ${var_scan_dir}"
+  exit 1
+fi
+
+if [[ -z "${var_scan_mode:-}" ]]; then
+  var_scan_mode=$(prompt_select "ClamAV scan mode for ${var_scan_dir}:" 1 60 "both" "watch" "daily")
+fi
+var_scan_mode="${var_scan_mode:-both}"
+if [[ ! "$var_scan_mode" =~ ^(both|watch|daily)$ ]]; then
+  msg_error "var_scan_mode must be both, watch or daily, got: ${var_scan_mode}"
   exit 1
 fi
 
@@ -34,7 +44,8 @@ msg_info "Installing ClamAV"
 $STD apt install -y \
   clamav \
   clamav-daemon \
-  clamav-freshclam
+  clamav-freshclam \
+  inotify-tools
 msg_ok "Installed ClamAV"
 
 # The package rewrites clamd.conf from debconf on upgrade with either TCPSocket or
@@ -60,7 +71,7 @@ systemctl restart clamav-daemon.socket
 systemctl enable -q --now clamav-daemon
 msg_ok "Downloaded ClamAV Signatures"
 
-msg_info "Creating Scan Timer"
+msg_info "Creating Scan Services"
 mkdir -p "$var_scan_dir"
 cat <<EOF >/etc/systemd/system/clamav-scan.service
 [Unit]
@@ -86,6 +97,23 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 EOF
+# inotify instead of clamonacc: fanotify is not available in an unprivileged LXC.
+# %% and $$ are systemd escapes for % and $.
+cat <<EOF >/etc/systemd/system/clamav-watch.service
+[Unit]
+Description=ClamAV scan of new and changed files in ${var_scan_dir}
+After=clamav-daemon.service
+Requires=clamav-daemon.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'inotifywait -m -r -q -e close_write,moved_to --format "%%w%%f" -- "${var_scan_dir}" | while IFS= read -r f; do clamdscan --fdpass --infected --no-summary --log=/var/log/clamav/scan.log -- "\$\$f"; done'
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
 cat <<EOF >/etc/logrotate.d/clamav-scan
 /var/log/clamav/scan.log {
     weekly
@@ -95,8 +123,13 @@ cat <<EOF >/etc/logrotate.d/clamav-scan
     notifempty
 }
 EOF
-systemctl enable -q --now clamav-scan.timer
-msg_ok "Created Scan Timer"
+if [[ "$var_scan_mode" != "watch" ]]; then
+  systemctl enable -q --now clamav-scan.timer
+fi
+if [[ "$var_scan_mode" != "daily" ]]; then
+  systemctl enable -q --now clamav-watch
+fi
+msg_ok "Created Scan Services"
 
 motd_ssh
 customize
