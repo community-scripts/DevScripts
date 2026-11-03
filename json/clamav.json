@@ -13,7 +13,7 @@
     "website": "https://www.clamav.net/",
     "repository": "https://github.com/Cisco-Talos/clamav",
     "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/clamav.webp",
-    "description": "ClamAV is an open-source antivirus engine for detecting trojans, viruses, malware and other malicious threats. It runs as a local scanning daemon with automatic signature updates and can scan files, archives and mailboxes.",
+    "description": "ClamAV is an open-source antivirus engine for detecting trojans, viruses and other malware. It scans bind-mounted folders such as download or share directories on a daily schedule, and can optionally serve clamd over TCP so Nextcloud, rspamd or mail servers share one scanner. Infected files are reported, never moved or deleted.",
     "install_methods": [
         {
             "type": "default",
@@ -39,20 +39,27 @@
             "type": "text",
             "default": "/mnt/scan",
             "help": "Absolute path inside the container that the daily scan checks; bind-mount host folders here"
+        },
+        {
+            "name": "var_clamd_tcp",
+            "label": "clamd over TCP (port 3310)",
+            "type": "boolean",
+            "default": false,
+            "help": "Let other hosts send files to clamd on port 3310, e.g. Nextcloud files_antivirus or rspamd"
         }
     ],
     "notes": [
         {
-            "text": "Bind-mount the folders to scan to the scan folder (default /mnt/scan): pct set <CTID> -mp0 /path,mp=/mnt/scan,ro=1. A daily timer scans it and logs to /var/log/clamav/scan.log.",
+            "text": "Bind-mount the folders to scan read-only to the scan folder: pct set <CTID> -mp0 /path,mp=/mnt/scan,ro=1. Results go to /var/log/clamav/scan.log.",
             "type": "info"
         },
         {
-            "text": "In an unprivileged container, only files readable by others on the host can be scanned. Use a privileged container to scan everything.",
+            "text": "clamd on TCP 3310 has no authentication. Allow the port only from the hosts that use it, e.g. with the Proxmox firewall.",
             "type": "warning"
         },
         {
-            "text": "Infected files are only reported, not moved or deleted. On-access scanning is not available inside an LXC.",
-            "type": "info"
+            "text": "In an unprivileged container, only files readable by others on the host can be scanned.",
+            "type": "warning"
         }
     ]
 }

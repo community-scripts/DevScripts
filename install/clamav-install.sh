@@ -22,6 +22,14 @@ if [[ "$var_scan_dir" != /* ]]; then
   exit 1
 fi
 
+if [[ -z "${var_clamd_tcp:-}" ]]; then
+  if prompt_confirm "Let other hosts scan files with clamd over TCP port 3310?" "n" 60; then
+    var_clamd_tcp="yes"
+  else
+    var_clamd_tcp="no"
+  fi
+fi
+
 msg_info "Installing ClamAV"
 $STD apt install -y \
   clamav \
@@ -29,12 +37,26 @@ $STD apt install -y \
   clamav-freshclam
 msg_ok "Installed ClamAV"
 
+# The package rewrites clamd.conf from debconf on upgrade with either TCPSocket or
+# LocalSocket, never both, so TCP is added as a second listener on the socket unit.
+if [[ "${var_clamd_tcp,,}" == "yes" ]]; then
+  msg_info "Configuring clamd TCP Listener"
+  mkdir -p /etc/systemd/system/clamav-daemon.socket.d
+  cat <<EOF >/etc/systemd/system/clamav-daemon.socket.d/tcp.conf
+[Socket]
+ListenStream=3310
+EOF
+  systemctl daemon-reload
+  msg_ok "Configured clamd TCP Listener"
+fi
+
 # clamd refuses to start without signatures, so fetch them once before enabling it.
 # The packaged freshclam service holds the database lock, so stop it for the first run.
 msg_info "Downloading ClamAV Signatures"
 systemctl stop clamav-freshclam
 $STD freshclam
 systemctl enable -q --now clamav-freshclam
+systemctl restart clamav-daemon.socket
 systemctl enable -q --now clamav-daemon
 msg_ok "Downloaded ClamAV Signatures"
 
