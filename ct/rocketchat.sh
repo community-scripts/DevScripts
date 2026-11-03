@@ -26,6 +26,7 @@ header_info "$APP"
 variables
 NSAPP="rocketchat"
 var_install="${NSAPP}-install"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2422}"
 color
 catch_errors
 

@@ -32,6 +32,7 @@ else
   var_ram="${var_ram:-2048}"
   var_disk="${var_disk:-8}"
   var_version="${var_version:-13}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2308}"
 fi
 
 export var_gitea_url="${var_gitea_url:-}"
