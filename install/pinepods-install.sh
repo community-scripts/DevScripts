@@ -30,7 +30,7 @@ setup_ffmpeg
 
 fetch_and_deploy_gh_release "yt-dlp" "yt-dlp/yt-dlp" "singlefile" "latest" "/usr/local/bin" "$(arch_resolve "yt-dlp_linux" "yt-dlp_linux_aarch64")"
 fetch_and_deploy_gh_release "pinepods" "madeofpendletonwool/PinePods" "tarball"
-# Upstream's pins. trunk matters most: it picks the Tailwind major, and newer trunk builds this Tailwind v3 UI with v4.
+
 PYTHON_VERSION=$(sed -n 's/^FROM python:\([0-9.]*\)-.*/\1/p' /opt/pinepods/dockerfile)
 TRUNK_VERSION=$(sed -n 's#.*trunk/releases/download/\(v[0-9.]*\)/.*#\1#p' /opt/pinepods/dockerfile)
 if [[ -z "$PYTHON_VERSION" || -z "$TRUNK_VERSION" ]]; then
@@ -42,12 +42,12 @@ fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "$TRUNK_VERSION"
 
 msg_info "Building PinePods"
 $STD rustup target add wasm32-unknown-unknown
-cd /opt/pinepods/web
+cd /opt/pinepods/web || msg_error "Directory /opt/pinepods/web not found" && exit 1
 RUSTFLAGS="--cfg=web_sys_unstable_apis --cfg getrandom_backend=\"wasm_js\"" $STD trunk build --features server_build --release
 rm -rf /var/www/html
 cp -r /opt/pinepods/web/dist /var/www/html
 cp -r /opt/pinepods/web/src/translations /var/www/html/static/translations
-cd /opt/pinepods/rust-api
+cd /opt/pinepods/rust-api || msg_error "Directory /opt/pinepods/rust-api not found" && exit 1
 $STD cargo build --release
 cp /opt/pinepods/rust-api/target/release/pinepods-api /usr/local/bin/pinepods-api
 rm -rf /opt/pinepods/web/target /opt/pinepods/web/dist /opt/pinepods/rust-api/target
@@ -59,7 +59,6 @@ $STD uv pip install --python /opt/pinepods/.venv/bin/python -r /opt/pinepods/req
 msg_ok "Set up Python Runtime"
 
 msg_info "Configuring PinePods"
-# The API hardcodes these paths, as well as /pinepods/current_version
 mkdir -p /opt/pinepods/{downloads,backups,local-media} /opt/pinepods_data /pinepods
 cp ~/.pinepods /pinepods/current_version
 cat <<EOF >/opt/pinepods_data/.env
