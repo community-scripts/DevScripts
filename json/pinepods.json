@@ -1,0 +1,45 @@
+{
+  "name": "PinePods",
+  "slug": "pinepods",
+  "categories": [
+    13
+  ],
+  "date_created": "2026-11-02",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8040,
+  "documentation": "https://www.pinepods.online/docs/Introduction",
+  "website": "https://www.pinepods.online/",
+  "repository": "https://github.com/madeofpendletonwool/PinePods",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/pinepods.webp",
+  "description": "PinePods is a self-hosted, multi-user podcast server and player. It searches, subscribes to and downloads podcasts and YouTube channels, syncs listening progress across its web, desktop and mobile clients, and works with gPodder-compatible apps.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/pinepods.sh",
+      "config_path": "/opt/pinepods_data/.env",
+      "resources": {
+        "cpu": 4,
+        "ram": 4096,
+        "hdd": 15,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "There is no default account. The first visit to the web UI asks you to create the admin user.",
+      "type": "info"
+    },
+    {
+      "text": "HOSTNAME and SERVER_URL in /opt/pinepods_data/.env must match the address you open PinePods at. Change them for a new IP or a reverse proxy, then run systemctl restart pinepods-api.",
+      "type": "info"
+    }
+  ]
+}

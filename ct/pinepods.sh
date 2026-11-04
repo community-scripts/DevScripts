@@ -42,14 +42,11 @@ function update_script() {
     systemctl stop pinepods-gpodder pinepods-api
     msg_ok "Stopped PinePods"
 
-    create_backup /opt/pinepods/.env
-
+    PYTHON_VERSION="3.11" setup_uv
     setup_go
-    setup_rust
+    RUST_PROFILE="minimal" setup_rust
     fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "latest" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
-    CLEAN_INSTALL=1 CLEAN_INSTALL_KEEP="downloads backups local-media certs" fetch_and_deploy_gh_release "pinepods" "madeofpendletonwool/PinePods" "tarball"
-
-    restore_backup
+    CLEAN_INSTALL=1 CLEAN_INSTALL_KEEP="downloads backups local-media" fetch_and_deploy_gh_release "pinepods" "madeofpendletonwool/PinePods" "tarball"
 
     msg_info "Building PinePods"
     $STD rustup target add wasm32-unknown-unknown
@@ -64,7 +61,7 @@ function update_script() {
     $STD cargo build --release
     cp target/release/pinepods-api /usr/local/bin/pinepods-api
     cd /opt/pinepods
-    $STD uv venv /opt/pinepods/.venv
+    $STD uv venv --python 3.11 /opt/pinepods/.venv
     $STD uv pip install -p /opt/pinepods/.venv/bin/python -r requirements.txt
     rm -rf /opt/pinepods/web/target /opt/pinepods/web/dist /opt/pinepods/rust-api/target
     $STD go clean -cache -modcache
