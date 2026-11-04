@@ -38,7 +38,7 @@
       "type": "info"
     },
     {
-      "text": "HOSTNAME and SERVER_URL in /opt/pinepods_data/.env must match the address you open PinePods at. Change them for a new IP or a reverse proxy, then run systemctl restart pinepods-api.",
+      "text": "HOSTNAME and SERVER_URL in /opt/pinepods_data/.env must match the address you open PinePods at. Change them for a new IP or a reverse proxy, then run systemctl restart pinepods.",
       "type": "info"
     }
   ]

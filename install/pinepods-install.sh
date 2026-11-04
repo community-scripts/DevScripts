@@ -28,10 +28,12 @@ PG_DB_NAME="pinepods_database" PG_DB_USER="pinepods" setup_postgresql_db
 PYTHON_VERSION="3.14" setup_uv
 RUST_PROFILE="minimal" setup_rust
 setup_ffmpeg
+
 fetch_and_deploy_gh_release "yt-dlp" "yt-dlp/yt-dlp" "singlefile" "latest" "/usr/local/bin" "$(arch_resolve "yt-dlp_linux" "yt-dlp_linux_aarch64")"
 fetch_and_deploy_gh_release "pinepods" "madeofpendletonwool/PinePods" "tarball"
-# Upstream's pin, because trunk picks the Tailwind major: newer trunk builds this Tailwind v3 UI with v4
-fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "$(sed -n 's#.*trunk/releases/download/\(v[0-9.]*\)/.*#\1#p' /opt/pinepods/dockerfile)" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
+# Upstream's pin: trunk picks the Tailwind major, and newer trunk builds this Tailwind v3 UI with v4.
+TRUNK_VERSION=$(sed -n 's#.*trunk/releases/download/\(v[0-9.]*\)/.*#\1#p' /opt/pinepods/dockerfile)
+fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "$TRUNK_VERSION" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
 
 msg_info "Building PinePods"
 $STD rustup target add wasm32-unknown-unknown
@@ -42,12 +44,14 @@ cp -r /opt/pinepods/web/dist /var/www/html
 cp -r /opt/pinepods/web/src/translations /var/www/html/static/translations
 cd /opt/pinepods/rust-api
 $STD cargo build --release
-cp target/release/pinepods-api /usr/local/bin/pinepods-api
-cd /opt/pinepods
-$STD uv venv --python 3.14 /opt/pinepods/.venv
-$STD uv pip install -p /opt/pinepods/.venv/bin/python -r requirements.txt
+cp /opt/pinepods/rust-api/target/release/pinepods-api /usr/local/bin/pinepods-api
 rm -rf /opt/pinepods/web/target /opt/pinepods/web/dist /opt/pinepods/rust-api/target
 msg_ok "Built PinePods"
+
+msg_info "Setting up Python Runtime"
+$STD uv venv --python 3.14 /opt/pinepods/.venv
+$STD uv pip install --python /opt/pinepods/.venv/bin/python -r /opt/pinepods/requirements.txt
+msg_ok "Set up Python Runtime"
 
 msg_info "Configuring PinePods"
 # The API hardcodes these paths, as well as /pinepods/current_version
@@ -221,15 +225,16 @@ nginx_enable_site "pinepods"
 msg_ok "Configured Nginx"
 
 msg_info "Creating Service"
-cat <<EOF >/etc/systemd/system/pinepods-api.service
+cat <<EOF >/etc/systemd/system/pinepods.service
 [Unit]
-Description=PinePods API
+Description=PinePods Service
 After=network.target postgresql.service valkey-server.service
 Requires=postgresql.service valkey-server.service
 
 [Service]
 Type=simple
 User=root
+TimeoutStartSec=infinity
 WorkingDirectory=/opt/pinepods
 EnvironmentFile=/opt/pinepods_data/.env
 ExecStartPre=/opt/pinepods/.venv/bin/python /opt/pinepods/startup/setup_database_new.py
@@ -240,7 +245,7 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now pinepods-api
+systemctl enable -q --now pinepods
 msg_ok "Created Service"
 
 motd_ssh

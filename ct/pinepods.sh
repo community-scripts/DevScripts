@@ -2,7 +2,6 @@
 _CS_DEFAULT_URL="https://raw.githubusercontent.com/community-scripts/DevScripts/main"
 _cs_boot="${COMMUNITY_SCRIPTS_CORE_DIR:-$(dirname "${BASH_SOURCE[0]}")/../../core}/core/build.func"
 source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/core/build.func")
-
 # Copyright (c) 2021-2026 community-scripts ORG
 # Author: untect
 # License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
@@ -35,16 +34,17 @@ function update_script() {
 
   if check_for_gh_release "pinepods" "madeofpendletonwool/PinePods"; then
     msg_info "Stopping PinePods"
-    systemctl stop pinepods-api
+    systemctl stop pinepods
     msg_ok "Stopped PinePods"
 
     PYTHON_VERSION="3.14" setup_uv
     RUST_PROFILE="minimal" setup_rust
     CLEAN_INSTALL=1 CLEAN_INSTALL_KEEP="downloads backups local-media" fetch_and_deploy_gh_release "pinepods" "madeofpendletonwool/PinePods" "tarball"
-    # Upstream's pin, because trunk picks the Tailwind major: newer trunk builds this Tailwind v3 UI with v4
-    fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "$(sed -n 's#.*trunk/releases/download/\(v[0-9.]*\)/.*#\1#p' /opt/pinepods/dockerfile)" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
+    # Upstream's pin: trunk picks the Tailwind major, and newer trunk builds this Tailwind v3 UI with v4.
+    TRUNK_VERSION=$(sed -n 's#.*trunk/releases/download/\(v[0-9.]*\)/.*#\1#p' /opt/pinepods/dockerfile)
+    fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "$TRUNK_VERSION" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
 
-    msg_info "Building PinePods"
+    msg_info "Rebuilding PinePods"
     $STD rustup target add wasm32-unknown-unknown
     cd /opt/pinepods/web
     RUSTFLAGS="--cfg=web_sys_unstable_apis --cfg getrandom_backend=\"wasm_js\"" $STD trunk build --features server_build --release
@@ -53,16 +53,18 @@ function update_script() {
     cp -r /opt/pinepods/web/src/translations /var/www/html/static/translations
     cd /opt/pinepods/rust-api
     $STD cargo build --release
-    cp target/release/pinepods-api /usr/local/bin/pinepods-api
-    cd /opt/pinepods
-    $STD uv venv --python 3.14 /opt/pinepods/.venv
-    $STD uv pip install -p /opt/pinepods/.venv/bin/python -r requirements.txt
+    cp /opt/pinepods/rust-api/target/release/pinepods-api /usr/local/bin/pinepods-api
     rm -rf /opt/pinepods/web/target /opt/pinepods/web/dist /opt/pinepods/rust-api/target
     cp ~/.pinepods /pinepods/current_version
-    msg_ok "Built PinePods"
+    msg_ok "Rebuilt PinePods"
+
+    msg_info "Updating Python Runtime"
+    $STD uv venv --python 3.14 /opt/pinepods/.venv
+    $STD uv pip install --python /opt/pinepods/.venv/bin/python -r /opt/pinepods/requirements.txt
+    msg_ok "Updated Python Runtime"
 
     msg_info "Starting PinePods"
-    systemctl start pinepods-api
+    systemctl start pinepods
     msg_ok "Started PinePods"
     msg_ok "Updated successfully!"
   fi
