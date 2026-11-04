@@ -42,7 +42,7 @@
       "type": "info"
     },
     {
-      "text": "If the shop moves to a domain or sits behind a reverse proxy, update APP_URL in /opt/shopware/.env.local and the sales channel domain in the Administration.",
+      "text": "Behind an HTTPS reverse proxy, add SYMFONY_TRUSTED_PROXIES=127.0.0.1,PRIVATE_SUBNETS and SYMFONY_TRUSTED_HEADERS=x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port to /opt/shopware/.env.local, set APP_URL to the public URL, add that domain to the sales channel and run bin/console cache:clear.",
       "type": "info"
     },
     {
