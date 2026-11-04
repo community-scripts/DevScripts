@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Copyright (c) 2021-2026 community-scripts ORG
-# Author: Morgan Hickman
+# Author: untect
 # License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
 # Source: https://github.com/madeofpendletonwool/PinePods
 
@@ -27,7 +27,7 @@ PG_VERSION="18" setup_postgresql
 PG_DB_NAME="pinepods_database" PG_DB_USER="pinepods" setup_postgresql_db
 PYTHON_VERSION="3.11" setup_uv
 setup_go
-setup_rust
+RUST_PROFILE="minimal" setup_rust
 setup_ffmpeg
 fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "latest" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
 fetch_and_deploy_gh_release "yt-dlp" "yt-dlp/yt-dlp" "singlefile" "latest" "/usr/local/bin" "$(arch_resolve "yt-dlp_linux" "yt-dlp_linux_aarch64")"
@@ -46,7 +46,7 @@ cd /opt/pinepods/rust-api
 $STD cargo build --release
 cp target/release/pinepods-api /usr/local/bin/pinepods-api
 cd /opt/pinepods
-$STD uv venv /opt/pinepods/.venv
+$STD uv venv --python 3.11 /opt/pinepods/.venv
 $STD uv pip install -p /opt/pinepods/.venv/bin/python -r requirements.txt
 rm -rf /opt/pinepods/web/target /opt/pinepods/web/dist /opt/pinepods/rust-api/target
 $STD go clean -cache -modcache
@@ -54,9 +54,9 @@ msg_ok "Built PinePods"
 
 msg_info "Configuring PinePods"
 # The API hardcodes these paths, as well as /pinepods/current_version
-mkdir -p /opt/pinepods/{downloads,backups,local-media,certs} /pinepods/cache
+mkdir -p /opt/pinepods/{downloads,backups,local-media} /opt/pinepods_data /pinepods
 cp ~/.pinepods /pinepods/current_version
-cat <<EOF >/opt/pinepods/.env
+cat <<EOF >/opt/pinepods_data/.env
 DB_TYPE=postgresql
 DB_HOST=127.0.0.1
 DB_PORT=5432
@@ -72,7 +72,7 @@ SERVER_URL=http://${LOCAL_IP}:8040
 DEFAULT_LANGUAGE=en
 DEBUG_MODE=false
 EOF
-chmod 600 /opt/pinepods/.env
+chmod 600 /opt/pinepods_data/.env
 msg_ok "Configured PinePods"
 
 msg_info "Configuring Nginx"
@@ -220,7 +220,7 @@ Requires=postgresql.service valkey-server.service
 Type=simple
 User=root
 WorkingDirectory=/opt/pinepods
-EnvironmentFile=/opt/pinepods/.env
+EnvironmentFile=/opt/pinepods_data/.env
 ExecStartPre=/opt/pinepods/.venv/bin/python /opt/pinepods/startup/setup_database_new.py
 ExecStart=/usr/local/bin/pinepods-api
 Restart=on-failure
@@ -239,7 +239,7 @@ Requires=pinepods-api.service
 Type=simple
 User=root
 WorkingDirectory=/opt/pinepods
-EnvironmentFile=/opt/pinepods/.env
+EnvironmentFile=/opt/pinepods_data/.env
 Environment=SERVER_PORT=8042
 ExecStart=/usr/local/bin/gpodder-api
 Restart=on-failure
