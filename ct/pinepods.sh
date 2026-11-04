@@ -40,8 +40,9 @@ function update_script() {
 
     PYTHON_VERSION="3.14" setup_uv
     RUST_PROFILE="minimal" setup_rust
-    fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "latest" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
     CLEAN_INSTALL=1 CLEAN_INSTALL_KEEP="downloads backups local-media" fetch_and_deploy_gh_release "pinepods" "madeofpendletonwool/PinePods" "tarball"
+    # Upstream's pin, because trunk picks the Tailwind major: newer trunk builds this Tailwind v3 UI with v4
+    fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "$(sed -n 's#.*trunk/releases/download/\(v[0-9.]*\)/.*#\1#p' /opt/pinepods/dockerfile)" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
 
     msg_info "Building PinePods"
     $STD rustup target add wasm32-unknown-unknown
