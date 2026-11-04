@@ -37,11 +37,16 @@ function update_script() {
     systemctl stop pinepods
     msg_ok "Stopped PinePods"
 
-    PYTHON_VERSION="3.14" setup_uv
     RUST_PROFILE="minimal" setup_rust
     CLEAN_INSTALL=1 CLEAN_INSTALL_KEEP="downloads backups local-media" fetch_and_deploy_gh_release "pinepods" "madeofpendletonwool/PinePods" "tarball"
-    # Upstream's pin: trunk picks the Tailwind major, and newer trunk builds this Tailwind v3 UI with v4.
+    # Upstream's pins. trunk matters most: it picks the Tailwind major, and newer trunk builds this Tailwind v3 UI with v4.
+    PYTHON_VERSION=$(sed -n 's/^FROM python:\([0-9.]*\)-.*/\1/p' /opt/pinepods/dockerfile)
     TRUNK_VERSION=$(sed -n 's#.*trunk/releases/download/\(v[0-9.]*\)/.*#\1#p' /opt/pinepods/dockerfile)
+    if [[ -z "$PYTHON_VERSION" || -z "$TRUNK_VERSION" ]]; then
+      msg_error "Could not read the Python or trunk version from the PinePods dockerfile"
+      exit 1
+    fi
+    setup_uv
     fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "$TRUNK_VERSION" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
 
     msg_info "Rebuilding PinePods"
@@ -59,7 +64,7 @@ function update_script() {
     msg_ok "Rebuilt PinePods"
 
     msg_info "Updating Python Runtime"
-    $STD uv venv --python 3.14 /opt/pinepods/.venv
+    $STD uv venv --python "$PYTHON_VERSION" /opt/pinepods/.venv
     $STD uv pip install --python /opt/pinepods/.venv/bin/python -r /opt/pinepods/requirements.txt
     msg_ok "Updated Python Runtime"
 

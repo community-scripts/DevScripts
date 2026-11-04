@@ -25,14 +25,19 @@ msg_ok "Installed Dependencies"
 
 PG_VERSION="18" setup_postgresql
 PG_DB_NAME="pinepods_database" PG_DB_USER="pinepods" setup_postgresql_db
-PYTHON_VERSION="3.14" setup_uv
 RUST_PROFILE="minimal" setup_rust
 setup_ffmpeg
 
 fetch_and_deploy_gh_release "yt-dlp" "yt-dlp/yt-dlp" "singlefile" "latest" "/usr/local/bin" "$(arch_resolve "yt-dlp_linux" "yt-dlp_linux_aarch64")"
 fetch_and_deploy_gh_release "pinepods" "madeofpendletonwool/PinePods" "tarball"
-# Upstream's pin: trunk picks the Tailwind major, and newer trunk builds this Tailwind v3 UI with v4.
+# Upstream's pins. trunk matters most: it picks the Tailwind major, and newer trunk builds this Tailwind v3 UI with v4.
+PYTHON_VERSION=$(sed -n 's/^FROM python:\([0-9.]*\)-.*/\1/p' /opt/pinepods/dockerfile)
 TRUNK_VERSION=$(sed -n 's#.*trunk/releases/download/\(v[0-9.]*\)/.*#\1#p' /opt/pinepods/dockerfile)
+if [[ -z "$PYTHON_VERSION" || -z "$TRUNK_VERSION" ]]; then
+  msg_error "Could not read the Python or trunk version from the PinePods dockerfile"
+  exit 1
+fi
+setup_uv
 fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "$TRUNK_VERSION" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
 
 msg_info "Building PinePods"
@@ -49,7 +54,7 @@ rm -rf /opt/pinepods/web/target /opt/pinepods/web/dist /opt/pinepods/rust-api/ta
 msg_ok "Built PinePods"
 
 msg_info "Setting up Python Runtime"
-$STD uv venv --python 3.14 /opt/pinepods/.venv
+$STD uv venv --python "$PYTHON_VERSION" /opt/pinepods/.venv
 $STD uv pip install --python /opt/pinepods/.venv/bin/python -r /opt/pinepods/requirements.txt
 msg_ok "Set up Python Runtime"
 
