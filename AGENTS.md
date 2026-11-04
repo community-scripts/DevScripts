@@ -1728,7 +1728,7 @@ Or no credentials:
 5. **Test local variables** - use `${VAR:-default}` pattern for optional values
 6. **Check eligibility before scaffolding a new app** - new-script PRs must meet the
    Application Requirements in [`.github/pull_request_template.md`](.github/pull_request_template.md):
-   **600+ stars** (GitHub, GitLab, Gitea/Forgejo, or Codeberg), **6+ months old**,
+   **1,000+ stars** (GitHub, GitLab, Gitea/Forgejo, or Codeberg), **6+ months old**,
    **actively maintained**, and **official release tarballs published**. Look up the
    real star count on the app's forge and flag the user immediately if it falls short,
    before generating any files.
