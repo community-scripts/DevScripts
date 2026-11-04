@@ -33,17 +33,12 @@ function update_script() {
     exit
   fi
 
-  if check_for_gh_release "yt-dlp" "yt-dlp/yt-dlp"; then
-    fetch_and_deploy_gh_release "yt-dlp" "yt-dlp/yt-dlp" "singlefile" "latest" "/usr/local/bin" "$(arch_resolve "yt-dlp_linux" "yt-dlp_linux_aarch64")"
-  fi
-
   if check_for_gh_release "pinepods" "madeofpendletonwool/PinePods"; then
     msg_info "Stopping PinePods"
-    systemctl stop pinepods-gpodder pinepods-api
+    systemctl stop pinepods-api
     msg_ok "Stopped PinePods"
 
-    PYTHON_VERSION="3.11" setup_uv
-    setup_go
+    PYTHON_VERSION="3.14" setup_uv
     RUST_PROFILE="minimal" setup_rust
     fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "latest" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
     CLEAN_INSTALL=1 CLEAN_INSTALL_KEEP="downloads backups local-media" fetch_and_deploy_gh_release "pinepods" "madeofpendletonwool/PinePods" "tarball"
@@ -55,21 +50,18 @@ function update_script() {
     rm -rf /var/www/html
     cp -r /opt/pinepods/web/dist /var/www/html
     cp -r /opt/pinepods/web/src/translations /var/www/html/static/translations
-    cd /opt/pinepods/gpodder-api
-    CGO_ENABLED=0 $STD go build -ldflags="-s -w" -o /usr/local/bin/gpodder-api ./cmd/server/
     cd /opt/pinepods/rust-api
     $STD cargo build --release
     cp target/release/pinepods-api /usr/local/bin/pinepods-api
     cd /opt/pinepods
-    $STD uv venv --python 3.11 /opt/pinepods/.venv
+    $STD uv venv --python 3.14 /opt/pinepods/.venv
     $STD uv pip install -p /opt/pinepods/.venv/bin/python -r requirements.txt
     rm -rf /opt/pinepods/web/target /opt/pinepods/web/dist /opt/pinepods/rust-api/target
-    $STD go clean -cache -modcache
     cp ~/.pinepods /pinepods/current_version
     msg_ok "Built PinePods"
 
     msg_info "Starting PinePods"
-    systemctl start pinepods-api pinepods-gpodder
+    systemctl start pinepods-api
     msg_ok "Started PinePods"
     msg_ok "Updated successfully!"
   fi

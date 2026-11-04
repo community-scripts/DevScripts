@@ -25,8 +25,7 @@ msg_ok "Installed Dependencies"
 
 PG_VERSION="18" setup_postgresql
 PG_DB_NAME="pinepods_database" PG_DB_USER="pinepods" setup_postgresql_db
-PYTHON_VERSION="3.11" setup_uv
-setup_go
+PYTHON_VERSION="3.14" setup_uv
 RUST_PROFILE="minimal" setup_rust
 setup_ffmpeg
 fetch_and_deploy_gh_release "trunk" "trunk-rs/trunk" "prebuild" "latest" "/usr/local/bin" "trunk-$(arch_resolve "x86_64" "aarch64")-unknown-linux-gnu.tar.gz"
@@ -40,16 +39,13 @@ RUSTFLAGS="--cfg=web_sys_unstable_apis --cfg getrandom_backend=\"wasm_js\"" $STD
 rm -rf /var/www/html
 cp -r /opt/pinepods/web/dist /var/www/html
 cp -r /opt/pinepods/web/src/translations /var/www/html/static/translations
-cd /opt/pinepods/gpodder-api
-CGO_ENABLED=0 $STD go build -ldflags="-s -w" -o /usr/local/bin/gpodder-api ./cmd/server/
 cd /opt/pinepods/rust-api
 $STD cargo build --release
 cp target/release/pinepods-api /usr/local/bin/pinepods-api
 cd /opt/pinepods
-$STD uv venv --python 3.11 /opt/pinepods/.venv
+$STD uv venv --python 3.14 /opt/pinepods/.venv
 $STD uv pip install -p /opt/pinepods/.venv/bin/python -r requirements.txt
 rm -rf /opt/pinepods/web/target /opt/pinepods/web/dist /opt/pinepods/rust-api/target
-$STD go clean -cache -modcache
 msg_ok "Built PinePods"
 
 msg_info "Configuring PinePods"
@@ -77,6 +73,15 @@ msg_ok "Configured PinePods"
 
 msg_info "Configuring Nginx"
 cat <<'EOF' >/etc/nginx/sites-available/pinepods
+map $http_x_forwarded_proto $fwd_proto {
+    default $http_x_forwarded_proto;
+    ''      $scheme;
+}
+map $http_x_forwarded_host $fwd_host {
+    default $http_x_forwarded_host;
+    ''      $http_host;
+}
+
 server {
     listen 8040;
     server_name _;
@@ -93,10 +98,11 @@ server {
     location /rss/ {
         rewrite ^/rss/(\d+)(?:/(\d+))?$ /api/feed/$1$2 last;
         proxy_pass http://127.0.0.1:8032;
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $fwd_host;
+        proxy_set_header X-Forwarded-Proto $fwd_proto;
         proxy_set_header Api-Key $arg_api_key;
         add_header Content-Type "application/rss+xml; charset=utf-8";
         expires 1h;
@@ -120,10 +126,11 @@ server {
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
 
         proxy_pass http://127.0.0.1:8032;
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $fwd_host;
+        proxy_set_header X-Forwarded-Proto $fwd_proto;
 
         if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*' always;
@@ -137,11 +144,12 @@ server {
     }
 
     location ~ ^/(api/2|auth|subscriptions|devices|updates|episodes|settings|lists|favorites|sync-devices|search|suggestions|toplist|tag|tags|data)/ {
-        proxy_pass http://127.0.0.1:8042;
-        proxy_set_header Host $host;
+        proxy_pass http://127.0.0.1:8032;
+        proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $fwd_host;
+        proxy_set_header X-Forwarded-Proto $fwd_proto;
 
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, DELETE, PUT' always;
@@ -168,10 +176,11 @@ server {
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
 
         proxy_pass http://127.0.0.1:8032;
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $fwd_host;
+        proxy_set_header X-Forwarded-Proto $fwd_proto;
         proxy_read_timeout 1800;
         proxy_send_timeout 1800;
 
@@ -186,15 +195,16 @@ server {
         }
     }
 
-    location ~ ^/ws/api/(data|tasks)/ {
+    location /ws/api/ {
         proxy_pass http://127.0.0.1:8032;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "Upgrade";
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $fwd_host;
+        proxy_set_header X-Forwarded-Proto $fwd_proto;
         proxy_read_timeout 86400;
         proxy_send_timeout 86400;
     }
@@ -209,7 +219,7 @@ EOF
 nginx_enable_site "pinepods"
 msg_ok "Configured Nginx"
 
-msg_info "Creating Services"
+msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/pinepods-api.service
 [Unit]
 Description=PinePods API
@@ -229,27 +239,8 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-cat <<EOF >/etc/systemd/system/pinepods-gpodder.service
-[Unit]
-Description=PinePods gPodder API
-After=pinepods-api.service
-Requires=pinepods-api.service
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/pinepods
-EnvironmentFile=/opt/pinepods_data/.env
-Environment=SERVER_PORT=8042
-ExecStart=/usr/local/bin/gpodder-api
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl enable -q --now pinepods-api pinepods-gpodder
-msg_ok "Created Services"
+systemctl enable -q --now pinepods-api
+msg_ok "Created Service"
 
 motd_ssh
 customize
