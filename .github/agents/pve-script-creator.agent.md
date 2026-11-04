@@ -81,7 +81,8 @@ Browser APIs like `crypto.subtle` (Web Crypto / PKCE), `navigator.storage.getDir
 - All `apt` / `npm` / build commands must be prefixed with `$STD`.
 - Do NOT hand-roll the nginx enable dance (`ln -sf sites-available→sites-enabled`, `rm -f sites-enabled/default`, manual `systemctl restart`) — write the vhost, then call `nginx_enable_site "<app>"`.
 - Do NOT hand-roll `git clone`/`git pull` for a repo with no GitHub Releases — use `fetch_and_deploy_gh_tag`/`check_for_gh_tag` (tag-only) or `fetch_and_deploy_gh_branch`/`check_for_gh_branch` (releaseless, branch-tracked).
-- Do NOT add decorative comment banners (`====`/`----`/`####`) or comments that just restate the next line — comment only the non-obvious (a workaround, a timing dependency, a surprising constraint).
+- Do NOT add comments besides the header. A line that would look like a mistake without one may get a single short comment, as the exception; the reason for a decision goes into the PR description, once.
+- Do NOT grow the closing block of the CT script: after `description` come the standard three lines (`msg_ok "Completed Successfully!..."`, the initialized line, the URL), at most one more for a second port or where the credentials are. No `if`/`else`, no `pct exec`, no setup instructions; what the user needs goes into the JSON `notes`.
 - Do NOT generate passwords with `openssl rand -base64 | tr -dc | head -c` or `| cut -c` — use `random_password`.
 - Do NOT leave a `msg_info` without its `msg_ok`: a completion is `msg_ok "Stopped Service"`, never `msg_info`; a notice is `msg_warn` or `echo -e "${INFO}${YW}...${CL}"`; prompts come before `msg_info`, and `stop_spinner` is never called directly.
 
@@ -117,16 +118,18 @@ repository.
 deployment can run unattended. This only *describes* what the script already
 reads; it does not create the behaviour. All three pieces are needed:
 
+In `install/<app>-install.sh`, read first and prompt only when unset:
+
 ```bash
-# install/<app>-install.sh — read first, prompt only when unset
 if [[ -z "${var_admin_user:-}" ]]; then
   read -rp "${TAB3}Admin username: " var_admin_user
 fi
 var_admin_user="${var_admin_user:-admin}"
 ```
 
+In `ct/<app>.sh`, without the export it never reaches the container:
+
 ```bash
-# ct/<app>.sh — without the export it never reaches the container
 export var_admin_user="${var_admin_user:-}"
 ```
 
@@ -175,7 +178,8 @@ changes nothing.
 - [ ] GitLab sources use `fetch_and_deploy_gl_release`/`check_for_gl_release` with `GITLAB_URL`
 - [ ] Nginx sites enabled via `nginx_enable_site`, not hand-rolled symlinks/restart
 - [ ] Tag-only/releaseless repos use `fetch_and_deploy_gh_tag`/`fetch_and_deploy_gh_branch`, not hand-rolled `git clone`/`git pull`
-- [ ] No decorative banner comments or comments that restate the obvious
+- [ ] No comments besides the header (a rare one-liner where the code would look wrong)
+- [ ] Closing block: the standard three lines, at most one more
 
 ## Output Format
 
@@ -185,3 +189,8 @@ Create exactly three files:
 3. `json/<slug>.json`
 
 After creating, briefly summarize what was generated and the app's access URL pattern.
+
+## Pull Request and Review
+
+- PR description: two to five sentences. What the app is, what deviates from the standard pattern (one line each), how it was tested (one line), and the model and reasoning level. Fill in the template's sections only; no extra headings, tables or decision lists.
+- Apply a review suggestion exactly as written, then resolve its thread. Do not regenerate the file to answer a review. Replies to review comments: one or two sentences.

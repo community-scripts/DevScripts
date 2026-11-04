@@ -1,0 +1,65 @@
+{
+  "name": "FreeScout",
+  "slug": "freescout",
+  "categories": [
+    25
+  ],
+  "date_created": "2026-11-03",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 80,
+  "documentation": "https://github.com/freescout-help-desk/freescout/wiki",
+  "website": "https://freescout.net/",
+  "repository": "https://github.com/freescout-help-desk/freescout",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/freescout.webp",
+  "description": "FreeScout is a self-hosted help desk and shared mailbox, an open-source alternative to Zendesk and Help Scout. It turns support email into conversations that agents assign, tag and answer together, with saved replies, internal notes, collision detection and customer history. Modules add features like a knowledge base, satisfaction ratings and workflows.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/freescout.sh",
+      "config_path": "/opt/freescout/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin@example.com",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in with the admin email and the generated password saved in ~/freescout.creds inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "FreeScout only answers on the host in APP_URL (the container IP). For a domain or reverse proxy, change APP_URL in /opt/freescout/.env, then click Clear Cache under Manage > System > Tools.",
+      "type": "warning"
+    },
+    {
+      "text": "Mail servers on private IPs are rejected until listed in APP_REMOTE_HOST_WHITE_LIST in /opt/freescout/.env (clear the cache afterwards).",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}

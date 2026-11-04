@@ -16,6 +16,7 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 #var_arm64="${var_arm64:-yes}" # built from source, upstream ships arm64 images of the same build, but not yet run on arm64
 var_unprivileged="${var_unprivileged:-1}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2406}"
 
 header_info "$APP"
 variables

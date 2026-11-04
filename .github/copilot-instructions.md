@@ -30,7 +30,8 @@ Before implementing:
 - No abstractions for single-use code.
 - No "flexibility" or "configurability" that wasn't requested.
 - No error handling for impossible scenarios.
-- No comment banners (`====`/`----`) or comments that just restate the next line - let the code speak, comment only the non-obvious.
+- No comments in `ct/` and `install/` scripts besides the header; a rare one-liner where the code would look wrong without it.
+- PR descriptions: two to five sentences. Apply review suggestions exactly as written and resolve their threads.
 - If you write 200 lines and it could be 50, rewrite it.
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.

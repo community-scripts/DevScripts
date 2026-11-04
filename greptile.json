@@ -15,7 +15,7 @@
       },
       {
         "path": ".github/pull_request_template.md",
-        "description": "Application requirements a newly added script must meet (600+ stars, 6+ months old, actively maintained, official release artifacts).",
+        "description": "Application requirements a newly added script must meet (1,000+ stars, 6+ months old, actively maintained, official release artifacts).",
         "scope": ["ct/**", "install/**", "json/**"]
       }
     ],
@@ -35,6 +35,14 @@
       {
         "rule": "Adding or changing an app script means all three files move together: ct/<app>.sh, install/<app>-install.sh and json/<app>.json. Flag a PR that touches one and not the others.",
         "scope": ["ct/**", "install/**", "json/**"]
+      },
+      {
+        "rule": "ct/ and install/ scripts carry no comments besides the header. Flag comments that explain a decision or a workaround; that belongs in the PR description. A single short line where the code would look wrong without it is the exception.",
+        "scope": ["ct/**", "install/**"]
+      },
+      {
+        "rule": "After description, a CT script ends with the standard three lines (Completed Successfully, initialized, access URL) and at most one more. Flag if/else, pct exec or setup instructions there; what the user needs goes into the JSON notes.",
+        "scope": ["ct/**"]
       }
     ]
   },

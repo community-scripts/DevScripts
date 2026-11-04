@@ -22,6 +22,7 @@ header_info "$APP"
 variables
 NSAPP="8mblocal"
 var_install="${NSAPP}-install"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2361}"
 color
 catch_errors
 

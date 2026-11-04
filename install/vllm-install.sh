@@ -56,9 +56,14 @@ cpu)
     msg_error "vLLM publishes no prebuilt CPU wheel for $(uname -m)"
     exit 1
   fi
-  $STD uv pip install --python /opt/vllm/bin/python \
-    "https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cpu-cp38-abi3-manylinux_2_39_x86_64.whl" \
-    --torch-backend cpu
+  github_api_call "https://api.github.com/repos/vllm-project/vllm/releases/tags/v${VLLM_VERSION}" /tmp/vllm-release.json
+  VLLM_WHEEL="$(jq -r '.assets[] | select(.name | endswith("+cpu-cp38-abi3-manylinux_2_39_x86_64.whl")) | .browser_download_url' /tmp/vllm-release.json | head -n1)"
+  rm -f /tmp/vllm-release.json
+  [[ -n "$VLLM_WHEEL" ]] || {
+    msg_error "vLLM ${VLLM_VERSION} has no CPU wheel for x86_64"
+    exit 1
+  }
+  $STD uv pip install --python /opt/vllm/bin/python "$VLLM_WHEEL" --torch-backend cpu
   ;;
 *)
   msg_error "Unknown var_backend '${var_backend}' (expected auto, cuda, rocm or cpu)"
