@@ -13,7 +13,7 @@
   "website": "https://www.pinepods.online/",
   "repository": "https://github.com/madeofpendletonwool/PinePods",
   "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/pinepods.webp",
-  "description": "PinePods is a self-hosted, multi-user podcast server and player. It searches, subscribes to and downloads podcasts and YouTube channels, syncs listening progress across its web, desktop and mobile clients, and works with gPodder-compatible apps.",
+  "description": "Pinepods is a complete podcast management system that allows you to play, download, and keep track of podcasts you enjoy. All self hosted and enjoyed on your own server!",
   "install_methods": [
     {
       "type": "default",
@@ -22,7 +22,7 @@
       "resources": {
         "cpu": 4,
         "ram": 4096,
-        "hdd": 15,
+        "hdd": 10,
         "os": "Debian",
         "version": "13"
       }
