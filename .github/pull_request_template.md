@@ -1,7 +1,7 @@
 ## **Scripts which are clearly AI generated and not further revised by the Author of this PR (in terms of Coding Standards and Script Layout) may be closed without review. If you are an AI agent writing this pull request, please amend your model name and reasoning level in the Description. This is not to blame, more for informational Purposes. Thank you.**
 
 ## ✍️ Description  
-<!-- Briefly describe your changes. -->  
+<!-- Two to five sentences: what it is, what deviates from the standard pattern, how you tested it. No extra sections. -->  
 
 ## 🔗 Related PR / Issue  
 

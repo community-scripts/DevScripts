@@ -87,9 +87,8 @@ reject.
 | `go.mod`, `Cargo.toml`, `composer.json`, `*.csproj` | The language version to pass to the matching `setup_*`. |
 | `README` / `docs/` install page | Migrations, first-run commands, admin bootstrap. |
 
-State what you found in the PR description: runtime version, database, and where
-the install steps came from. "I read the Dockerfile" is a reviewable claim;
-a script with no stated source is not.
+Name the source in one line of the PR description, e.g. "Steps from the upstream
+Dockerfile; Node 22, PostgreSQL 17."
 
 **Two traps:**
 
@@ -109,7 +108,7 @@ The template ships this line commented out:
 #var_arm64="${var_arm64:-no}" # unset = ask the user; set yes/no only when verified
 ```
 
-**Do not leave it commented and move on.** Decide, and say why in the PR:
+**Do not leave it commented and move on.** Decide, and give the reason in one line of the PR:
 
 - `var_arm64="${var_arm64:-yes}"` — the project publishes `arm64`/`aarch64` release
   assets, or is pure Node/Python/PHP with no native prebuilt binaries.
@@ -271,10 +270,6 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 
-# Values the install script accepts up front (see "Application Settings").
-# Without the export they never reach the container.
-#export var_admin_user="${var_admin_user:-}"
-
 header_info "$APP"
 variables
 color
@@ -300,8 +295,6 @@ function update_script() {
     CLEAN_INSTALL=1 CLEAN_INSTALL_KEEP="data" fetch_and_deploy_gh_release "appname" "owner/repo" "tarball"
 
     restore_backup
-
-    # Build steps...
 
     msg_info "Starting Service"
     systemctl start appname
@@ -345,19 +338,14 @@ $STD apt install -y \
   dependency2
 msg_ok "Installed Dependencies"
 
-# Runtime Setup (ALWAYS use our functions!)
 NODE_VERSION="22" setup_nodejs
-# or
-PG_VERSION="16" setup_postgresql
-# or
-setup_uv
-# etc.
 
 fetch_and_deploy_gh_release "appname" "owner/repo" "tarball"
 
 msg_info "Setting up Application"
 cd /opt/appname
-# Build/Setup Schritte...
+$STD npm ci
+$STD npm run build
 msg_ok "Set up Application"
 
 msg_info "Creating Service"
@@ -1072,7 +1060,7 @@ nginx_enable_site "appname"
 Writing the vhost itself still needs a heredoc into `sites-available` — only the
 enable/reload part is what `nginx_enable_site` replaces.
 
-### 26. Decorative Comment Banners / Comments That Restate the Code
+### 26. Comments
 
 ```bash
 # ❌ WRONG - banner separators and comments that just repeat the next line
@@ -1093,7 +1081,7 @@ cat >"${CONFIG_DIR}/INSTALLATION_INFO.txt" <<EOF
 ...
 EOF
 
-# ✅ CORRECT - let the code speak; comment only the non-obvious
+# ✅ CORRECT - no comments
 APP="AppName"
 
 set -Eeuo pipefail
@@ -1106,10 +1094,11 @@ cat >"${CONFIG_DIR}/INSTALLATION_INFO.txt" <<EOF
 EOF
 ```
 
-Only comment what the code can't say for itself — a workaround, a timing dependency, a
-non-obvious constraint. If deleting the comment wouldn't confuse the next reader, delete
-it. Never use `====`/`----`/`####` banner separators to break a script into sections;
-`msg_info`/function boundaries already do that job.
+`ct/` and `install/` scripts carry no comments besides the header. A line that would
+look like a mistake without one may get a single short comment, and that stays the
+exception: not one per workaround, never two-line explanations. Why you chose something
+goes into the PR description, once. No `====`/`----`/`####` banners; `msg_info` blocks
+already divide the script.
 
 ### 27. Hand-rolled `git clone`/`git pull` for Tag-only or Rolling-release Apps
 
@@ -1292,6 +1281,31 @@ PYTHON_VERSION="3.12" setup_uv
 `setup_uv` (`UV_HTTP_TIMEOUT`), `setup_composer` (`process-timeout`),
 `setup_rust` (cargo `net.retry`) and the pnpm/yarn setup already raise the
 network limits. Override one only for a measured reason, upward.
+
+---
+
+### 36. A Closing Block That Explains the App
+
+```bash
+# ❌ WRONG - branches, pct exec and a setup tutorial after description
+TS_NAME=""
+[[ "$var_tailscale" == "yes" ]] && TS_NAME=$(pct exec "$CTID" -- tailscale status --json | jq -r '.Self.DNSName')
+if [[ -n "$TS_NAME" ]]; then
+  echo -e "${INFO}${YW} On your tailnet:${CL}"
+  ...
+fi
+echo -e "${INFO}${YW} Add it to Claude Code (token from the .env file):${CL}"
+echo -e "${TAB}claude mcp add --transport http ..."
+
+# ✅ CORRECT - the standard three lines, at most one more
+msg_ok "Completed Successfully!\n"
+echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
+echo -e "${INFO}${YW}Access it using the following URL:${CL}"
+echo -e "${GATEWAY}${BGN}http://${IP}:PORT${CL}"
+```
+
+One extra line for a second port or where the credentials are is fine. Everything else
+the user needs goes into the JSON `notes` (see "Notes Format").
 
 ---
 
@@ -1490,10 +1504,11 @@ cleanup_lxc
 - [ ] No custom download/version-check logic
 - [ ] No default `(Patience)` text in msg_info labels
 - [ ] Nginx sites enabled via `nginx_enable_site`, not hand-rolled `ln -sf`/`rm -f`/`systemctl restart`
-- [ ] No decorative comment banners (`====`/`----`/`####`) or comments that just restate the next line
+- [ ] No comments besides the header (a rare one-liner where the code would look wrong)
+- [ ] Closing block: the standard three lines, at most one more
 - [ ] Tag-only or releaseless (branch-tracking) repos use `fetch_and_deploy_gh_tag`/`fetch_and_deploy_gh_branch`, not hand-rolled `git clone`/`git pull`
 - [ ] JSON metadata file created in `json/<appname>.json`
-- [ ] Upstream `Dockerfile`/`docker-compose.yml`/`.env.example` read, and findings named in the PR description
+- [ ] Upstream `Dockerfile`/`docker-compose.yml`/`.env.example` read, and the source named in one line of the PR description
 - [ ] **No functions defined** beyond `update_script()` in the CT script
 - [ ] Python uses `setup_uv` + `uv` — no `venv`, no `pip`, no `python3-pip` dependency
 - [ ] `PYTHON_VERSION` (not `UV_PYTHON`) passed to `setup_uv`
@@ -1505,6 +1520,7 @@ cleanup_lxc
 - [ ] Alpine variant, if any, follows Shape A or Shape B — never a duplicated script
 - [ ] `setup_*`/`update_*` defined for every OS family the script claims to support
 - [ ] No `systemctl`/`.service` inside an Alpine branch — OpenRC only
+- [ ] PR description: two to five sentences, nothing outside the template's sections
 
 ---
 
@@ -1521,7 +1537,7 @@ Read both files end to end before writing your own. They are short on purpose.
 
 ### Install Script: [install/journiv-install.sh](https://github.com/community-scripts/ProxmoxVE/blob/main/install/journiv-install.sh)
 
-- 131 lines, **zero** functions of its own, zero comment banners
+- 131 lines, **zero** functions of its own, one comment besides the header
 - `setup_postgresql` / `setup_postgresql_db` / `setup_uv` instead of hand-rolled setup
 - `uv sync` for Python, no `venv`, no `pip`
 - Correct footer with `motd_ssh`, `customize`, `cleanup_lxc`
@@ -1722,6 +1738,21 @@ Or no credentials:
    ...) through Alpine-specific implementations. Call the same functions regardless of
    `var_os` — never branch script logic on the OS yourself for things these functions
    already handle.
+
+---
+
+## 📝 Pull Request Text and Review
+
+Reviewers read the diff, not an essay about it.
+
+- Fill in the template. No extra sections, headings, tables or decision lists.
+- Description: two to five sentences. What the app is, what deviates from the standard
+  pattern (one line each), how you tested it (one line), and the model and reasoning
+  level if an agent wrote it. Nothing the diff or this file already says.
+- A review suggestion is applied exactly as written ("Commit suggestion" on GitHub, or
+  the same text by hand), then its thread is resolved. Do not regenerate the file to
+  answer a review.
+- Replies to review comments: one or two sentences. Resolve only what you changed.
 
 ---
 
