@@ -1,0 +1,44 @@
+{
+  "name": "Bark Server",
+  "slug": "bark-server",
+  "categories": [
+    18
+  ],
+  "date_created": "2026-10-14",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://bark.day.app/",
+  "website": "https://bark.day.app/",
+  "repository": "https://github.com/Finb/bark-server",
+  "logo": "https://bark.day.app/logo.png",
+  "description": "Bark Server is the self-hosted backend for the Bark iOS app. It receives push requests over a simple HTTP API and forwards them to Apple's APNs, so scripts and home-automation flows can send custom notifications to your own iPhone. Device keys are stored locally in an embedded key-value database, so no external database is required.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/bark-server.sh",
+      "resources": {
+        "cpu": 1,
+        "ram": 256,
+        "hdd": 2,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Bark Server has no authentication by default, set BARK_SERVER_BASIC_AUTH_USER / BARK_SERVER_BASIC_AUTH_PASSWORD to enable HTTP Basic auth.",
+      "type": "warning"
+    },
+    {
+      "text": "Verify the server with: curl http://<IP>:8080/ping — it returns {\"code\":200,\"message\":\"pong\"}.",
+      "type": "info"
+    }
+  ]
+}
