@@ -43,7 +43,7 @@
     },
     {
       "text": "Behind an HTTPS reverse proxy, add SYMFONY_TRUSTED_PROXIES=127.0.0.1,PRIVATE_SUBNETS and SYMFONY_TRUSTED_HEADERS=x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port to /opt/shopware/.env.local, set APP_URL to the public URL, add that domain to the sales channel and run bin/console cache:clear.",
-      "type": "info"
+      "type": "warning"
     },
     {
       "text": "Major Shopware upgrades (e.g. 6.7 to 6.8) are not applied by the update and must follow the official upgrade guide.",
