@@ -23,8 +23,8 @@
                 "cpu": 2,
                 "ram": 4096,
                 "hdd": 8,
-                "os": "Ubuntu",
-                "version": "26.04"
+                "os": "Debian",
+                "version": "13"
             }
         }
     ],
@@ -39,6 +39,13 @@
             "type": "text",
             "default": "/mnt/scan",
             "help": "Absolute path inside the container that is watched and/or scanned daily; bind-mount host folders here"
+        },
+        {
+            "name": "var_scan_host_dir",
+            "label": "Host Folder to Scan",
+            "type": "text",
+            "default": "",
+            "help": "Optional folder on the Proxmox host; mounted read-only into the scan folder after the install (asked at the end when empty)"
         },
         {
             "name": "var_scan_mode",
@@ -58,7 +65,7 @@
     ],
     "notes": [
         {
-            "text": "Bind-mount the folders to scan read-only to the scan folder: pct set <CTID> -mp0 /path,mp=/mnt/scan,ro=1. Results go to /var/log/clamav/scan.log; signatures update hourly.",
+            "text": "Pick a host folder at install (var_scan_host_dir) and it is bind-mounted read-only into the scan folder. Results go to /var/log/clamav/scan.log; signatures update hourly.",
             "type": "info"
         },
         {
