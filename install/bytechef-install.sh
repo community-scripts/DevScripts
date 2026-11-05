@@ -14,7 +14,7 @@ network_check
 update_os
 
 JAVA_VERSION="25" setup_java
-NODE_VERSION="22" setup_nodejs
+NODE_VERSION="24" setup_nodejs
 PG_VERSION="16" setup_postgresql
 PG_DB_NAME="bytechef" PG_DB_USER="bytechef" setup_postgresql_db
 

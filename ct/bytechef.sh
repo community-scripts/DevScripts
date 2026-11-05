@@ -39,7 +39,7 @@ function update_script() {
     msg_ok "Stopped ByteChef"
 
     JAVA_VERSION="25" setup_java
-    NODE_VERSION="22" setup_nodejs
+    NODE_VERSION="24" setup_nodejs
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "bytechef" "bytechefhq/bytechef" "tarball"
 
     msg_info "Building ByteChef (Patience)"
