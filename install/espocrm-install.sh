@@ -14,9 +14,14 @@ network_check
 update_os
 
 if [[ -z "${var_admin_user:-}" ]]; then
-  var_admin_user=$(prompt_input "EspoCRM admin username:" "admin" 60)
+  var_admin_user=$(prompt_input "EspoCRM admin username (a-z, 0-9, @ . _ -):" "admin" 60)
 fi
 var_admin_user="${var_admin_user:-admin}"
+var_admin_user="${var_admin_user,,}"
+if [[ ! "$var_admin_user" =~ ^[a-z0-9@._-]+$ ]]; then
+  msg_warn "EspoCRM usernames take only a-z, 0-9 and @ . _ -; using admin"
+  var_admin_user="admin"
+fi
 if [[ -z "${var_admin_pass:-}" ]]; then
   var_admin_pass=$(random_password 16)
 fi
