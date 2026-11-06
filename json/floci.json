@@ -1,0 +1,53 @@
+{
+  "name": "Floci",
+  "slug": "floci",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-06",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "interface_port": 4566,
+  "documentation": "https://floci.io/floci/",
+  "website": "https://floci.io/floci/",
+  "repository": "https://github.com/floci-io/floci",
+  "logo": "https://cdn.jsdelivr.net/gh/floci-io/floci@main/docs/assets/floci.svg",
+  "description": "Floci is a free, open source local AWS emulator for development and CI. It serves S3, SQS, SNS, DynamoDB, IAM, Lambda, Secrets Manager and many more services on a single endpoint at port 4566, so the AWS CLI and SDKs work against it by setting an endpoint URL.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/floci.sh",
+      "config_path": "/opt/floci_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 3072,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Floci has no authentication. Use any non-empty AWS access key and secret (for example test/test), region us-east-1, and set the endpoint URL to http://<container-ip>:4566. Keep it on a trusted network.",
+      "type": "warning"
+    },
+    {
+      "text": "Docker is not installed, so services that run containers (Lambda, ECS, RDS, ElastiCache, EKS and similar) are limited or unavailable. S3, SQS, SNS, DynamoDB and the other core services work.",
+      "type": "info"
+    },
+    {
+      "text": "Response URLs such as SQS queue URLs use FLOCI_BASE_URL in /opt/floci_data/.env, set to the container IP at install. Update it and restart floci when the IP changes or clients reach Floci through a hostname.",
+      "type": "info"
+    }
+  ]
+}
