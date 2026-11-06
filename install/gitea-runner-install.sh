@@ -32,7 +32,7 @@ setup_deb_based() {
 
   if [[ -n "${var_gitea_url:-}" ]] && [[ -n "${var_gitea_token:-}" ]]; then
     msg_info "Registering Gitea Runner"
-    /usr/local/bin/gitea-runner register --no-interactive --config /etc/gitea-runner/config.yaml --instance "${var_gitea_url}" --token "${var_gitea_token}" --name "$(hostname)"
+    $STD /usr/local/bin/gitea-runner register --no-interactive --config /etc/gitea-runner/config.yaml --instance "${var_gitea_url}" --token "${var_gitea_token}" --name "$(hostname)"
     msg_ok "Registered Gitea Runner"
   fi
 
@@ -86,7 +86,7 @@ setup_alpine() {
 
   if [[ -n "${var_gitea_url:-}" ]] && [[ -n "${var_gitea_token:-}" ]]; then
     msg_info "Registering Gitea Runner"
-    /usr/local/bin/gitea-runner register --no-interactive --config /etc/gitea-runner/config.yaml --instance "${var_gitea_url}" --token "${var_gitea_token}" --name "$(hostname)"
+    $STD /usr/local/bin/gitea-runner register --no-interactive --config /etc/gitea-runner/config.yaml --instance "${var_gitea_url}" --token "${var_gitea_token}" --name "$(hostname)"
     msg_ok "Registered Gitea Runner"
   fi
 
