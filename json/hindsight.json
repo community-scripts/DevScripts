@@ -1,0 +1,72 @@
+{
+  "name": "Hindsight",
+  "slug": "hindsight",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-10-31",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8888,
+  "documentation": "https://hindsight.vectorize.io/developer/installation",
+  "website": "https://hindsight.vectorize.io/",
+  "repository": "https://github.com/vectorize-io/hindsight",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/hindsight.webp",
+  "description": "Hindsight is an open-source memory server for AI agents. Agents retain conversations and documents into memory banks, then recall facts, entities and their history, or reflect on them, through a REST API, SDKs and an MCP server.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/hindsight.sh",
+      "config_path": "/opt/hindsight.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 12,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_llm_provider",
+      "label": "LLM Provider",
+      "type": "text",
+      "help": "Empty for none: memories are stored as plain chunks, without fact extraction or reflect. Otherwise openai, anthropic, gemini, groq, ollama, lmstudio and others; see https://hindsight.vectorize.io/developer/models"
+    },
+    {
+      "name": "var_llm_api_key",
+      "label": "LLM API Key",
+      "type": "password",
+      "secret": true,
+      "help": "Not needed for ollama or lmstudio"
+    },
+    {
+      "name": "var_llm_model",
+      "label": "LLM Model",
+      "type": "text",
+      "help": "Empty for the provider's default model"
+    },
+    {
+      "name": "var_llm_base_url",
+      "label": "LLM Base URL",
+      "type": "text",
+      "help": "Empty for the provider's default. For a local LLM, e.g. the Ollama script's container: http://<ollama-ip>:11434/v1"
+    }
+  ],
+  "notes": [
+    {
+      "text": "The API key is saved to `~/hindsight.creds` inside the container. Send it as `Authorization: Bearer <key>` to the API and the MCP endpoint.",
+      "type": "info"
+    },
+    {
+      "text": "Without an LLM, Hindsight stores plain chunks only. Set the provider, key and model in `/opt/hindsight.env`, then run `systemctl restart hindsight`.",
+      "type": "info"
+    }
+  ]
+}
