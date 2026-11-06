@@ -1,0 +1,49 @@
+{
+  "name": "Printventory",
+  "slug": "printventory",
+  "categories": [11],
+  "date_created": "2026-11-02",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "interface_port": 5000,
+  "documentation": "https://github.com/TechJeeper/Printventory/blob/main/README.md",
+  "website": "https://printventory.com/",
+  "repository": "https://github.com/TechJeeper/Printventory",
+  "logo": "https://raw.githubusercontent.com/TechJeeper/Printventory/main/logo.png",
+  "description": "Printventory indexes local STL, 3MF and related 3D model files, then tracks tags, print status, filament and library organization. Server mode serves the same UI over HTTP on port 5000 for homelab and NAS-style access without uploading models.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/printventory.sh",
+      "config_path": "/root/.config/printventory",
+      "resources": {
+        "cpu": 4,
+        "ram": 8192,
+        "hdd": 20,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Printventory runs Electron headlessly (Xvfb). Defaults are 4 CPU / 8 GB RAM / 20 GB disk — lower RAM often OOMs during thumbnail work.",
+      "type": "warning"
+    },
+    {
+      "text": "Bind-mount your model storage into the CT (for example /mnt/models), then set STL Home in Settings to those Linux paths. Files stay on your mounts; nothing is uploaded.",
+      "type": "info"
+    },
+    {
+      "text": "Upstream has no GitHub Releases yet, so install and update track the main branch. After you publish Releases, the script can move to fetch_and_deploy_gh_release.",
+      "type": "info"
+    }
+  ]
+}
