@@ -42,7 +42,7 @@
       "type": "info"
     },
     {
-      "text": "Behind an HTTPS reverse proxy (NPM, Traefik, Caddy, Cloudflare Tunnel): 1) add these two lines to /opt/shopware/.env.local, each on a single line: SYMFONY_TRUSTED_PROXIES=127.0.0.1,PRIVATE_SUBNETS and SYMFONY_TRUSTED_HEADERS=x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port (PRIVATE_SUBNETS is a Symfony keyword, keep it after the comma). 2) In the Administration, add your public https domain to the Storefront sales channel (Sales Channels > Storefront > Domains). 3) Run: cd /opt/shopware && php bin/console cache:clear. If you install apps from the Shopware Store, also set APP_URL in .env.local to the public https URL before installing them.",
+      "text": "Behind an HTTPS reverse proxy (NPM, Traefik, Caddy, Cloudflare Tunnel), run inside the container: shopware-proxy shop.example.com (your public domain). It makes Shopware trust the proxy, sets APP_URL to https and rebuilds the config. Then, in the Administration, add https://shop.example.com to the Storefront sales channel (Sales Channels > Storefront > Domains).",
       "type": "warning"
     },
     {

@@ -362,6 +362,42 @@ EOF
 chmod 600 ~/shopware.creds
 msg_ok "Saved Credentials"
 
+msg_info "Creating Reverse Proxy Helper"
+cat <<'EOF' >/usr/local/bin/shopware-proxy
+#!/usr/bin/env bash
+# Prepare Shopware for an HTTPS reverse proxy (NPM, Traefik, Caddy, Cloudflare Tunnel).
+# Usage: shopware-proxy shop.example.com
+set -euo pipefail
+DOMAIN="${1:-}"
+DOMAIN="${DOMAIN#http://}"
+DOMAIN="${DOMAIN#https://}"
+DOMAIN="${DOMAIN%%/*}"
+if [[ -z "$DOMAIN" ]]; then
+  echo "Usage: shopware-proxy <public domain>   e.g. shopware-proxy shop.example.com"
+  exit 1
+fi
+cd /opt/shopware
+set_env() {
+  if grep -q "^$1=" .env.local; then
+    sed -i "s|^$1=.*|$1=$2|" .env.local
+  else
+    printf '%s=%s\n' "$1" "$2" >>.env.local
+  fi
+}
+set_env SYMFONY_TRUSTED_PROXIES "127.0.0.1,PRIVATE_SUBNETS"
+set_env SYMFONY_TRUSTED_HEADERS "x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port"
+set_env APP_URL "https://${DOMAIN}"
+php bin/console dotenv:dump prod >/dev/null
+rm -rf var/cache/prod_*
+php bin/console cache:clear >/dev/null
+chown -R www-data:www-data /opt/shopware/.env.local /opt/shopware/.env.local.php /opt/shopware/var
+systemctl restart 'php*-fpm.service'
+echo "Done. Shopware now trusts your reverse proxy and uses https://${DOMAIN}"
+echo "Last step: in the Administration, add https://${DOMAIN} to the Storefront sales channel (Sales Channels > Storefront > Domains)."
+EOF
+chmod +x /usr/local/bin/shopware-proxy
+msg_ok "Created Reverse Proxy Helper"
+
 motd_ssh
 customize
 cleanup_lxc
