@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-# Engine comes from community-scripts/core; this repo only ships the scripts.
-# A local core checkout wins (COMMUNITY_SCRIPTS_CORE_DIR, else a sibling ../core),
-# so a fork or branch of core can be tested without editing this file.
+_CS_DEFAULT_URL="https://raw.githubusercontent.com/community-scripts/DevScripts/main"
 _cs_boot="${COMMUNITY_SCRIPTS_CORE_DIR:-$(dirname "${BASH_SOURCE[0]}")/../../core}/core/build.func"
 source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/core/build.func")
 # Copyright (c) 2021-2026 community-scripts ORG
 # Author: MrNRod
-# License: MIT | https://github.com/community-scripts/ProxmoxVED/raw/main/LICENSE
-# Source: https://github.com/cedya77/aiometadata | Docs: https://github.com/cedya77/aiometadata/blob/dev/docs/ENVIRONMENT_VARIABLES.md
+# License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
+# Source: https://github.com/cedya77/aiometadata
 
 APP="AIOMetadata"
 var_tags="${var_tags:-media;streaming;stremio}"
@@ -16,7 +14,7 @@ var_ram="${var_ram:-2048}"
 var_disk="${var_disk:-8}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
-var_arm64="${var_arm64:-yes}" # upstream ships official multi-arch (amd64+arm64) images built with no native-compile toolchain; not independently verified on arm64 hardware by this script's author
+#var_arm64="${var_arm64:-no}" # unset = ask the user; set yes/no only when verified
 var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
@@ -35,22 +33,22 @@ function update_script() {
   fi
 
   if check_for_gh_release "aiometadata" "cedya77/aiometadata" "" "" "v"; then
-    msg_info "Stopping Service"
+    msg_info "Stopping AIOMetadata"
     systemctl stop aiometadata
-    msg_ok "Stopped Service"
+    msg_ok "Stopped AIOMetadata"
 
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "aiometadata" "cedya77/aiometadata" "tarball" "latest" "" "" "v"
 
-    msg_info "Building Application (Patience)"
+    msg_info "Building AIOMetadata"
     cd /opt/aiometadata
     $STD npm ci
     $STD npm run build
     $STD npm run build:backend
-    msg_ok "Built Application"
+    msg_ok "Built AIOMetadata"
 
-    msg_info "Starting Service"
+    msg_info "Starting AIOMetadata"
     systemctl start aiometadata
-    msg_ok "Started Service"
+    msg_ok "Started AIOMetadata"
     msg_ok "Updated successfully!"
   fi
   exit
