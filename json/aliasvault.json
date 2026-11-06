@@ -39,7 +39,7 @@
             "type": "info"
         },
         {
-            "text": "Behind a TLS-terminating reverse proxy, set FORCE_HTTPS_REDIRECT=false and TRUSTED_PROXIES=<proxy IP> in /opt/aliasvault/.env, then run: systemctl restart aliasvault.target",
+            "text": "Behind a TLS-terminating reverse proxy, set FORCE_HTTPS_REDIRECT=false and TRUSTED_PROXIES=<proxy IPv4> in /opt/aliasvault/.env, then run: systemctl restart aliasvault.target",
             "type": "info"
         },
         {
