@@ -38,7 +38,11 @@
       "type": "warning"
     },
     {
-      "text": "An ADMIN_KEY for the admin endpoints was generated in /opt/aiometadata_data/.env. API keys set directly (not BUILT_IN_*) are served to any visitor via /api/config.",
+      "text": "To enable the Trakt, Simkl, AniList and MyAnimeList integrations, add their client ID and secret to /opt/aiometadata_data/.env, then restart the aiometadata service.",
+      "type": "info"
+    },
+    {
+      "text": "Use the generated ADMIN_KEY from /opt/aiometadata_data/.env to access the dashboard. Keys set directly (not BUILT_IN_*) are served to any visitor via /api/config.",
       "type": "warning"
     }
   ]
