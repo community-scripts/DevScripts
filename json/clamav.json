@@ -1,0 +1,80 @@
+{
+    "name": "ClamAV",
+    "slug": "clamav",
+    "categories": [
+        6
+    ],
+    "date_created": "2026-11-02",
+    "type": "ct",
+    "updateable": true,
+    "privileged": false,
+    "interface_port": null,
+    "documentation": "https://docs.clamav.net/",
+    "website": "https://www.clamav.net/",
+    "repository": "https://github.com/Cisco-Talos/clamav",
+    "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/clamav.webp",
+    "description": "ClamAV is an open-source antivirus engine for detecting trojans, viruses and other malware. It scans bind-mounted folders such as download or share directories as files arrive and/or daily, and can optionally serve clamd over TCP so Nextcloud, rspamd or mail servers share one scanner. Infected files are reported, never moved or deleted.",
+    "install_methods": [
+        {
+            "type": "default",
+            "script": "ct/clamav.sh",
+            "config_path": "/etc/clamav/clamd.conf",
+            "resources": {
+                "cpu": 2,
+                "ram": 4096,
+                "hdd": 8,
+                "os": "Debian",
+                "version": "13"
+            }
+        }
+    ],
+    "default_credentials": {
+        "username": null,
+        "password": null
+    },
+    "app_vars": [
+        {
+            "name": "var_scan_dir",
+            "label": "Scan Folder",
+            "type": "text",
+            "default": "/mnt/scan",
+            "help": "Absolute path inside the container that is watched and/or scanned daily; bind-mount host folders here"
+        },
+        {
+            "name": "var_scan_host_dir",
+            "label": "Host Folder to Scan",
+            "type": "text",
+            "default": "",
+            "help": "Optional folder on the Proxmox host; mounted read-only into the scan folder after the install (asked at the end when empty)"
+        },
+        {
+            "name": "var_scan_mode",
+            "label": "Scan Mode",
+            "type": "select",
+            "options": ["both", "watch", "daily"],
+            "default": "both",
+            "help": "watch: scan files as they are written or moved in; daily: full scan once a day; both: watch plus a daily full rescan"
+        },
+        {
+            "name": "var_clamd_tcp",
+            "label": "clamd over TCP (port 3310)",
+            "type": "boolean",
+            "default": false,
+            "help": "Let other hosts send files to clamd on port 3310, e.g. Nextcloud files_antivirus or rspamd"
+        }
+    ],
+    "notes": [
+        {
+            "text": "Pick a host folder at install (var_scan_host_dir) and it is bind-mounted read-only into the scan folder. Results go to /var/log/clamav/scan.log; signatures update hourly.",
+            "type": "info"
+        },
+        {
+            "text": "clamd on TCP 3310 has no authentication. Allow the port only from the hosts that use it, e.g. with the Proxmox firewall.",
+            "type": "warning"
+        },
+        {
+            "text": "In an unprivileged container, only files readable by others on the host can be scanned. Watch mode does not see changes made on NFS or SMB mounts.",
+            "type": "warning"
+        }
+    ]
+}
