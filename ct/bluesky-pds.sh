@@ -2,12 +2,10 @@
 _CS_DEFAULT_URL="https://raw.githubusercontent.com/community-scripts/DevScripts/main"
 _cs_boot="${COMMUNITY_SCRIPTS_CORE_DIR:-$(dirname "${BASH_SOURCE[0]}")/../../core}/core/build.func"
 source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/core/build.func")
-
 # Copyright (c) 2021-2026 community-scripts ORG
 # Author: Community Scripts contributor
 # License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
 # Source: https://github.com/bluesky-social/pds
-
 APP="Bluesky PDS"
 var_tags="${var_tags:-social;atproto}"
 var_cpu="${var_cpu:-2}"
@@ -18,13 +16,11 @@ var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 var_arm64=1
 export var_pds_hostname="${var_pds_hostname:-}"
-export var_admin_email="${var_admin_email:-}"
 
 header_info "$APP"
 variables
 color
 catch_errors
-
 function update_script() {
   header_info
   check_container_storage
@@ -51,7 +47,6 @@ function update_script() {
   fi
   exit
 }
-
 start
 build_container
 
@@ -60,3 +55,5 @@ msg_ok "Completed Successfully!\n"
 echo -e "${CREATING}${GN}${APP} has been successfully initialized!${CL}"
 echo -e "${INFO}${YW}PDS URL:${CL} ${BGN}https://${var_pds_hostname:-<your-domain>}${CL}"
 echo -e "${INFO}${YW}Administration:${CL} run ${GN}pdsadmin help${CL} inside the container"
+echo -e "${INFO}${YW}Cloudflare Tunnel:${CL} route ${var_pds_hostname:-<your-domain>} to HTTP://<LXC-IP>:3000"
+echo -e "${INFO}${YW}No Caddy or public inbound ports are required on this LXC when using Cloudflare Tunnel."
