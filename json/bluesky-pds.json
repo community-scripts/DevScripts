@@ -42,16 +42,12 @@
   ],
   "notes": [
     {
-      "text": "Create a Cloudflare Tunnel Published Application route for your PDS hostname. Set the service to HTTP and point it to http://<LXC-IP>:3000. The PDS must be reachable from the machine running cloudflared.",
+      "text": "Create A records for your PDS domain and its wildcard (*.your-domain) pointing to this LXC before installation.",
       "type": "warning"
     },
     {
-      "text": "Do not put Cloudflare Access authentication in front of the PDS. Ensure WebSockets are enabled. No Caddy, in-container TLS certificate, or public inbound ports are needed when using Cloudflare Tunnel.",
+      "text": "PDS running ob TCP port 3000.",
       "type": "warning"
-    },
-    {
-      "text": "For accounts using the PDS-managed subdomain handles, configure the DNS and hostname routing required for those handles. Custom-domain handles such as krtko.me use an _atproto TXT record pointing to the account DID.",
-      "type": "info"
     },
     {
       "text": "This is a source-built, community-maintained native deployment; it is not the upstream Docker installer and needs testing before production use.",
