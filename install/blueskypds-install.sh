@@ -35,7 +35,7 @@ $STD apt install -y build-essential ca-certificates curl git gpg apt-transport-h
 msg_ok "Installed Bluesky PDS build dependencies"
 
 NODE_VERSION="24" setup_nodejs
-$STD npm install --global pnpm@11.11.0
+$STD npm install --global pnpm@12.16.1
 export PUPPETEER_SKIP_DOWNLOAD=true
 fetch_and_deploy_gh_branch "bluesky-pds" "bluesky-social/atproto" "main"
 cd /opt/bluesky-pds
