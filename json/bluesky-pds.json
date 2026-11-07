@@ -6,14 +6,14 @@
   "type": "ct",
   "updateable": true,
   "privileged": false,
-  "interface_port": 443,
+  "interface_port": 3000,
   "documentation": "https://github.com/bluesky-social/pds",
   "website": "https://bsky.social/",
   "repository": "https://github.com/bluesky-social/pds",
   "architectures": ["amd64", "arm64"],
   "platforms": ["pve"],
   "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/bluesky.webp",
-  "description": "Host a federated Bluesky Personal Data Server (PDS) and manage accounts on your own domain. This deployment builds and runs the official TypeScript PDS directly in the LXC without Docker.",
+  "description": "Host a federated Bluesky Personal Data Server (PDS) and manage accounts on your own domain. This deployment builds and runs the official TypeScript PDS directly in the LXC without Docker or an in-container reverse proxy.",
   "install_methods": [
     {
       "type": "default",
@@ -38,22 +38,20 @@
       "label": "Public PDS domain",
       "type": "text",
       "required": true
-    },
-    {
-      "name": "var_admin_email",
-      "label": "Let's Encrypt contact email",
-      "type": "text",
-      "required": true
     }
   ],
   "notes": [
     {
-      "text": "Create A records for your PDS domain and its wildcard (*.your-domain) pointing to this LXC before installation.",
+      "text": "Create a Cloudflare Tunnel Published Application route for your PDS hostname. Set the service to HTTP and point it to http://<LXC-IP>:3000. The PDS must be reachable from the machine running cloudflared.",
       "type": "warning"
     },
     {
-      "text": "TCP ports 80 and 443 must reach this LXC. They must not be in use by another service inside the container.",
+      "text": "Do not put Cloudflare Access authentication in front of the PDS. Ensure WebSockets are enabled. No Caddy, in-container TLS certificate, or public inbound ports are needed when using Cloudflare Tunnel.",
       "type": "warning"
+    },
+    {
+      "text": "For accounts using the PDS-managed subdomain handles, configure the DNS and hostname routing required for those handles. Custom-domain handles such as krtko.me use an _atproto TXT record pointing to the account DID.",
+      "type": "info"
     },
     {
       "text": "This is a source-built, community-maintained native deployment; it is not the upstream Docker installer and needs testing before production use.",
