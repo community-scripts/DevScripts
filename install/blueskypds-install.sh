@@ -41,7 +41,7 @@ fetch_and_deploy_gh_branch "bluesky-pds" "bluesky-social/atproto" "main"
 cd /opt/bluesky-pds
 
 msg_info "Building Bluesky PDS from source"
-$STD pnpm install --frozen-lockfile --filter 'pds-service...'
+$STD pnpm install --frozen-lockfile --filter 'pds-service...' --shamefully-hoist
 $STD pnpm run --recursive --stream --workspace-concurrency 1 --filter 'pds-service...' build --force
 $STD pnpm install --prod --filter 'pds-service...' --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 msg_ok "Built Bluesky PDS"
