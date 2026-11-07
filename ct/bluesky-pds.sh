@@ -35,11 +35,11 @@ function update_script() {
     msg_ok "Stopped Bluesky PDS"
     CLEAN_INSTALL=1 fetch_and_deploy_gh_branch "bluesky-pds" "bluesky-social/atproto" "main"
     NODE_VERSION="24" setup_nodejs
-    $STD npm install --global pnpm@11.11.0
+    $STD npm install --global pnpm@12.16.1
     export PUPPETEER_SKIP_DOWNLOAD=true
     cd /opt/bluesky-pds
-    $STD pnpm install --frozen-lockfile --filter 'pds-service...'
-    $STD pnpm run --recursive --stream --workspace-concurrency 1 --filter 'pds-service...' build -- --force
+    $STD pnpm install --frozen-lockfile --filter 'pds-service...' --shamefully-hoist
+    $STD pnpm run --recursive --stream --workspace-concurrency 1 --filter 'pds-service...' build --force
     $STD pnpm install --prod --filter 'pds-service...' --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
     msg_info "Starting Bluesky PDS"
     systemctl start pds
