@@ -42,7 +42,7 @@ cd /opt/bluesky-pds
 
 msg_info "Building Bluesky PDS from source"
 $STD pnpm install --frozen-lockfile --filter 'pds-service...'
-$STD pnpm run --recursive --stream --workspace-concurrency 1 --filter 'pds-service...' build -- --force
+$STD pnpm run --recursive --stream --workspace-concurrency 1 --filter 'pds-service...' build --force
 $STD pnpm install --prod --filter 'pds-service...' --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 msg_ok "Built Bluesky PDS"
 
