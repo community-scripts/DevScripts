@@ -2,6 +2,7 @@
 
 # Copyright (c) 2021-2026 community-scripts ORG
 # Author: stout01
+# Co-Author: J0113
 # License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
 # Source: https://github.com/BerriAI/litellm
 
@@ -28,7 +29,7 @@ PYTHON_VERSION="3.13" setup_uv
 msg_info "Installing LiteLLM and Generating the Prisma Client"
 venv_path="/opt/litellm/.venv"
 $STD uv venv --python 3.13 "$venv_path"
-$STD uv pip install --python "$venv_path/bin/python" "litellm[proxy,extra-proxy]==${var_litellm_version:-1.108.0}" "prisma==${var_litellm_prisma_version:-0.11.0}"
+$STD uv pip install --python "$venv_path/bin/python" "litellm[proxy,extra-proxy]==${var_litellm_version:?LiteLLM version must be supplied by ct/litellm.sh}" "prisma==${var_litellm_prisma_version:?LiteLLM Prisma version must be supplied by ct/litellm.sh}"
 schema_path=$("$venv_path/bin/python" -c 'from importlib.util import find_spec; from pathlib import Path; print(Path(find_spec("litellm").origin).parent / "proxy" / "schema.prisma")')
 $STD env "PATH=$venv_path/bin:$PATH" "$venv_path/bin/prisma" generate --schema="$schema_path"
 msg_ok "Installed LiteLLM and Generated the Prisma Client"

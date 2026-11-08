@@ -4,11 +4,12 @@ _cs_boot="${COMMUNITY_SCRIPTS_CORE_DIR:-$(dirname "${BASH_SOURCE[0]}")/../../cor
 source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_URL:-https://raw.githubusercontent.com/community-scripts/core/main}/core/build.func")
 # Copyright (c) 2021-2026 community-scripts ORG
 # Author: stout01
+# Co-Author: J0113
 # License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
 # Source: https://github.com/BerriAI/litellm
 
 APP="LiteLLM"
-var_tags="${var_tags:-ai;interface}"
+var_tags="${var_tags:-ai;llm;proxy}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-2048}"
 var_disk="${var_disk:-8}"
@@ -17,8 +18,8 @@ var_version="${var_version:-13}"
 var_arm64="${var_arm64:-yes}"
 var_unprivileged="${var_unprivileged:-1}"
 export var_litellm_http="${var_litellm_http:-yes}"
-export var_litellm_version="1.108.0"
-export var_litellm_prisma_version="0.11.0"
+export var_litellm_version="${var_litellm_version:-1.108.0}"
+export var_litellm_prisma_version="${var_litellm_prisma_version:-0.11.0}"
 
 header_info "$APP"
 variables
@@ -163,7 +164,3 @@ msg_ok "Completed Successfully!\n"
 echo -e "${CREATING}${GN}LiteLLM setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW}Access it using the following URL:${CL}"
 echo -e "${GATEWAY}${BGN}https://${IP}/ui${CL}"
-if [[ "$var_litellm_http" == "yes" ]]; then
-  echo -e "${INFO}${YW}HTTP access is also enabled on port 80.${CL}"
-fi
-echo -e "${INFO}${YW}Log in to LiteLLM as admin with LITELLM_MASTER_KEY from /opt/litellm/.env inside the container.${CL}"

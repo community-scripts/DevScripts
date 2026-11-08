@@ -4,7 +4,7 @@
   "categories": [
     20
   ],
-  "date_created": "2025-08-07",
+  "date_created": "2026-11-08",
   "type": "ct",
   "updateable": true,
   "privileged": false,
@@ -46,16 +46,12 @@
   ],
   "notes": [
     {
-      "text": "Open https://<container-ip>/ui and accept the self-signed certificate. Sign in as admin with the generated LITELLM_MASTER_KEY from /opt/litellm/.env.",
+      "text": "Sign in as admin using LITELLM_MASTER_KEY from /opt/litellm/.env. HTTPS uses a self-signed certificate that you must accept in your browser.",
       "type": "info"
     },
     {
-      "text": "Plain HTTP on port 80 is enabled by default. Set var_litellm_http=no at install time to redirect HTTP to HTTPS. Use HTTPS for the admin UI.",
-      "type": "info"
-    },
-    {
-      "text": "Updates apply the LiteLLM and Prisma versions selected by the script. Each upgrade saves the previous environment, configuration, and a PostgreSQL dump under /opt/litellm-backup.*.",
-      "type": "info"
+      "text": "HTTP on port 80 is enabled by default for local access and sends credentials unencrypted. Set var_litellm_http=no at install time to redirect HTTP to HTTPS.",
+      "type": "warning"
     }
   ]
 }
