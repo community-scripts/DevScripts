@@ -32,8 +32,8 @@ else
   var_ram="${var_ram:-2048}"
   var_disk="${var_disk:-8}"
   var_version="${var_version:-13}"
-var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2308}"
 fi
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2308}"
 
 export var_gitea_url="${var_gitea_url:-}"
 export var_gitea_token="${var_gitea_token:-}"
@@ -48,6 +48,8 @@ update_deb_based() {
     msg_error "No ${APP} Installation Found!"
     exit 1
   fi
+
+  ensure_dependencies git
 
   RELEASE=$(curl -fsSL https://gitea.com/api/v1/repos/gitea/runner/releases/latest | jq -r .tag_name | sed 's/^v//')
   if [[ "${RELEASE}" == "$(cat ~/.gitea-runner 2>/dev/null)" ]]; then
@@ -80,6 +82,7 @@ update_alpine() {
 
   msg_info "Updating Alpine Packages"
   $STD apk -U upgrade
+  $STD apk add --no-cache git
   msg_ok "Updated Alpine Packages"
 
   RELEASE=$(curl -fsSL https://gitea.com/api/v1/repos/gitea/runner/releases/latest | jq -r .tag_name | sed 's/^v//')

@@ -14,6 +14,10 @@ network_check
 update_os
 
 setup_deb_based() {
+  msg_info "Installing Dependencies"
+  $STD apt install -y git
+  msg_ok "Installed Dependencies"
+
   setup_docker
 
   msg_info "Installing Gitea Runner"
@@ -65,7 +69,7 @@ EOF
 
 setup_alpine() {
   msg_info "Installing Docker"
-  $STD apk add --no-cache docker docker-cli-compose
+  $STD apk add --no-cache docker docker-cli-compose git
   $STD rc-update add docker default
   $STD rc-service docker start
   msg_ok "Installed Docker"
