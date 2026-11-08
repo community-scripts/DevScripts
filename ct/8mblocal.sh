@@ -58,7 +58,7 @@ function update_script() {
     rm -rf /opt/8mblocal-build
     cd /opt/8mblocal
     $STD uv venv --python 3.12 .venv
-    $STD uv pip install --python .venv/bin/python -r requirements.txt
+    $STD uv pip install --python .venv/bin/python -r requirements.txt packaging
     msg_ok "Built 8mb.local"
 
     msg_info "Starting 8mb.local"
