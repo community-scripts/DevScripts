@@ -34,8 +34,10 @@ msg_ok "Installed Dependencies"
 
 MONGO_VERSION="8.0" setup_mongodb
 
+RELEASE_INFO=$(curl -fsSL https://releases.rocket.chat/latest/info)
+RELEASE=$(jq -r '.tag' <<<"$RELEASE_INFO")
 # npm 12 cannot install this bundle
-NODE_VERSION="22" NPM_VERSION="10" setup_nodejs
+NODE_VERSION="$(jq -r '.nodeVersion' <<<"$RELEASE_INFO" | cut -d. -f1)" NPM_VERSION="10" setup_nodejs
 
 msg_info "Configuring MongoDB Replica Set"
 if ! grep -q "^replication:" /etc/mongod.conf; then
@@ -58,7 +60,6 @@ for _ in {1..60}; do
 done
 msg_ok "Configured MongoDB Replica Set"
 
-RELEASE=$(curl -fsSL https://releases.rocket.chat/latest/info | jq -r '.tag')
 fetch_and_deploy_from_url "https://releases.rocket.chat/${RELEASE}/download" "/opt/rocketchat"
 echo "${RELEASE}" >~/.rocketchat
 

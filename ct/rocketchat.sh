@@ -40,11 +40,14 @@ function update_script() {
     exit
   fi
 
-  RELEASE=$(curl -fsSL https://releases.rocket.chat/latest/info | jq -r '.tag')
+  RELEASE_INFO=$(curl -fsSL https://releases.rocket.chat/latest/info)
+  RELEASE=$(jq -r '.tag' <<<"$RELEASE_INFO")
   if [[ "${RELEASE}" != "$(cat ~/.rocketchat 2>/dev/null)" ]]; then
     msg_info "Stopping Service"
     systemctl stop rocketchat
     msg_ok "Stopped Service"
+
+    NODE_VERSION="$(jq -r '.nodeVersion' <<<"$RELEASE_INFO" | cut -d. -f1)" NPM_VERSION="10" setup_nodejs
 
     CLEAN_INSTALL=1 fetch_and_deploy_from_url "https://releases.rocket.chat/${RELEASE}/download" "/opt/rocketchat"
     echo "${RELEASE}" >~/.rocketchat
