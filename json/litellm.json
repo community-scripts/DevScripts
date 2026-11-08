@@ -1,0 +1,61 @@
+{
+  "name": "LiteLLM",
+  "slug": "litellm",
+  "categories": [
+    20
+  ],
+  "date_created": "2025-08-07",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 443,
+  "documentation": "https://docs.litellm.ai/",
+  "website": "https://www.litellm.ai/",
+  "repository": "https://github.com/BerriAI/litellm",
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons/webp/litellm-light.webp",
+  "description": "LiteLLM is an OpenAI-compatible gateway for multiple LLM providers with virtual API keys, usage tracking, and spending budgets.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/litellm.sh",
+      "config_path": "/opt/litellm/litellm.yaml",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_litellm_http",
+      "label": "Allow plain HTTP on port 80",
+      "type": "boolean",
+      "default": "yes"
+    }
+  ],
+  "notes": [
+    {
+      "text": "Open https://<container-ip>/ui and accept the self-signed certificate. Sign in as admin with the generated LITELLM_MASTER_KEY from /opt/litellm/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Plain HTTP on port 80 is enabled by default. Set var_litellm_http=no at install time to redirect HTTP to HTTPS. Use HTTPS for the admin UI.",
+      "type": "info"
+    },
+    {
+      "text": "Updates apply the LiteLLM and Prisma versions selected by the script. Each upgrade saves the previous environment, configuration, and a PostgreSQL dump under /opt/litellm-backup.*.",
+      "type": "info"
+    }
+  ]
+}
