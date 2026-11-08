@@ -39,6 +39,13 @@ nextdns install \
   -profile "${var_nextdns_profile}" \
   -report-client-info \
   -setup-router
+mkdir -p /etc/systemd/system/nextdns.service.d
+cat <<EOF >/etc/systemd/system/nextdns.service.d/network-online.conf
+[Unit]
+Wants=network-online.target
+After=network-online.target
+EOF
+systemctl daemon-reload
 msg_ok "Configured NextDNS (profile ${var_nextdns_profile})"
 
 motd_ssh
