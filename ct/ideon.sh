@@ -33,6 +33,8 @@ function update_script() {
     exit
   fi
 
+  $STD sudo -u postgres psql -c "ALTER ROLE ideon BYPASSRLS;"
+
   if check_for_gh_release "ideon" "3xpyth0n/ideon"; then
     msg_info "Stopping Ideon"
     systemctl stop ideon

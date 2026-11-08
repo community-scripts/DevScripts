@@ -44,10 +44,6 @@
     {
       "text": "Links and redirects use APP_URL in /opt/ideon_data/.env. Change it behind a reverse proxy or after an IP change, add the SMTP_* values for email, then run systemctl restart ideon.",
       "type": "info"
-    },
-    {
-      "text": "Shell blocks, MCP and API-key clients, and access requests to other users' projects do not work here, as the database user is not a superuser like in upstream's Docker setup.",
-      "type": "info"
     }
   ]
 }
