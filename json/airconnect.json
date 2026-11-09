@@ -1,0 +1,53 @@
+{
+  "name": "AirConnect",
+  "slug": "airconnect",
+  "categories": [
+    13
+  ],
+  "date_created": "2026-11-09",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "interface_port": null,
+  "documentation": "https://github.com/philippe44/AirConnect#readme",
+  "website": "https://github.com/philippe44/AirConnect",
+  "repository": "https://github.com/philippe44/AirConnect",
+  "logo": "https://avatars.githubusercontent.com/u/9712599?v=4",
+  "description": "AirConnect adds AirPlay capabilities to Chromecast and UPnP (such as Sonos) players, allowing them to appear as native AirPlay audio devices on your network.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/airconnect.sh",
+      "config_path": "/opt/airconnect/airupnp.xml",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "AirConnect relies on network discovery (mDNS on UDP 5353 and UPnP/SSDP on UDP 1900) to find players and receive AirPlay streams. The container must be attached to the same local network bridge (e.g. vmbr0) as your audio devices and AirPlay clients.",
+      "type": "warning"
+    },
+    {
+      "text": "Both AirUPnP (Sonos/UPnP bridge) and AirCast (Chromecast bridge) services are enabled by default. If you only need one, disable the unused service with systemctl disable --now aircast or systemctl disable --now airupnp.",
+      "type": "info"
+    },
+    {
+      "text": "Optional custom XML configuration files can be placed at /opt/airconnect/airupnp.xml and /opt/airconnect/aircast.xml. Custom configs are preserved across updates.",
+      "type": "info"
+    }
+  ]
+}
