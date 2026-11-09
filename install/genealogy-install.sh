@@ -13,21 +13,14 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies (PostgreSQL 16, curl, jq, openssl)"
-$STD apt-get install -y \
+msg_info "Installing Dependencies"
+$STD apt install -y \
   curl \
   tar \
   gzip \
   ca-certificates \
   jq \
-  openssl \
-  postgresql \
-  postgresql-contrib
-
-# Mark critical packages as manual to safeguard against clean-lxcs autoremove
-if command -v apt-mark >/dev/null 2>&1; then
-  apt-mark manual curl tar gzip ca-certificates jq openssl postgresql postgresql-contrib >/dev/null 2>&1 || true
-fi
+  openssl
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Genealogy Family Tree"
@@ -36,9 +29,4 @@ msg_ok "Installed Genealogy Family Tree"
 
 motd_ssh
 customize
-
-msg_info "Cleaning up"
-$STD apt-get -y autoremove
-$STD apt-get -y clean
-rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-msg_ok "Cleaned up"
+cleanup_lxc
