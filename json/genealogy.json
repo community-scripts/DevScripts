@@ -1,0 +1,49 @@
+{
+  "name": "Genealogy",
+  "slug": "genealogy",
+  "categories": [
+    0
+  ],
+  "date_created": "2026-11-09",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://github.com/vlevshits/genealogy",
+  "website": "https://github.com/vlevshits/genealogy",
+  "repository": "https://github.com/vlevshits/genealogy",
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "logo": "https://raw.githubusercontent.com/vlevshits/genealogy/main/frontend/public/icons/icon-192.png",
+  "description": "Genealogy is a modern, private, self-hosted web application for building, exploring, and preserving a family tree archive with living-person privacy protection, Slavic patronymics, and zero-proxy native port 80 web serving.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/genealogy.sh",
+      "config_path": "/etc/genealogy/genealogy.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "12"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open http://<IP>:80 in your browser to complete the First-Run Setup Wizard (create admin account, set passkey/password, and name your family tree).",
+      "type": "info"
+    },
+    {
+      "text": "To update to the latest release in the future, simply run 'update' inside the container console.",
+      "type": "info"
+    }
+  ]
+}
