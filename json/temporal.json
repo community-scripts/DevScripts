@@ -1,0 +1,49 @@
+{
+  "name": "Temporal",
+  "slug": "temporal",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-09",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://docs.temporal.io/",
+  "website": "https://temporal.io/",
+  "repository": "https://github.com/temporalio/temporal",
+  "logo": "https://cdn.jsdelivr.net/gh/temporalio/ui@main/src/lib/vendor/apple-touch-icon.png",
+  "description": "Temporal is an open-source durable execution platform. Workflows written in Go, Java, Python, TypeScript, .NET, PHP or Ruby keep their state across crashes, restarts and retries, and the server handles timers, retries, signals and schedules so application code does not have to.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/temporal.sh",
+      "config_path": "/etc/temporal/config/production.yaml",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The gRPC endpoint on port 7233, the HTTP API on 7243 and the UI on 8080 have no authentication. Keep the container on a trusted network or put it behind a firewall and a TLS proxy.",
+      "type": "warning"
+    },
+    {
+      "text": "Point workers and SDK clients at <IP>:7233. The temporal CLI is installed in the container and already talks to the local server; the default namespace is created with a 72h retention.",
+      "type": "info"
+    },
+    {
+      "text": "The database password lives in /etc/temporal/temporal.env; the server config in /etc/temporal/config/production.yaml reads it from there. Restart temporal after changing either file.",
+      "type": "info"
+    }
+  ]
+}
