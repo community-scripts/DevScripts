@@ -1,0 +1,45 @@
+{
+  "name": "Bindery",
+  "slug": "bindery",
+  "categories": [
+    14
+  ],
+  "date_created": "2026-11-09",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8787,
+  "documentation": "https://github.com/vavallee/bindery/blob/main/docs/DEPLOYMENT.md",
+  "website": "https://github.com/vavallee/bindery",
+  "repository": "https://github.com/vavallee/bindery",
+  "logo": "https://cdn.jsdelivr.net/gh/vavallee/bindery@main/.github/assets/logo.png",
+  "description": "Bindery is a self-hosted book and audiobook manager in the *arr style. It tracks authors and series, searches Usenet and torrent indexers, hands grabs to your download client and imports finished files into your library, with OPDS, multi-user support and OIDC sign-in.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/bindery.sh",
+      "config_path": "/opt/bindery_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open the web UI once to create the admin account on the first-run setup page.",
+      "type": "info"
+    },
+    {
+      "text": "Books land in /books and downloads in /downloads. Mount your own storage on those paths or change them in /opt/bindery_data/.env.",
+      "type": "info"
+    }
+  ]
+}
