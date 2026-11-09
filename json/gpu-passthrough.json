@@ -1,0 +1,49 @@
+{
+  "name": "GPU Passthrough",
+  "slug": "gpu-passthrough",
+  "categories": [
+    1
+  ],
+  "date_created": "2026-10-17",
+  "type": "pve",
+  "updateable": false,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://pve.proxmox.com/wiki/PCI(e)_Passthrough",
+  "website": "https://community-scripts.org",
+  "repository": null,
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/proxmox.webp",
+  "description": "A helper script for configuring GPU passthrough (vfio-pci) for virtual machines on Proxmox VE. It checks CPU virtualization and IOMMU status, configures GRUB and VFIO kernel modules, binds detected GPU PCI devices, adds driver softdeps (NVIDIA/AMD), updates initramfs, extracts ACPI VFCT VBIOS for AMD GPUs, and provides verification and revert options.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "tools/pve/gpu-passthrough.sh",
+      "config_path": "/etc/modprobe.d/vfio.conf",
+      "resources": {
+        "cpu": null,
+        "ram": null,
+        "hdd": null,
+        "os": null,
+        "version": "PVE 8.x / 9.x"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Run this script directly in the Proxmox VE host shell as root.",
+      "type": "info"
+    },
+    {
+      "text": "This tool configures vfio-pci to dedicate your GPU exclusively to Virtual Machines. Do not use this if you want to share your GPU with LXC containers (e.g., Plex or Ollama), as VFIO unbinds host drivers and disables /dev/dri and /dev/kfd.",
+      "type": "warning"
+    },
+    {
+      "text": "A host reboot is required after enabling or reverting GPU passthrough for changes to take effect.",
+      "type": "info"
+    }
+  ]
+}
