@@ -30,7 +30,8 @@ setup_mongodb
 msg_info "Configuring RabbitMQ"
 systemctl enable -q --now rabbitmq-server
 until rabbitmqctl status &>/dev/null; do sleep 1; done
-$STD rabbitmqctl add_user rabbituser rabbitpass
+RABBIT_PASS=$(random_password 24)
+$STD rabbitmqctl add_user rabbituser "$RABBIT_PASS"
 $STD rabbitmqctl set_permissions -p / rabbituser ".*" ".*" ".*"
 msg_ok "Configured RabbitMQ"
 
@@ -156,7 +157,7 @@ january = "https://${LOCAL_IP}/january"
 host = "127.0.0.1"
 port = 5672
 username = "rabbituser"
-password = "rabbitpass"
+password = "${RABBIT_PASS}"
 
 [files]
 encryption_key = "${FILES_ENCRYPTION_KEY}"
