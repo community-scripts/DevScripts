@@ -83,14 +83,18 @@ dpkg -i code-server_${VERSION}_amd64.deb &>/dev/null
 rm -rf code-server_${VERSION}_amd64.deb
 mkdir -p ~/.config/code-server/
 systemctl enable -q --now code-server@$USER
+CS_PASS=$(openssl rand -hex 12)
 cat <<EOF >~/.config/code-server/config.yaml
 bind-addr: 0.0.0.0:8680
-auth: none
-password:
+auth: password
+password: ${CS_PASS}
 cert: false
 EOF
+chmod 600 ~/.config/code-server/config.yaml
+echo -e "Code Server\nPassword: ${CS_PASS}" >~/code-server.creds
+chmod 600 ~/code-server.creds
 systemctl restart code-server@$USER
 msg_ok "Installed Code-Server v${VERSION} on $hostname"
 
 echo -e "${APP} should be reachable by going to the following URL.
-         ${BL}http://$IP:8680${CL} \n"
+         ${BL}http://$IP:8680${CL} (password in ~/code-server.creds)\n"
