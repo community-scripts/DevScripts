@@ -35,7 +35,7 @@
     },
     "notes": [
         {
-            "text": "MQTT broker is available on port 1900. Default MQTT credentials are username 'bunker' / password 'bunker' — change them after first login.",
+            "text": "MQTT broker is available on port 1900. The admin client 'bunker' gets a random password, saved in ~/bunkerm.creds.",
             "type": "warning"
         },
         {

@@ -128,7 +128,7 @@ msg_ok "Configured Supervisor"
 
 msg_info "Creating Environment"
 MQTT_USERNAME="bunker"
-MQTT_PASSWORD="bunker"
+MQTT_PASSWORD=$(random_password 24)
 JWT_SECRET=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | cut -c1-48)
 API_KEY=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | cut -c1-48)
 AUTH_SECRET=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | cut -c1-48)
@@ -137,6 +137,8 @@ MQTT_BROKER=localhost
 MQTT_PORT=1900
 MQTT_USERNAME=${MQTT_USERNAME}
 MQTT_PASSWORD=${MQTT_PASSWORD}
+MOSQUITTO_ADMIN_USERNAME=${MQTT_USERNAME}
+MOSQUITTO_ADMIN_PASSWORD=${MQTT_PASSWORD}
 JWT_SECRET=${JWT_SECRET}
 API_KEY=${API_KEY}
 AUTH_SECRET=${AUTH_SECRET}
@@ -191,6 +193,18 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 systemctl enable -q --now bunkerm
+# The dynsec file from upstream ships the admin client bunker/bunker
+for _ in {1..30}; do
+  mosquitto_ctrl -h 127.0.0.1 -p 1900 -u bunker -P bunker dynsec getClient bunker &>/dev/null && break
+  sleep 2
+done
+$STD mosquitto_ctrl -h 127.0.0.1 -p 1900 -u bunker -P bunker dynsec setClientPassword bunker "$MQTT_PASSWORD"
+systemctl restart bunkerm
+{
+  echo "BunkerM MQTT admin"
+  echo "Username: bunker"
+  echo "Password: ${MQTT_PASSWORD}"
+} >~/bunkerm.creds
 msg_ok "Created Service"
 
 motd_ssh
