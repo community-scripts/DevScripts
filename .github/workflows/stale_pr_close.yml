@@ -9,7 +9,7 @@ on:
 
 jobs:
   stale-prs:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       issues: write
