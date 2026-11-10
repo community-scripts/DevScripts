@@ -6,10 +6,10 @@ name: PR script test
 #
 # A self-hosted runner that executes pull request code as root is only
 # acceptable if a human decides what runs on it. Nothing here starts on a push:
-# someone with write access comments `/test <sha>` naming the commit they
-# reviewed (optionally followed by the ct/ paths to build). Nothing is built
-# unless that commit is still the PR head: a push after the review is never
-# covered by it, not even one that lands in the seconds before this job runs.
+# someone with write access comments `/test` (optionally followed by a full SHA
+# to pin, and the ct/ paths to build). Only a commit that existed when the
+# comment was written gets built: a push after it is never covered, not even
+# one that lands in the seconds before this job runs.
 #
 #   gate    ubuntu-latest   who asked, which scripts, which commit
 #   test    proxmox-test    build + checks, one matrix job per script/OS
@@ -31,8 +31,8 @@ on:
         required: true
         type: number
       sha:
-        description: "The PR head commit you reviewed (full 40-character SHA)"
-        required: true
+        description: "Pin a commit (full 40-character SHA); empty = the latest, if nothing was pushed since"
+        required: false
         type: string
       scripts:
         description: "Space-separated ct/ paths (empty = everything the PR touches)"
@@ -48,6 +48,7 @@ jobs:
       (github.event.issue.pull_request && startsWith(github.event.comment.body, '/test'))
     runs-on: ubuntu-latest
     permissions:
+      actions: read # when the run was dispatched, for a /test without SHA
       checks: write
       contents: read
       issues: write
@@ -71,7 +72,7 @@ jobs:
             let prNumber, requested = '';
             if (context.eventName === 'workflow_dispatch') {
               prNumber = Number(context.payload.inputs.pr);
-              requested = `${context.payload.inputs.sha} ${context.payload.inputs.scripts || ''}`;
+              requested = `${context.payload.inputs.sha || ''} ${context.payload.inputs.scripts || ''}`;
             } else {
               prNumber = context.payload.issue.number;
               const body = context.payload.comment.body.trim();
@@ -101,28 +102,49 @@ jobs:
               else await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
             };
 
-            // The approval names the commit. Reading pr.head.sha alone would build
-            // whatever was pushed between the comment and this job starting, i.e.
-            // code nobody looked at. It has to be the full SHA: the author writes
-            // both commits, so a short prefix only takes a birthday collision
-            // (2^24 tries for 12 hex characters) to match a malicious one.
+            // Which commit the approval covers. Reading pr.head.sha alone would
+            // build whatever was pushed between the comment and this job
+            // starting, i.e. code nobody looked at. Two ways to be sure:
+            //
+            //   /test <sha>  that exact commit, and only while it is the head. A
+            //                full SHA: the author writes both commits, so a short
+            //                prefix is a quick birthday collision away.
+            //   /test        the latest commit, if nothing reached the fork after
+            //                the comment. pushed_at is set by GitHub on every push
+            //                and read after the PR, so a push in between shows up.
+            //                Branches of this repository belong to people with
+            //                write access, who could build anything anyway.
             const tokens = requested.split(/\s+/).filter(Boolean);
             const isSha = t => /^[0-9a-f]{7,40}$/.test(t);
             const approved = tokens.filter(isSha);
             let entries = tokens.filter(t => !isSha(t));
-            if (approved.length !== 1 || approved[0] !== pr.head.sha) {
-              const current = pr.head.sha;
-              await sticky([
-                MARK, '### Proxmox script test', '',
-                approved.length !== 1
-                  ? '⚠️ Nothing was built: `/test` has to name the commit you reviewed, as its full 40-character SHA.'
-                  : approved[0].length !== 40 && pr.head.sha.startsWith(approved[0])
-                    ? '⚠️ Nothing was built: a short SHA is not enough, it has to be the full 40 characters.'
-                    : `⚠️ \`${approved[0]}\` is not the head of this PR: it has been pushed to since. Nothing was built.`,
-                '', 'To build the current head, comment:', '', '```', `/test ${current}`, '```',
-              ].join('\n'));
-              core.notice(`Approval does not match head ${pr.head.sha}`);
+            const refuse = async (why, retry) => {
+              await sticky([MARK, '### Proxmox script test', '', `⚠️ ${why} Nothing was built.`, '', retry].join('\n'));
+              core.notice(why);
+            };
+            if (approved.length > 1) {
+              await refuse('`/test` takes at most one commit.', 'Comment `/test` to build the latest commit.');
               return;
+            }
+            if (approved.length === 1 && approved[0] !== pr.head.sha) {
+              await refuse(
+                approved[0].length !== 40 && pr.head.sha.startsWith(approved[0])
+                  ? 'A short SHA is not enough, it has to be all 40 characters.'
+                  : `\`${approved[0]}\` is not the head of this PR (any more).`,
+                'Comment `/test` to build the latest commit.');
+              return;
+            }
+            if (approved.length === 0 && head.full_name !== `${owner}/${repo}`) {
+              const askedAt = context.eventName === 'workflow_dispatch'
+                ? (await github.rest.actions.getWorkflowRun({ owner, repo, run_id: context.runId })).data.created_at
+                : context.payload.comment.created_at;
+              const { data: fork } = await github.rest.repos.get({ owner: head.owner.login, repo: head.name });
+              if (new Date(fork.pushed_at) >= new Date(askedAt)) {
+                await refuse(
+                  `Something was pushed to ${head.full_name} after the \`/test\`, so it is not certain which commit was meant.`,
+                  'Comment `/test` again once you have looked at the latest commit.');
+                return;
+              }
             }
             if (entries.some(e => !/^ct\/[A-Za-z0-9._-]+\.sh$/.test(e))) {
               core.setFailed(`Only ct/<name>.sh paths can be requested, got: ${requested}`);
@@ -375,7 +397,7 @@ jobs:
               table, '',
               ...shots, '',
               ...logs, '',
-              `Full logs: [workflow run](${runUrl}) (artifacts \`result-*\`). Comment \`/test ${process.env.SHA}\` to build again.`,
+              `Full logs: [workflow run](${runUrl}) (artifacts \`result-*\`). Comment \`/test\` to build again.`,
             ].join('\n');
 
             await github.rest.checks.update({

@@ -12,19 +12,21 @@ The same file runs in DevScripts and ProxmoxVE.
 
 | Comment | Builds |
 | ------- | ------ |
-| `/test <sha>` | Every `ct/` script the PR changes, plus the `ct/` entry point of every changed `install/` script |
-| `/test <sha> ct/foo.sh ct/bar.sh` | Only these scripts |
+| `/test` | The latest commit: every `ct/` script the PR changes, plus the `ct/` entry point of every changed `install/` script |
+| `/test ct/foo.sh ct/bar.sh` | Only these scripts |
+| `/test <sha>` | Exactly that commit (all 40 characters), and only while it is the PR head |
 
 - Only users with write access can trigger it. Anyone else's `/test` is ignored.
-- `<sha>` is the commit you reviewed, all 40 characters. A short SHA is refused:
-  the PR author writes both commits, so making a malicious one share a short
-  prefix with the reviewed one is a quick birthday collision. If the PR has been
-  pushed to since, nothing is built, and the bot replies with the command for
-  the current head. A plain `/test` gets the same reply, so you never have to
-  look the SHA up yourself.
-- Why it is required: without it, the job would build whatever the head is
-  when it starts, and a contributor could push unreviewed code in the seconds
-  between your comment and the build.
+- Only a commit that existed when you wrote the comment is built. Otherwise a
+  contributor could push unreviewed code in the seconds between your comment
+  and the build. For a PR from a fork, the gate checks when that fork was last
+  pushed to (`pushed_at`, set by GitHub); if that is after your comment,
+  nothing is built and the bot asks you to comment again. Branches in this
+  repository belong to people with write access and always build the latest
+  commit.
+- A pinned SHA has to be all 40 characters. The PR author writes both commits,
+  so giving a malicious one the same short prefix is a quick birthday
+  collision.
 - Scripts that ask for the OS (`msg_menu "Choose the container OS"`) are built
   twice, once on Debian and once on Alpine.
 - At most 10 scripts per run.
