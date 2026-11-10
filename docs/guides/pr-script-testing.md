@@ -36,11 +36,31 @@ The same file runs in DevScripts and ProxmoxVE.
 1. The script exits 0 within 45 minutes and prints `Completed successfully`.
 2. The container is running.
 3. No failed systemd units (Alpine: no crashed OpenRC services).
-4. The URL the script prints (`http://${IP}:PORT/...`) answers with any HTTP
-   status below 500 within 2 minutes. Scripts that print no URL skip this check.
+4. The URL the script prints (`http://${IP}:PORT/...`) answers **200** within 2
+   minutes. Redirects are followed, so a jump to a login page is fine. Scripts
+   that print no URL skip this check.
 
 The container is destroyed afterwards, whether the build passed or failed. The
 full build log is attached to the run as a `result-*` artifact.
+
+## What you see
+
+- **Live output:** the `test` job's log on GitHub streams the build as it
+  happens, including the install log from inside the container (lines marked
+  `│`), which the engine normally hides. The PR comment links to it while the
+  build runs. Workflow commands are switched off while that output streams,
+  so a script cannot inject `::error` or similar into the log.
+- **Result comment:** posted as a new comment that mentions whoever started the
+  test, replacing the bot's previous one. An edited comment would not reliably
+  notify. Text from the build that lands outside code blocks has its `@`
+  defused, so a log line cannot ping anyone.
+- **Screenshot:** where the script prints a URL, headless Chromium (as the
+  unprivileged user `ci-shot` on the test host) takes a 1280×800 screenshot, on
+  a failed check too. It is stored on the orphan branch `ci-screenshots` as
+  `pr-<n>/<script>.png`, overwritten on every run, and shown in the comment.
+  Never merge that branch.
+- **Install log:** collapsed in the comment for every script, the end of the
+  build log as well for failures.
 
 ## How a fork branch gets built
 

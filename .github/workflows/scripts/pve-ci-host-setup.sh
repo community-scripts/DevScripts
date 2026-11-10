@@ -18,7 +18,10 @@ UPLINK="${UPLINK:-vmbr0}"
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq jq curl python3 dnsmasq iptables >/dev/null
+apt-get install -y -qq jq curl python3 dnsmasq iptables chromium fonts-dejavu fonts-noto-color-emoji >/dev/null
+
+# Screenshots of the app under test are taken as this user, never as root.
+id ci-shot &>/dev/null || useradd --system --create-home --shell /usr/sbin/nologin ci-shot
 
 # Containers get their own NATed bridge instead of the lab network: no DHCP
 # lease surprises (a lab lease once handed a container the host's own address),

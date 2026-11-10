@@ -58,6 +58,7 @@ jobs:
       repo: ${{ steps.plan.outputs.repo }}
       sha: ${{ steps.plan.outputs.sha }}
       check_id: ${{ steps.plan.outputs.check_id }}
+      actor: ${{ steps.plan.outputs.actor }}
     steps:
       - id: plan
         uses: actions/github-script@v8
@@ -94,7 +95,8 @@ jobs:
             const MARK = '<!-- pr-script-test -->';
             const sticky = async body => {
               const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: prNumber });
-              const mine = comments.find(c => c.body.includes(MARK));
+              // Only our own comment: anyone can paste the marker into theirs.
+              const mine = comments.find(c => c.body.includes(MARK) && c.user.type === 'Bot');
               if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
               else await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
             };
@@ -165,10 +167,12 @@ jobs:
             core.setOutput('repo', head.full_name);
             core.setOutput('sha', pr.head.sha);
             core.setOutput('check_id', String(check.id));
+            // Who asked: the /test commenter, or whoever dispatched the run.
+            core.setOutput('actor', context.actor);
 
             await sticky([
               MARK, '### Proxmox script test', '',
-              `⏳ Building ${include.length} at ${pr.head.sha.slice(0, 7)} — [run](${runUrl})`, '',
+              `⏳ Building ${include.length} at ${pr.head.sha.slice(0, 7)} — [watch it live](${runUrl}) (open the \`test\` job)`, '',
               ...include.map(i => `- \`${i.script}\`${i.os ? ` (${i.os})` : ''}`),
             ].join('\n'));
 
@@ -219,6 +223,7 @@ jobs:
     permissions:
       actions: read
       checks: write
+      contents: write # the ci-screenshots branch only; main is protected
       issues: write
       pull-requests: write
     steps:
@@ -234,6 +239,7 @@ jobs:
           SHA: ${{ needs.gate.outputs.sha }}
           CHECK_ID: ${{ needs.gate.outputs.check_id }}
           TEST_RESULT: ${{ needs.test.result }}
+          ACTOR: ${{ needs.gate.outputs.actor }}
         with:
           script: |
             const fs = require('fs');
@@ -256,6 +262,8 @@ jobs:
                     const r = JSON.parse(fs.readFileSync(p, 'utf8'));
                     const log = path.join(dir, 'install.log');
                     r.install_log = fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '';
+                    const shot = path.join(dir, 'screenshot.png');
+                    r.shot_file = fs.existsSync(shot) ? shot : '';
                     found.set(`${r.script}|${r.os}`, r);
                   } catch (err) { core.warning(`unreadable ${p}: ${err.message}`); }
                 }
@@ -264,15 +272,57 @@ jobs:
             walk('results');
 
             // A job that died before writing result.json still gets a row.
-            const rows = matrix.map(m => found.get(`${m.script}|${m.os || 'default'}`) || {
+            const rows = matrix.map(m => ({ ...(found.get(`${m.script}|${m.os || 'default'}`) || {
               script: m.script, os: m.os || 'default',
               status: process.env.TEST_RESULT === 'cancelled' ? 'cancelled' : 'error',
-              step: 'no result (runner or job failure)', duration: 0, log_tail: '', install_log: '',
-            });
+              step: 'no result (runner or job failure)', duration: 0, log_tail: '', install_log: '', shot_file: '',
+            }), name: m.name }));
+
+            // Screenshots go to an orphan branch, because a comment can only show
+            // an image that has a URL. One file per PR and script, overwritten on
+            // every run; the link names the commit, so no cache shows an old one.
+            // The PNG comes from the host that ran the PR's code: check it again.
+            const BRANCH = 'ci-screenshots';
+            const prNum = Number(process.env.PR);
+            const isPng = buf => buf.length > 8 && buf.length < 3000000 &&
+              buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+            const ensureBranch = async () => {
+              try { await github.rest.git.getRef({ owner, repo, ref: `heads/${BRANCH}` }); return; }
+              catch (e) { if (e.status !== 404) throw e; }
+              const { data: blob } = await github.rest.git.createBlob({ owner, repo, encoding: 'utf-8',
+                content: 'Screenshots taken by pr-script-test.yml for the PR comments. Not code; never merge this branch.\n' });
+              const { data: tree } = await github.rest.git.createTree({ owner, repo, tree: [{ path: 'README.md', mode: '100644', type: 'blob', sha: blob.sha }] });
+              const { data: commit } = await github.rest.git.createCommit({ owner, repo, message: 'Start ci-screenshots', tree: tree.sha, parents: [] });
+              await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${BRANCH}`, sha: commit.sha });
+            };
+            for (const r of rows.filter(r => r.shot_file)) {
+              const buf = fs.readFileSync(r.shot_file);
+              if (!isPng(buf)) { core.warning(`${r.script}: screenshot is not a plausible PNG, skipped`); continue; }
+              const file = `pr-${prNum}/${r.name}.png`;
+              for (let attempt = 1; attempt <= 3 && !r.shot_url; attempt++) {
+                try {
+                  await ensureBranch();
+                  let sha;
+                  try { sha = (await github.rest.repos.getContent({ owner, repo, path: file, ref: BRANCH })).data.sha; }
+                  catch (e) { if (e.status !== 404) throw e; }
+                  const { data } = await github.rest.repos.createOrUpdateFileContents({
+                    owner, repo, branch: BRANCH, path: file, sha, content: buf.toString('base64'),
+                    message: `Screenshot: ${r.script} (${r.os}) for #${prNum} at ${process.env.SHA.slice(0, 7)}`,
+                  });
+                  r.shot_url = `https://raw.githubusercontent.com/${owner}/${repo}/${data.commit.sha}/${file}`;
+                } catch (e) {
+                  // Two reports at once race on the branch head; try again.
+                  core.warning(`${r.script}: screenshot upload attempt ${attempt} failed: ${e.message}`);
+                  await new Promise(res => setTimeout(res, 2000 * attempt));
+                }
+              }
+            }
 
             const icon = { pass: '✅', fail: '❌', error: '⚠️', cancelled: '⏹️' };
             const dur = s => `${Math.floor(s / 60)}m${String(s % 60).padStart(2, '0')}s`;
-            const clean = s => String(s || '').replace(/[|\r\n]/g, ' ').replace(/`/g, "'").slice(0, 200);
+            // Text from the build lands outside code blocks here: no table breaks,
+            // no code spans, and no @mention of a stranger (zero-width space).
+            const clean = s => String(s || '').replace(/[|\r\n]/g, ' ').replace(/`/g, "'").replace(/@/g, '@​').slice(0, 200);
             const fence = s => String(s || '').replace(/~~~~/g, '~~~');
 
             const passed = rows.filter(r => r.status === 'pass').length;
@@ -315,11 +365,17 @@ jobs:
               return parts.join('\n\n');
             });
 
+            const shots = rows.filter(r => r.shot_url).map(r => [
+              `<details open><summary>📸 ${r.script} (${r.os}) — ${clean(r.url)}</summary>`, '',
+              `<img src="${r.shot_url}" width="640" alt="Screenshot of ${r.script}">`, '', '</details>',
+            ].join('\n'));
+
             const summary = [
               `${allPass ? '✅' : '❌'} **${passed}/${rows.length} passed** at \`${process.env.SHA.slice(0, 7)}\``, '',
               table, '',
+              ...shots, '',
               ...logs, '',
-              `Full logs: [workflow run](${runUrl}) (artifacts \`result-*\`). Comment \`/test\` to build again.`,
+              `Full logs: [workflow run](${runUrl}) (artifacts \`result-*\`). Comment \`/test ${process.env.SHA}\` to build again.`,
             ].join('\n');
 
             await github.rest.checks.update({
@@ -328,10 +384,17 @@ jobs:
               output: { title: `${passed}/${rows.length} passed`, summary: summary.slice(0, 65000) },
             });
 
+            // The result pings whoever started the test. A mention added by
+            // editing a comment does not reliably notify, so the old comment
+            // goes and the result is posted as a new one, at the end of the
+            // thread where it is looked for.
+            const actor = process.env.ACTOR || '';
+            const ping = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(actor) ? `@${actor} ` : '';
             const MARK = '<!-- pr-script-test -->';
-            const body = `${MARK}\n### Proxmox script test\n\n${summary}`.slice(0, 65000);
+            const body = `${MARK}\n### Proxmox script test\n\n${ping}${summary}`.slice(0, 65000);
             const pr = Number(process.env.PR);
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: pr });
-            const mine = comments.find(c => c.body.includes(MARK));
-            if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
-            else await github.rest.issues.createComment({ owner, repo, issue_number: pr, body });
+            for (const c of comments.filter(c => c.body.includes(MARK) && c.user.type === 'Bot')) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: c.id });
+            }
+            await github.rest.issues.createComment({ owner, repo, issue_number: pr, body });

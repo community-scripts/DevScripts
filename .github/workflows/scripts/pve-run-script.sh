@@ -98,8 +98,57 @@ finish() {
   echo "::endgroup::"
 }
 
+# --- Live output ------------------------------------------------------------------
+# The job log on GitHub streams while the job runs, so mirroring the build there
+# is all "live" takes. Two streams: the engine's own output, and the install
+# log inside the container, which holds everything $STD hides (apt, npm, ...).
+#
+# Both are written by the code under test. A line starting with `::` would be
+# read by the runner as a workflow command, so command processing is switched
+# off for as long as they run, with a token the build cannot know.
+stream_token=""
+log_pid=""
+install_pid=""
+
+# Colours stay, cursor movement and spinner redraws go.
+live_filter() {
+  sed -u -E 's/\r/\n/g; s/\x1B\[[0-9;?]*[ABCDEFGHJKSTfhilnsu]//g' | sed -u -E '/^\s*$/d'
+}
+
+start_streams() {
+  stream_token=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+  echo "::stop-commands::${stream_token}"
+  tail -n +1 -F --pid="$build_pid" "$RAW_LOG" 2>/dev/null > >(live_filter) &
+  log_pid=$!
+  # setsid: its own process group, so stop_streams can take down the
+  # pct exec / tail pair inside it in one go.
+  setsid bash -c '
+    for _ in $(seq 1 900); do
+      f=$(pct exec "$1" -- sh -c "ls -t /root/.install-*.log 2>/dev/null | head -n1" 2>/dev/null)
+      if [ -n "$f" ]; then
+        echo "──────── install log of CT $1 (live) ────────"
+        exec pct exec "$1" -- tail -n +1 -F "$f"
+      fi
+      sleep 2
+    done' _ "$ctid" 2>/dev/null > >(live_filter | sed -u 's/^/  │ /') &
+  install_pid=$!
+}
+
+stop_streams() {
+  [[ -n "$stream_token" ]] || return 0
+  [[ -n "$install_pid" ]] && kill -TERM -- "-$install_pid" &>/dev/null
+  [[ -n "$log_pid" ]] && kill -TERM "$log_pid" &>/dev/null
+  wait "$log_pid" "$install_pid" &>/dev/null
+  sleep 1 # let the filters flush
+  install_pid=""
+  log_pid=""
+  echo "::${stream_token}::"
+  stream_token=""
+}
+
 build_pid=""
 cleanup() {
+  stop_streams
   if [[ -n "$build_pid" ]]; then
     pkill -TERM -P "$build_pid" &>/dev/null || true
     kill -TERM "$build_pid" &>/dev/null || true
@@ -181,9 +230,11 @@ touch "$RAW_LOG.start"
 env -i "${build_env[@]}" timeout --kill-after=1m "$BUILD_TIMEOUT" \
   bash -c 'bash -c "$(curl -fsSL "$1")"' _ "$base/$SCRIPT" </dev/null >"$RAW_LOG" 2>&1 &
 build_pid=$!
+start_streams
 wait "$build_pid"
 exit_code=$?
 build_pid=""
+stop_streams
 
 if ((exit_code == 124 || exit_code == 137)); then
   fail "build timed out after ${BUILD_TIMEOUT}"
@@ -208,16 +259,38 @@ elif pct exec "$ctid" -- sh -c 'command -v rc-status' &>/dev/null; then
 fi
 [[ -z "$failed_units" ]] || fail "failed services: ${failed_units}"
 
-# The URL the script tells the user to open, e.g. http://${IP}:1337/admin
+# What the app's page looks like, for the PR comment. Chromium runs as its own
+# unprivileged user with its sandbox on: the page is served by code under test.
+take_screenshot() {
+  command -v chromium >/dev/null && id ci-shot &>/dev/null || return 0
+  local dir
+  dir=$(mktemp -d)
+  chown ci-shot "$dir"
+  runuser -u ci-shot -- timeout 60 chromium --headless=new --disable-gpu --hide-scrollbars \
+    --ignore-certificate-errors --no-first-run --window-size=1280,800 --virtual-time-budget=10000 \
+    --user-data-dir="$dir/profile" --screenshot="$dir/shot.png" "$url" &>/dev/null
+  # Only a plausible PNG leaves this function.
+  if [[ -s "$dir/shot.png" && $(stat -c %s "$dir/shot.png") -lt 3000000 ]] &&
+    [[ "$(head -c 8 "$dir/shot.png" | od -An -tx1 | tr -d ' \n')" == "89504e470d0a1a0a" ]]; then
+    cp "$dir/shot.png" "$OUT_DIR/screenshot.png"
+  fi
+  rm -rf -- "$dir"
+}
+
+# The URL the script tells the user to open, e.g. http://${IP}:1337/admin, has
+# to answer 200 (after redirects, so a jump to /login is fine). A script that
+# prints no URL has no web UI to check.
 pattern=$(grep -oE 'https?://\$\{IP\}(:[0-9]+)?(/[A-Za-z0-9._~/?=&%-]*)?' "$tree/$SCRIPT" | head -n1)
 if [[ -n "$pattern" && -n "$ct_ip" ]]; then
   url="${pattern/\$\{IP\}/$ct_ip}"
   for ((waited = 0; waited < URL_WAIT; waited += 5)); do
-    http_code=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 10 "$url" || true)
-    [[ "$http_code" =~ ^[1-4][0-9][0-9]$ ]] && break
+    http_code=$(curl -sk -L --max-redirs 5 -o /dev/null -w '%{http_code}' --max-time 10 "$url" || true)
+    [[ "$http_code" =~ ^2[0-9][0-9]$ ]] && break
     sleep 5
   done
-  [[ "$http_code" =~ ^[1-4][0-9][0-9]$ ]] || fail "${url} did not answer within ${URL_WAIT}s (last: ${http_code:-none})"
+  # Also when the check fails: an error page explains more than a status code.
+  [[ "$http_code" =~ ^[1-5][0-9][0-9]$ ]] && take_screenshot
+  [[ "$http_code" =~ ^2[0-9][0-9]$ ]] || fail "${url} answered ${http_code/#000/nothing} instead of 200 within ${URL_WAIT}s"
 fi
 
 status="pass"
