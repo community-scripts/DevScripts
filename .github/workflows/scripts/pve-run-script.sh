@@ -81,24 +81,35 @@ collect_install_log() {
 }
 
 # "Requires AVX2" and friends: the script may be fine, the test host's CPU is
-# not (Xeon E5-2650, Sandy Bridge: AVX, no AVX2). Reported as untestable here
-# rather than as a failure of the PR.
+# not (Xeon E5-2650, Sandy Bridge: AVX, no AVX2). Shown as untestable rather
+# than as a failure of the PR -- but the log is written by the code under test,
+# so its word is not enough. Only the engine's error lines count, only when the
+# build or install itself failed, and the feature they name must really be
+# missing from this host's /proc/cpuinfo. Claiming a feature the host has
+# changes nothing.
 CPU_RE='(requir|need)[a-z]*[^.]{0,60}(AVX(2|-?512)?|SSE4[._]?2|x86-64-v[234])\b|\b(AVX(2|-?512)?|x86-64-v[234])\b[^.]{0,60}(not (supported|available)|does not have|is missing|unsupported)'
 
 classify_cpu_failure() {
-  [[ "$status" == "fail" ]] || return 0
-  local line
-  line=$(cat "$LOG" "$INSTALL_LOG_OUT" 2>/dev/null | grep -m1 -iE "$CPU_RE" |
+  local line feature flags
+  line=$(strip_ansi <"$RAW_LOG" | grep -E '✖|\[ERROR\]' | grep -m1 -iE "$CPU_RE" |
     sed -E 's/^\s*(✖️?|\[[^]]*\]|\s)*//' | cut -c1-200)
   [[ -n "$line" ]] || return 0
+  # The CPU flag that would have to be missing for the message to be true.
+  case "${line,,}" in
+  *avx-512* | *avx512* | *x86-64-v4*) feature=avx512f ;;
+  *avx2* | *x86-64-v3*) feature=avx2 ;;
+  *sse4.2* | *sse4_2* | *x86-64-v2*) feature=sse4_2 ;;
+  *) return 0 ;;
+  esac
+  flags=" $(grep -m1 '^flags' /proc/cpuinfo | cut -d: -f2) "
+  [[ "$flags" == *" ${feature} "* ]] && return 0
   status="unsupported"
-  step="needs a newer CPU than the test host has: ${line}"
+  step="needs a newer CPU than the test host has (no ${feature}): ${line}"
 }
 
 finish() {
   [[ -f "$RAW_LOG" ]] && strip_ansi <"$RAW_LOG" >"$LOG"
   [[ -f "$RAW_LOG" ]] && collect_install_log
-  classify_cpu_failure
   jq -n \
     --arg script "$SCRIPT" --arg os "${OS:-default}" --arg status "$status" \
     --arg step "$step" --arg exit_code "$exit_code" --arg sha "$PR_SHA" \
@@ -192,15 +203,18 @@ trap cleanup EXIT
 trap 'exit 143' TERM
 trap 'exit 130' INT
 
+# fail <reason> [fail|unsupported]: only the build/install branches pass the
+# second argument, after classify_cpu_failure has checked the host.
 fail() {
   step="$1"
-  status="fail"
+  status="${2:-fail}"
+  [[ "$status" == "unsupported" ]] || status="fail"
   finish
   if [[ "$status" == "unsupported" ]]; then
     echo "::warning title=${SCRIPT}::${step}"
-    exit 0 # not the PR's fault; the report shows it as untestable
+  else
+    echo "::error title=${SCRIPT}::${step}"
   fi
-  echo "::error title=${SCRIPT}::${step}"
   exit 1
 }
 
@@ -267,7 +281,10 @@ failure_line() {
 }
 if ((exit_code != 0)); then
   last=$(failure_line)
-  fail "build exited ${exit_code}${last:+: $last}"
+  step="build exited ${exit_code}${last:+: $last}"
+  status="fail"
+  classify_cpu_failure
+  fail "$step" "$status"
 fi
 # With dev_mode=keep (needed to read the install log) the engine carries on
 # after a failed install and still prints "Completed Successfully", exit 0.
@@ -275,7 +292,10 @@ install_exit=$(strip_ansi <"$RAW_LOG" | grep -oE 'Installation failed in contain
   grep -oE '[0-9]+\)$' | tr -d ')' | tail -n 1)
 if [[ -n "$install_exit" ]]; then
   last=$(failure_line)
-  fail "install script exited ${install_exit}${last:+: $last}"
+  step="install script exited ${install_exit}${last:+: $last}"
+  status="fail"
+  classify_cpu_failure
+  fail "$step" "$status"
 fi
 grep -qi 'completed successfully' "$RAW_LOG" || fail "build exited 0 but never reported success"
 

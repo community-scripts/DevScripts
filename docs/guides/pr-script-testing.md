@@ -50,10 +50,12 @@ A failed install counts as failed even though the engine, running with
 successfully" afterwards.
 
 **🖥️ Needs a newer CPU:** the test host is a Xeon E5-2650 (Sandy Bridge): AVX,
-but no AVX2. A build that fails with a message such as "requires AVX2" (also
-AVX-512, SSE4.2, x86-64-v3) is shown as 🖥️ instead of ❌, and the check is
-*neutral* rather than *failed*. That says nothing about the script; test it on
-newer hardware by hand.
+but no AVX2. A build or install that fails with an engine error such as
+"requires AVX2" (also AVX-512, SSE4.2, x86-64-v2/v3/v4) is shown as 🖥️
+instead of ❌, and the check asks for action (*action required*) instead of
+failing: test it on newer hardware by hand. The log comes from the code under
+test, so the claim only counts if the harness confirms in `/proc/cpuinfo`
+that the host really lacks that feature; it never makes the check pass.
 
 ## What you see
 

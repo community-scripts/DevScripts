@@ -282,6 +282,9 @@ jobs:
                 else if (e.name === 'result.json') {
                   try {
                     const r = JSON.parse(fs.readFileSync(p, 'utf8'));
+                    // Written on the host that ran the PR's code: anything but a
+                    // known status is an error, never something new.
+                    if (!['pass', 'fail', 'unsupported'].includes(r.status)) r.status = 'error';
                     const log = path.join(dir, 'install.log');
                     r.install_log = fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '';
                     const shot = path.join(dir, 'screenshot.png');
@@ -411,7 +414,9 @@ jobs:
 
             await github.rest.checks.update({
               owner, repo, check_run_id: Number(process.env.CHECK_ID), status: 'completed',
-              conclusion: cancelled ? 'cancelled' : allPass ? 'success' : broken ? 'failure' : 'neutral',
+              // Untestable here is "test it by hand", not a pass: action_required,
+              // because a required check would count neutral as passed.
+              conclusion: cancelled ? 'cancelled' : allPass ? 'success' : broken ? 'failure' : 'action_required',
               output: { title: `${passed}/${rows.length} passed`, summary: summary.slice(0, 65000) },
             });
 
