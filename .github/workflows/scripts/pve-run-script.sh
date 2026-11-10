@@ -261,8 +261,11 @@ fi
 
 # What the app's page looks like, for the PR comment. Chromium runs as its own
 # unprivileged user with its sandbox on: the page is served by code under test.
+# ci-shot-firewall (pve-ci-host-setup.sh) keeps that user off this host and the
+# lab network; without it there is no screenshot rather than an unguarded one.
 take_screenshot() {
   command -v chromium >/dev/null && id ci-shot &>/dev/null || return 0
+  iptables -w -S CI_SHOT 2>/dev/null | grep -q -- '-d 10.0.0.0/8 .*REJECT' || return 0
   local dir
   dir=$(mktemp -d)
   chown ci-shot "$dir"

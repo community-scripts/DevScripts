@@ -23,6 +23,48 @@ apt-get install -y -qq jq curl python3 dnsmasq iptables chromium fonts-dejavu fo
 # Screenshots of the app under test are taken as this user, never as root.
 id ci-shot &>/dev/null || useradd --system --create-home --shell /usr/sbin/nologin ci-shot
 
+# The page Chromium renders is served by code under test, and a redirect or an
+# <img> could point it at this host (the PVE UI on :8006) or the lab network;
+# the screenshot would then publish that on the PR. So ci-shot may reach the
+# test containers, DNS and the public internet (apps load fonts and scripts
+# from CDNs), and nothing private.
+cat >/usr/local/sbin/ci-shot-firewall <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+uid=$(id -u ci-shot)
+for fw in iptables ip6tables; do
+  $fw -w -N CI_SHOT 2>/dev/null || $fw -w -F CI_SHOT
+  $fw -w -C OUTPUT -m owner --uid-owner "$uid" -j CI_SHOT 2>/dev/null ||
+    $fw -w -I OUTPUT -m owner --uid-owner "$uid" -j CI_SHOT
+done
+iptables -w -A CI_SHOT -d 10.99.0.1 -j REJECT
+iptables -w -A CI_SHOT -d 10.99.0.0/24 -j ACCEPT
+for ns in $(awk '/^nameserver/ && $2 !~ /:/ {print $2}' /etc/resolv.conf); do
+  iptables -w -A CI_SHOT -d "$ns" -p udp --dport 53 -j ACCEPT
+  iptables -w -A CI_SHOT -d "$ns" -p tcp --dport 53 -j ACCEPT
+done
+for net in 0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16 224.0.0.0/3; do
+  iptables -w -A CI_SHOT -d "$net" -j REJECT
+done
+for net in ::1/128 fc00::/7 fe80::/10 ff00::/8; do
+  ip6tables -w -A CI_SHOT -d "$net" -j REJECT
+done
+EOF
+chmod +x /usr/local/sbin/ci-shot-firewall
+cat >/etc/systemd/system/ci-shot-firewall.service <<'EOF'
+[Unit]
+Description=Keep the screenshot browser away from this host and the lab network
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/ci-shot-firewall
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # Containers get their own NATed bridge instead of the lab network: no DHCP
 # lease surprises (a lab lease once handed a container the host's own address),
 # and an app listening on 8080 can never be confused with this host.
@@ -124,8 +166,8 @@ WantedBy=timers.target
 EOF
 
 systemctl daemon-reload
-systemctl enable --now ci-serve.service ci-sweep.timer >/dev/null
-systemctl restart ci-serve.service
+systemctl enable --now ci-serve.service ci-sweep.timer ci-shot-firewall.service >/dev/null
+systemctl restart ci-serve.service ci-shot-firewall.service
 
 # --- Runner (one per repository) ----------------------------------------------
 if [[ $# -eq 2 ]]; then
