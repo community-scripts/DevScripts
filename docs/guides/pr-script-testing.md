@@ -45,6 +45,16 @@ The same file runs in DevScripts and ProxmoxVE.
 The container is destroyed afterwards, whether the build passed or failed. The
 full build log is attached to the run as a `result-*` artifact.
 
+A failed install counts as failed even though the engine, running with
+`dev_mode=keep` so the install log can be read, still prints "Completed
+successfully" afterwards.
+
+**🖥️ Needs a newer CPU:** the test host is a Xeon E5-2650 (Sandy Bridge): AVX,
+but no AVX2. A build that fails with a message such as "requires AVX2" (also
+AVX-512, SSE4.2, x86-64-v3) is shown as 🖥️ instead of ❌, and the check is
+*neutral* rather than *failed*. That says nothing about the script; test it on
+newer hardware by hand.
+
 ## What you see
 
 - **Live output:** the `test` job's log on GitHub streams the build as it

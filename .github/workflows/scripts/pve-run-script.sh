@@ -80,9 +80,25 @@ collect_install_log() {
   rm -f "$INSTALL_LOG_OUT"
 }
 
+# "Requires AVX2" and friends: the script may be fine, the test host's CPU is
+# not (Xeon E5-2650, Sandy Bridge: AVX, no AVX2). Reported as untestable here
+# rather than as a failure of the PR.
+CPU_RE='(requir|need)[a-z]*[^.]{0,60}(AVX(2|-?512)?|SSE4[._]?2|x86-64-v[234])\b|\b(AVX(2|-?512)?|x86-64-v[234])\b[^.]{0,60}(not (supported|available)|does not have|is missing|unsupported)'
+
+classify_cpu_failure() {
+  [[ "$status" == "fail" ]] || return 0
+  local line
+  line=$(cat "$LOG" "$INSTALL_LOG_OUT" 2>/dev/null | grep -m1 -iE "$CPU_RE" |
+    sed -E 's/^\s*(✖️?|\[[^]]*\]|\s)*//' | cut -c1-200)
+  [[ -n "$line" ]] || return 0
+  status="unsupported"
+  step="needs a newer CPU than the test host has: ${line}"
+}
+
 finish() {
   [[ -f "$RAW_LOG" ]] && strip_ansi <"$RAW_LOG" >"$LOG"
   [[ -f "$RAW_LOG" ]] && collect_install_log
+  classify_cpu_failure
   jq -n \
     --arg script "$SCRIPT" --arg os "${OS:-default}" --arg status "$status" \
     --arg step "$step" --arg exit_code "$exit_code" --arg sha "$PR_SHA" \
@@ -179,8 +195,12 @@ trap 'exit 130' INT
 fail() {
   step="$1"
   status="fail"
-  echo "::error title=${SCRIPT}::${step}"
   finish
+  if [[ "$status" == "unsupported" ]]; then
+    echo "::warning title=${SCRIPT}::${step}"
+    exit 0 # not the PR's fault; the report shows it as untestable
+  fi
+  echo "::error title=${SCRIPT}::${step}"
   exit 1
 }
 
@@ -239,10 +259,23 @@ stop_streams
 if ((exit_code == 124 || exit_code == 137)); then
   fail "build timed out after ${BUILD_TIMEOUT}"
 fi
+# The engine marks the step that broke with a cross. Its closing "Installation
+# failed in container" line is generic, so the cross before it is the useful one.
+failure_line() {
+  strip_ansi <"$RAW_LOG" | grep -E '✖|\[ERROR\]|error:' | grep -v 'Installation failed in container' |
+    tail -n 1 | sed -E 's/^\s*(✖️?|\s)*//' | cut -c1-200
+}
 if ((exit_code != 0)); then
-  # The engine marks the step that broke with a cross; that line is the useful one.
-  last=$(sed -E 's/\x1B\[[0-9;?]*[A-Za-z]//g; s/\r/\n/g' "$RAW_LOG" | grep -E '✖|\[ERROR\]|error:' | tail -n 1 | sed -E 's/^\s+//' | cut -c1-200)
+  last=$(failure_line)
   fail "build exited ${exit_code}${last:+: $last}"
+fi
+# With dev_mode=keep (needed to read the install log) the engine carries on
+# after a failed install and still prints "Completed Successfully", exit 0.
+install_exit=$(strip_ansi <"$RAW_LOG" | grep -oE 'Installation failed in container [0-9]+ \(exit code: [0-9]+\)' |
+  grep -oE '[0-9]+\)$' | tr -d ')' | tail -n 1)
+if [[ -n "$install_exit" ]]; then
+  last=$(failure_line)
+  fail "install script exited ${install_exit}${last:+: $last}"
 fi
 grep -qi 'completed successfully' "$RAW_LOG" || fail "build exited 0 but never reported success"
 

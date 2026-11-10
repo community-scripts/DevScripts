@@ -340,7 +340,9 @@ jobs:
               }
             }
 
-            const icon = { pass: '✅', fail: '❌', error: '⚠️', cancelled: '⏹️' };
+            // unsupported: the script needs a CPU feature the test host lacks
+            // (AVX2 and the like). Not the PR's fault, so not a failure.
+            const icon = { pass: '✅', fail: '❌', error: '⚠️', cancelled: '⏹️', unsupported: '🖥️' };
             const dur = s => `${Math.floor(s / 60)}m${String(s % 60).padStart(2, '0')}s`;
             // Text from the build lands outside code blocks here: no table breaks,
             // no code spans, and no @mention of a stranger (zero-width space).
@@ -348,8 +350,15 @@ jobs:
             const fence = s => String(s || '').replace(/~~~~/g, '~~~');
 
             const passed = rows.filter(r => r.status === 'pass').length;
+            const untestable = rows.filter(r => r.status === 'unsupported').length;
+            const broken = rows.length - passed - untestable;
             const allPass = passed === rows.length;
             const cancelled = rows.every(r => r.status === 'cancelled');
+            const headline = broken
+              ? `❌ **${passed}/${rows.length} passed**`
+              : untestable
+                ? `🖥️ **${passed}/${rows.length} passed**, ${untestable} need${untestable === 1 ? 's' : ''} a newer CPU than the test host has (nothing failed)`
+                : `✅ **${passed}/${rows.length} passed**`;
 
             const table = [
               '| Script | OS | Result | Duration | Detail |',
@@ -393,7 +402,7 @@ jobs:
             ].join('\n'));
 
             const summary = [
-              `${allPass ? '✅' : '❌'} **${passed}/${rows.length} passed** at \`${process.env.SHA.slice(0, 7)}\``, '',
+              `${headline} at \`${process.env.SHA.slice(0, 7)}\``, '',
               table, '',
               ...shots, '',
               ...logs, '',
@@ -402,7 +411,7 @@ jobs:
 
             await github.rest.checks.update({
               owner, repo, check_run_id: Number(process.env.CHECK_ID), status: 'completed',
-              conclusion: cancelled ? 'cancelled' : allPass ? 'success' : 'failure',
+              conclusion: cancelled ? 'cancelled' : allPass ? 'success' : broken ? 'failure' : 'neutral',
               output: { title: `${passed}/${rows.length} passed`, summary: summary.slice(0, 65000) },
             });
 
