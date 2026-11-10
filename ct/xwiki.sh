@@ -51,7 +51,7 @@ function update_script() {
 
   msg_info "Updating ${APP}"
   export DEBIAN_FRONTEND=noninteractive
-  mapfile -t XWIKI_PKGS < <(dpkg-query -W -f='${Package}\n' 'xwiki-*')
+  mapfile -t XWIKI_PKGS < <(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 'xwiki-*' 2>/dev/null | awk '$1 == "ii" {print $2}')
   $STD apt update
   $STD apt install -y --only-upgrade -o Dpkg::Options::=--force-confold "${XWIKI_PKGS[@]}"
   msg_ok "Updated ${APP}"
