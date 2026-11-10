@@ -1,0 +1,57 @@
+{
+  "name": "SurfSense",
+  "slug": "surfsense",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-10",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://www.surfsense.com/docs",
+  "website": "https://www.surfsense.com/",
+  "repository": "https://github.com/MODSetter/SurfSense",
+  "architectures": [
+    "amd64"
+  ],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/surfsense.webp",
+  "description": "SurfSense is a self-hosted, privacy-focused alternative to NotebookLM. Upload your documents, chat with them and get answers with citations, and let its agent research, summarize and turn them into reports, decks or podcasts, using local models or any OpenAI-compatible or cloud provider.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/surfsense.sh",
+      "config_path": "/opt/surfsense_data/.env",
+      "resources": {
+        "cpu": 4,
+        "ram": 4096,
+        "hdd": 16,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open http://<IP> right after the install and create the sign-in password: until one is set, whoever opens the page first chooses it.",
+      "type": "warning"
+    },
+    {
+      "text": "The setup wizard asks for a chat model: an OpenAI-compatible server such as Ollama, a cloud API key, or a local GGUF model, which runs on the CPU.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_surfsense_password",
+      "label": "Sign-in Password",
+      "type": "password",
+      "secret": true,
+      "help": "Optional. Set here, it can only be changed in /opt/surfsense_data/.env; left empty, the first visitor creates it"
+    }
+  ]
+}
