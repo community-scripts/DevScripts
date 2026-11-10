@@ -65,9 +65,13 @@ that the host really lacks that feature; it never makes the check pass.
   build runs. Workflow commands are switched off while that output streams,
   so a script cannot inject `::error` or similar into the log.
 - **Result comment:** posted as a new comment that mentions whoever started the
-  test, replacing the bot's previous one. An edited comment would not reliably
-  notify. Text from the build that lands outside code blocks has its `@`
-  defused, so a log line cannot ping anyone.
+  test and the PR's author, replacing the bot's previous one. An edited
+  comment would not reliably notify. Text from the build that lands outside
+  code blocks has its `@` defused, so a log line cannot ping anyone.
+- **Review state:** a real failure (❌) requests changes on the tested commit,
+  listing what failed. The next run dismisses that review: a pass lifts it,
+  a new failure replaces it. 🖥️ (CPU), ⚠️ (runner trouble) and cancelled runs
+  leave the review state alone; they are not the PR's fault.
 - **Screenshot:** where the script prints a URL, headless Chromium (as the
   unprivileged user `ci-shot` on the test host) takes a 1280×800 screenshot, on
   a failed check too. It is stored on the orphan branch `ci-screenshots` as

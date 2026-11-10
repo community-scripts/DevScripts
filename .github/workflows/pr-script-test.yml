@@ -424,13 +424,45 @@ jobs:
             // editing a comment does not reliably notify, so the old comment
             // goes and the result is posted as a new one, at the end of the
             // thread where it is looked for.
-            const actor = process.env.ACTOR || '';
-            const ping = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(actor) ? `@${actor} ` : '';
+            // Whoever started the test and the PR's author, once each; no bots.
+            const pr = Number(process.env.PR);
+            const { data: prInfo } = await github.rest.pulls.get({ owner, repo, pull_number: pr });
+            const author = prInfo.user && prInfo.user.type === 'User' ? prInfo.user.login : '';
+            const login = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
+            const ping = [...new Set([process.env.ACTOR || '', author])].filter(l => login.test(l)).map(l => `@${l} `).join('');
             const MARK = '<!-- pr-script-test -->';
             const body = `${MARK}\n### Proxmox script test\n\n${ping}${summary}`.slice(0, 65000);
-            const pr = Number(process.env.PR);
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: pr });
             for (const c of comments.filter(c => c.body.includes(MARK) && c.user.type === 'Bot')) {
               await github.rest.issues.deleteComment({ owner, repo, comment_id: c.id });
             }
-            await github.rest.issues.createComment({ owner, repo, issue_number: pr, body });
+            const { data: posted } = await github.rest.issues.createComment({ owner, repo, issue_number: pr, body });
+
+            // A real failure requests changes on the tested commit. Untestable
+            // (CPU), runner errors and cancelled runs are not the PR's fault and
+            // leave the review state alone. Our previous "changes requested" is
+            // always dismissed first: a pass lifts it, a new failure replaces it.
+            const REVIEW_MARK = '<!-- pr-script-test-review -->';
+            const failedRows = cancelled ? [] : rows.filter(r => r.status === 'fail');
+            const sha7 = process.env.SHA.slice(0, 7);
+            try {
+              const reviews = await github.paginate(github.rest.pulls.listReviews, { owner, repo, pull_number: pr });
+              for (const v of reviews.filter(v => v.user && v.user.type === 'Bot' && v.state === 'CHANGES_REQUESTED' && (v.body || '').includes(REVIEW_MARK))) {
+                await github.rest.pulls.dismissReview({
+                  owner, repo, pull_number: pr, review_id: v.id,
+                  message: failedRows.length ? 'Replaced by a newer Proxmox script test.' : `Proxmox script test passed at ${sha7}.`,
+                });
+              }
+              if (failedRows.length) {
+                await github.rest.pulls.createReview({
+                  owner, repo, pull_number: pr, commit_id: process.env.SHA, event: 'REQUEST_CHANGES',
+                  body: [
+                    REVIEW_MARK, `**Proxmox script test failed** at \`${sha7}\`:`, '',
+                    ...failedRows.map(r => `- \`${r.script}\` (${r.os}): ${clean(r.step)}`), '',
+                    `Logs and details: [test result](${posted.html_url}). Push a fix, then ask for \`/test\` again.`,
+                  ].join('\n'),
+                });
+              }
+            } catch (e) {
+              core.warning(`Could not update the review state: ${e.message}`);
+            }
