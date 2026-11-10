@@ -269,6 +269,53 @@ build_env=(
 touch "$RAW_LOG.start"
 [[ -n "$OS" ]] && build_env+=(var_os="$OS")
 
+# --- Answers for the script's questions ------------------------------------------
+# Nobody types into CI, so anything the install asks has to be answered up front.
+# AGENTS.md rule 24: a script reads var_<x> first and prompts only when it is
+# unset (or uses prompt_input_required ... "var_x"). Every such variable gets a
+# CI value here. The names come from json/<app>.json app_vars (DevScripts) and
+# from the read/prompt_ lines of the install script (both repos). A bare `read`
+# that ignores its variable still fails, and the report says why.
+ENGINE_VARS=" var_ctid var_hostname var_os var_version var_cpu var_ram var_disk var_brg var_net var_container_storage var_template_storage var_unprivileged var_tags var_arm64 var_testurl var_verbose var_timezone var_http_proxy var_http_no_proxy var_appversion "
+host_app=$(tr -c 'a-z0-9-\n' '-' <<<"${app,,}")
+ci_value() {
+  case "${1,,}" in
+  *pass* | *secret* | *token* | *key*) head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-20 ;;
+  *email* | *mail*) echo "ci@example.test" ;;
+  *url* | *endpoint*) echo "https://ci-${host_app}.example.test" ;;
+  *host* | *domain* | *fqdn*) echo "ci-${host_app}.example.test" ;;
+  *user*) echo "ciadmin" ;;
+  *) echo "ci-test" ;;
+  esac
+}
+declare -A answers=()
+json="$tree/json/${app}.json"
+if [[ -f "$json" ]]; then
+  while IFS=$'\t' read -r name default; do
+    answers[$name]="$default"
+  done < <(jq -r '(if type == "array" then .[0] else . end).app_vars // [] | .[] |
+    select(.name | test("^var_[a-z0-9_]{1,40}$")) | [.name, (.default // "" | tostring)] | @tsv' "$json" 2>/dev/null)
+fi
+# The engine names the install script after APP (lower case, no spaces), which
+# need not match the ct/ file name: ct/bluesky-pds.sh -> blueskypds-install.sh.
+nsapp=$(grep -m1 -oE '^APP="[^"]+"' "$tree/$SCRIPT" | cut -d'"' -f2 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+for f in "$tree/install/${app}-install.sh" "$tree/install/${nsapp}-install.sh" "$tree/$SCRIPT"; do
+  [[ -f "$f" ]] || continue
+  while read -r name; do
+    [[ -v "answers[$name]" ]] || answers[$name]=""
+  done < <(grep -E '\bread\b|prompt_(input|input_required|confirm|select|password)\b' "$f" | grep -oE '\bvar_[a-z0-9_]{1,40}\b' | sort -u)
+done
+for name in "${!answers[@]}"; do
+  [[ "$ENGINE_VARS" == *" $name "* ]] && continue
+  value="${answers[$name]}"
+  [[ -n "$value" ]] || value=$(ci_value "$name")
+  build_env+=("$name=$value")
+  case "${name,,}" in
+  *pass* | *secret* | *token* | *key*) echo "Pre-answered ${name}=(random)" ;;
+  *) echo "Pre-answered ${name}=${value}" ;;
+  esac
+done
+
 # In the background so that a TERM from a cancelled job is handled at once:
 # bash defers traps until a foreground command returns.
 env -i "${build_env[@]}" timeout --kill-after=1m "$BUILD_TIMEOUT" \
@@ -286,8 +333,17 @@ fi
 # The engine marks the step that broke with a cross. Its closing "Installation
 # failed in container" line is generic, so the cross before it is the useful one.
 failure_line() {
-  strip_ansi <"$RAW_LOG" | grep -E '✖|\[ERROR\]|error:' | grep -v 'Installation failed in container' |
-    tail -n 1 | sed -E 's/^\s*(✖️?|\s)*//' | cut -c1-200
+  local line
+  line=$(strip_ansi <"$RAW_LOG" | grep -E '✖|\[ERROR\]|error:' | grep -v 'Installation failed in container' |
+    tail -n 1 | sed -E 's/^\s*(✖️?|\s)*//' | cut -c1-200)
+  # A prompt nobody can answer: say what to do instead.
+  # First, because the report keeps 200 characters.
+  if [[ "$line" == *"read exited with status"* || "$line" == *"executing command read "* ]]; then
+    local asked
+    asked=$(grep -oE '\bvar_[a-z0-9_]{1,40}\b' <<<"$line" | tail -n 1)
+    line="unanswerable prompt (AGENTS.md rule 24): ask only when ${asked:-var_<x>} is unset, or use prompt_input_required. ${line}"
+  fi
+  echo "$line"
 }
 if ((exit_code != 0)); then
   last=$(failure_line)
