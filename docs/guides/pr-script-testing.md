@@ -45,6 +45,14 @@ The same file runs in DevScripts and ProxmoxVE.
 The container is destroyed afterwards, whether the build passed or failed. The
 full build log is attached to the run as a `result-*` artifact.
 
+**A broken app does not fail the workflow run.** The run says whether the
+test worked, not whether the app did: a script that fails to build is a
+result, reported on the PR as ❌ (failed check, comment, changes requested),
+while the run on the Actions tab stays green so nobody gets a failure mail per
+broken PR. A run only goes red when the test setup itself broke (no free
+container ID, the PR could not be downloaded, the runner died); the PR then
+shows ⚠️ with no changes requested, because it is not the author's fault.
+
 A failed install counts as failed even though the engine, running with
 `dev_mode=keep` so the install log can be read, still prints "Completed
 successfully" afterwards.

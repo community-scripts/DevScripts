@@ -205,16 +205,26 @@ trap 'exit 130' INT
 
 # fail <reason> [fail|unsupported]: only the build/install branches pass the
 # second argument, after classify_cpu_failure has checked the host.
+#
+# The exit code says whether *this job* worked, not whether the app did. A
+# script that fails to build is a result: it is written down, reported on the
+# PR (check, comment, review) and the job exits 0 -- a red run per broken app
+# would only be notification noise. Only trouble with the test setup itself
+# (setup_error) fails the job, because that is ours to look at.
 fail() {
   step="$1"
   status="${2:-fail}"
   [[ "$status" == "unsupported" ]] || status="fail"
   finish
-  if [[ "$status" == "unsupported" ]]; then
-    echo "::warning title=${SCRIPT}::${step}"
-  else
-    echo "::error title=${SCRIPT}::${step}"
-  fi
+  echo "::warning title=${SCRIPT}::${step}"
+  exit 0
+}
+
+setup_error() {
+  step="$1"
+  status="error"
+  finish
+  echo "::error title=${SCRIPT}::test setup: ${step}"
   exit 1
 }
 
@@ -233,12 +243,12 @@ for ((id = CTID_BASE; id < CTID_BASE + CTID_COUNT; id++)); do
 done
 flock -u 9
 exec 9>&-
-[[ -n "$ctid" ]] || fail "no free container ID in ${CTID_BASE}-$((CTID_BASE + CTID_COUNT - 1))"
+[[ -n "$ctid" ]] || setup_error "no free container ID in ${CTID_BASE}-$((CTID_BASE + CTID_COUNT - 1))"
 
 # --- Fetch the approved commit and point it at ourselves ------------------------
 mkdir -p "$tree"
 curl -fsSL --retry 3 "https://codeload.github.com/${PR_REPO}/tar.gz/${PR_SHA}" |
-  tar -xz -C "$tree" --strip-components=1 || fail "could not download ${PR_REPO}@${PR_SHA:0:7}"
+  tar -xz -C "$tree" --strip-components=1 || setup_error "could not download ${PR_REPO}@${PR_SHA:0:7}"
 [[ -f "$tree/$SCRIPT" ]] || fail "${SCRIPT} does not exist at ${PR_SHA:0:7}"
 
 upstream_re="https://raw\.githubusercontent\.com/${UPSTREAM//./\\.}/(refs/heads/)?main"

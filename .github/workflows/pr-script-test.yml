@@ -284,7 +284,7 @@ jobs:
                     const r = JSON.parse(fs.readFileSync(p, 'utf8'));
                     // Written on the host that ran the PR's code: anything but a
                     // known status is an error, never something new.
-                    if (!['pass', 'fail', 'unsupported'].includes(r.status)) r.status = 'error';
+                    if (!['pass', 'fail', 'unsupported', 'error'].includes(r.status)) r.status = 'error';
                     const log = path.join(dir, 'install.log');
                     r.install_log = fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '';
                     const shot = path.join(dir, 'screenshot.png');
@@ -352,16 +352,23 @@ jobs:
             const clean = s => String(s || '').replace(/[|\r\n]/g, ' ').replace(/`/g, "'").replace(/@/g, '@​').slice(0, 200);
             const fence = s => String(s || '').replace(/~~~~/g, '~~~');
 
-            const passed = rows.filter(r => r.status === 'pass').length;
-            const untestable = rows.filter(r => r.status === 'unsupported').length;
-            const broken = rows.length - passed - untestable;
+            // fail: the app broke, the PR's business. error/cancelled: our test
+            // setup did, not the PR's. unsupported: the host's CPU is too old.
+            const count = s => rows.filter(r => r.status === s).length;
+            const passed = count('pass');
+            const untestable = count('unsupported');
+            const broken = count('fail');
+            const setupTrouble = count('error') + count('cancelled');
             const allPass = passed === rows.length;
             const cancelled = rows.every(r => r.status === 'cancelled');
+            const of = `**${passed}/${rows.length} passed**`;
             const headline = broken
-              ? `❌ **${passed}/${rows.length} passed**`
-              : untestable
-                ? `🖥️ **${passed}/${rows.length} passed**, ${untestable} need${untestable === 1 ? 's' : ''} a newer CPU than the test host has (nothing failed)`
-                : `✅ **${passed}/${rows.length} passed**`;
+              ? `❌ ${of}`
+              : setupTrouble
+                ? `⚠️ ${of}, ${setupTrouble} could not be tested because of a problem with the test setup (not the PR)`
+                : untestable
+                  ? `🖥️ ${of}, ${untestable} need${untestable === 1 ? 's' : ''} a newer CPU than the test host has (nothing failed)`
+                  : `✅ ${of}`;
 
             const table = [
               '| Script | OS | Result | Duration | Detail |',
