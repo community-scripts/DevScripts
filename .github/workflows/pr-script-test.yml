@@ -1,0 +1,316 @@
+name: PR script test
+
+# Builds the ct/ scripts a pull request touches on a real Proxmox host and
+# reports the outcome on the PR, as a check run and as one comment kept up to
+# date.
+#
+# A self-hosted runner that executes pull request code as root is only
+# acceptable if a human decides what runs on it. Nothing here starts on a push:
+# someone with write access comments `/test <sha>` naming the commit they
+# reviewed (optionally followed by the ct/ paths to build). Nothing is built
+# unless that commit is still the PR head: a push after the review is never
+# covered by it, not even one that lands in the seconds before this job runs.
+#
+#   gate    ubuntu-latest   who asked, which scripts, which commit
+#   test    proxmox-test    build + checks, one matrix job per script/OS
+#   report  ubuntu-latest   check run + PR comment
+#
+# The test job gets a read-only token and never sees a secret: the host it runs
+# on executes untrusted code and has to be treated as compromised.
+#
+# This file is identical in DevScripts and ProxmoxVE; github.repository decides
+# which URLs get rewritten and which container ID range is used.
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "Pull request number"
+        required: true
+        type: number
+      sha:
+        description: "The PR head commit you reviewed (at least 12 hex characters)"
+        required: true
+        type: string
+      scripts:
+        description: "Space-separated ct/ paths (empty = everything the PR touches)"
+        required: false
+        type: string
+
+permissions: {}
+
+jobs:
+  gate:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request && startsWith(github.event.comment.body, '/test'))
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
+      issues: write
+      pull-requests: write
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      pr: ${{ steps.plan.outputs.pr }}
+      repo: ${{ steps.plan.outputs.repo }}
+      sha: ${{ steps.plan.outputs.sha }}
+      check_id: ${{ steps.plan.outputs.check_id }}
+    steps:
+      - id: plan
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const MAX = 10;
+            core.setOutput('matrix', '[]');
+
+            let prNumber, requested = '';
+            if (context.eventName === 'workflow_dispatch') {
+              prNumber = Number(context.payload.inputs.pr);
+              requested = `${context.payload.inputs.sha} ${context.payload.inputs.scripts || ''}`;
+            } else {
+              prNumber = context.payload.issue.number;
+              const body = context.payload.comment.body.trim();
+              if (!/^\/test(\s|$)/.test(body)) return;
+              // author_association hides private org members, so ask for the permission itself.
+              const user = context.payload.comment.user.login;
+              const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username: user });
+              if (!['admin', 'maintain', 'write'].includes(perm.permission)) {
+                core.notice(`${user} has ${perm.permission} access; /test needs write`);
+                return;
+              }
+              await github.rest.reactions.createForIssueComment({
+                owner, repo, comment_id: context.payload.comment.id, content: 'rocket',
+              });
+              requested = body.split('\n')[0].slice('/test'.length);
+            }
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            if (pr.state !== 'open' || !pr.head.repo) { core.notice('PR is closed or its fork is gone'); return; }
+            const head = pr.head.repo;
+            const MARK = '<!-- pr-script-test -->';
+            const sticky = async body => {
+              const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: prNumber });
+              const mine = comments.find(c => c.body.includes(MARK));
+              if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+              else await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
+            };
+
+            // The approval names the commit. Reading pr.head.sha alone would build
+            // whatever was pushed between the comment and this job starting, i.e.
+            // code nobody looked at. 12 hex characters are 48 bits: too many to
+            // brute-force a colliding commit in the time a review takes.
+            const tokens = requested.split(/\s+/).filter(Boolean);
+            const approved = tokens.filter(t => /^[0-9a-f]{12,40}$/.test(t));
+            let entries = tokens.filter(t => !/^[0-9a-f]{12,40}$/.test(t));
+            if (approved.length !== 1 || !pr.head.sha.startsWith(approved[0])) {
+              const current = pr.head.sha.slice(0, 12);
+              await sticky([
+                MARK, '### Proxmox script test', '',
+                approved.length
+                  ? `⚠️ \`${approved[0]}\` is not the head of this PR any more: it has been pushed to since. Nothing was built.`
+                  : '⚠️ Nothing was built: `/test` has to name the commit you reviewed.',
+                '', 'To build the current head, comment:', '', '```', `/test ${current}`, '```',
+              ].join('\n'));
+              core.notice(`Approval does not match head ${pr.head.sha}`);
+              return;
+            }
+            if (entries.some(e => !/^ct\/[A-Za-z0-9._-]+\.sh$/.test(e))) {
+              core.setFailed(`Only ct/<name>.sh paths can be requested, got: ${requested}`);
+              return;
+            }
+            if (entries.length === 0) {
+              const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: prNumber });
+              const set = new Set();
+              for (const f of files) {
+                if (f.status === 'removed') continue;
+                let m;
+                if ((m = f.filename.match(/^install\/([A-Za-z0-9._-]+)-install\.sh$/))) set.add(`ct/${m[1]}.sh`);
+                else if (/^ct\/[A-Za-z0-9._-]+\.sh$/.test(f.filename)) set.add(f.filename);
+              }
+              entries = [...set].sort();
+            }
+
+            const include = [];
+            for (const script of entries.slice(0, MAX)) {
+              let text;
+              try {
+                const res = await github.rest.repos.getContent({ owner: head.owner.login, repo: head.name, path: script, ref: pr.head.sha });
+                text = Buffer.from(res.data.content || '', 'base64').toString('utf8');
+              } catch (e) { continue; }   // install script without a ct/ entry point
+              // Scripts that ask for the OS get built once per OS.
+              const oses = /msg_menu\s+"Choose the container OS"/.test(text) ? ['debian', 'alpine'] : [''];
+              const name = script.slice(3, -3);
+              for (const os of oses) include.push({ script, os, name: os ? `${name}-${os}` : name });
+            }
+            if (entries.length > MAX) core.warning(`Only the first ${MAX} of ${entries.length} scripts are built`);
+            if (include.length === 0) { core.notice('No ct/ script to build'); return; }
+
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const { data: check } = await github.rest.checks.create({
+              owner, repo, name: 'Proxmox script test', head_sha: pr.head.sha, status: 'in_progress',
+              details_url: runUrl,
+              output: { title: `Building ${include.length} on Proxmox`, summary: include.map(i => `- \`${i.script}\` ${i.os}`).join('\n') },
+            });
+
+            core.setOutput('matrix', JSON.stringify(include));
+            core.setOutput('pr', String(prNumber));
+            core.setOutput('repo', head.full_name);
+            core.setOutput('sha', pr.head.sha);
+            core.setOutput('check_id', String(check.id));
+
+            await sticky([
+              MARK, '### Proxmox script test', '',
+              `⏳ Building ${include.length} at ${pr.head.sha.slice(0, 7)} — [run](${runUrl})`, '',
+              ...include.map(i => `- \`${i.script}\`${i.os ? ` (${i.os})` : ''}`),
+            ].join('\n'));
+
+  test:
+    needs: gate
+    if: needs.gate.outputs.matrix != '[]' && needs.gate.outputs.matrix != ''
+    # Only `proxmox-test`, never `self-hosted`: the runner is registered without
+    # default labels so that no other workflow can be scheduled onto it.
+    runs-on: proxmox-test
+    permissions:
+      contents: read
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.gate.outputs.matrix) }}
+    name: test (${{ matrix.name }})
+    steps:
+      # The default branch, never the PR: the harness itself must be trusted.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/workflows/scripts
+          persist-credentials: false
+
+      - name: Build and check ${{ matrix.script }}
+        env:
+          PR_REPO: ${{ needs.gate.outputs.repo }}
+          PR_SHA: ${{ needs.gate.outputs.sha }}
+          SCRIPT: ${{ matrix.script }}
+          OS: ${{ matrix.os }}
+          UPSTREAM: ${{ github.repository }}
+          CTID_BASE: ${{ github.repository == 'community-scripts/ProxmoxVE' && '9050' || '9000' }}
+          OUT_DIR: ${{ runner.temp }}/result
+        run: bash .github/workflows/scripts/pve-run-script.sh
+
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: result-${{ matrix.name }}
+          path: ${{ runner.temp }}/result
+          if-no-files-found: ignore
+          retention-days: 14
+
+  report:
+    needs: [gate, test]
+    if: always() && needs.gate.result == 'success' && needs.gate.outputs.matrix != '[]' && needs.gate.outputs.matrix != ''
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      checks: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: result-*
+          path: results
+
+      - uses: actions/github-script@v8
+        env:
+          MATRIX: ${{ needs.gate.outputs.matrix }}
+          PR: ${{ needs.gate.outputs.pr }}
+          SHA: ${{ needs.gate.outputs.sha }}
+          CHECK_ID: ${{ needs.gate.outputs.check_id }}
+          TEST_RESULT: ${{ needs.test.result }}
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const matrix = JSON.parse(process.env.MATRIX);
+
+            // A job that died before writing result.json still gets a row.
+            const rows = matrix.map(m => {
+              const file = `results/result-${m.name}/result.json`;
+              if (!fs.existsSync(file)) {
+                return { script: m.script, os: m.os || 'default', status: process.env.TEST_RESULT === 'cancelled' ? 'cancelled' : 'error', step: 'no result (runner or job failure)', duration: 0, log_tail: '' };
+              }
+              const r = JSON.parse(fs.readFileSync(file, 'utf8'));
+              const log = `results/result-${m.name}/install.log`;
+              r.install_log = fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '';
+              return r;
+            });
+
+            const icon = { pass: '✅', fail: '❌', error: '⚠️', cancelled: '⏹️' };
+            const dur = s => `${Math.floor(s / 60)}m${String(s % 60).padStart(2, '0')}s`;
+            const clean = s => String(s || '').replace(/[|\r\n]/g, ' ').replace(/`/g, "'").slice(0, 200);
+            const fence = s => String(s || '').replace(/~~~~/g, '~~~');
+
+            const passed = rows.filter(r => r.status === 'pass').length;
+            const allPass = passed === rows.length;
+            const cancelled = rows.every(r => r.status === 'cancelled');
+
+            const table = [
+              '| Script | OS | Result | Duration | Detail |',
+              '|---|---|---|---|---|',
+              ...rows.map(r => `| \`${r.script}\` | ${r.os} | ${icon[r.status] || '❔'} | ${dur(r.duration || 0)} | ${r.status === 'pass' ? (r.url ? `${clean(r.url)} → ${r.http_code}` : 'no URL to check') : clean(r.step)} |`),
+            ].join('\n');
+
+            // A comment holds 65536 characters. Each script gets an equal share
+            // and a log that does not fit loses its beginning: the end is where
+            // a failure shows.
+            const budget = Math.floor(52000 / rows.length);
+            const tail = (text, max) => {
+              text = fence(text).trimEnd();
+              if (text.length <= max) return text;
+              const kept = text.slice(text.length - max);
+              const cut = text.slice(0, text.length - max).split('\n').length;
+              return `… ${cut} earlier lines cut, the full log is in the run artifacts\n${kept.slice(kept.indexOf('\n') + 1)}`;
+            };
+            const details = (summaryLine, text, max) => [
+              `<details><summary>${summaryLine}</summary>`, '',
+              '~~~~text', tail(text, max), '~~~~', '</details>',
+            ].join('\n');
+
+            const logs = rows.map(r => {
+              const parts = [];
+              const failed = r.status !== 'pass';
+              const buildShare = failed && r.log_tail ? Math.min(r.log_tail.length, Math.floor(budget / 3)) : 0;
+              if (buildShare) parts.push(details(`${icon[r.status] || '❔'} ${r.script} (${r.os}) — build log`, r.log_tail, buildShare));
+              if (r.install_log) {
+                const lines = r.install_log.trimEnd().split('\n').length;
+                parts.push(details(`📄 ${r.script} (${r.os}) — install log (${lines} lines)`, r.install_log, budget - buildShare - 300));
+              } else if (!buildShare) {
+                parts.push(`<sub>${r.script} (${r.os}): no install log was captured</sub>`);
+              }
+              return parts.join('\n\n');
+            });
+
+            const summary = [
+              `${allPass ? '✅' : '❌'} **${passed}/${rows.length} passed** at \`${process.env.SHA.slice(0, 7)}\``, '',
+              table, '',
+              ...logs, '',
+              `Full logs: [workflow run](${runUrl}) (artifacts \`result-*\`). Comment \`/test\` to build again.`,
+            ].join('\n');
+
+            await github.rest.checks.update({
+              owner, repo, check_run_id: Number(process.env.CHECK_ID), status: 'completed',
+              conclusion: cancelled ? 'cancelled' : allPass ? 'success' : 'failure',
+              output: { title: `${passed}/${rows.length} passed`, summary: summary.slice(0, 65000) },
+            });
+
+            const MARK = '<!-- pr-script-test -->';
+            const body = `${MARK}\n### Proxmox script test\n\n${summary}`.slice(0, 65000);
+            const pr = Number(process.env.PR);
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: pr });
+            const mine = comments.find(c => c.body.includes(MARK));
+            if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number: pr, body });
