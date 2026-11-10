@@ -241,16 +241,33 @@ jobs:
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
             const matrix = JSON.parse(process.env.MATRIX);
 
-            // A job that died before writing result.json still gets a row.
-            const rows = matrix.map(m => {
-              const file = `results/result-${m.name}/result.json`;
-              if (!fs.existsSync(file)) {
-                return { script: m.script, os: m.os || 'default', status: process.env.TEST_RESULT === 'cancelled' ? 'cancelled' : 'error', step: 'no result (runner or job failure)', duration: 0, log_tail: '' };
+            // download-artifact unpacks a single artifact straight into results/
+            // and several into results/<name>/, so look for every result.json
+            // and match it by what it says it is.
+            const path = require('path');
+            const found = new Map();
+            const walk = dir => {
+              if (!fs.existsSync(dir)) return;
+              for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+                const p = path.join(dir, e.name);
+                if (e.isDirectory()) walk(p);
+                else if (e.name === 'result.json') {
+                  try {
+                    const r = JSON.parse(fs.readFileSync(p, 'utf8'));
+                    const log = path.join(dir, 'install.log');
+                    r.install_log = fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '';
+                    found.set(`${r.script}|${r.os}`, r);
+                  } catch (err) { core.warning(`unreadable ${p}: ${err.message}`); }
+                }
               }
-              const r = JSON.parse(fs.readFileSync(file, 'utf8'));
-              const log = `results/result-${m.name}/install.log`;
-              r.install_log = fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '';
-              return r;
+            };
+            walk('results');
+
+            // A job that died before writing result.json still gets a row.
+            const rows = matrix.map(m => found.get(`${m.script}|${m.os || 'default'}`) || {
+              script: m.script, os: m.os || 'default',
+              status: process.env.TEST_RESULT === 'cancelled' ? 'cancelled' : 'error',
+              step: 'no result (runner or job failure)', duration: 0, log_tail: '', install_log: '',
             });
 
             const icon = { pass: '✅', fail: '❌', error: '⚠️', cancelled: '⏹️' };
