@@ -10,6 +10,15 @@ The same file runs in DevScripts and ProxmoxVE.
 
 ## Using it
 
+**Automatic for scripts moving over from DevScripts (ProxmoxVE):** PRs that the
+`push-app-to-main` app opens on a branch of the repository itself are built on
+every push without anyone asking, and approved when every script passes. They
+were reviewed and tested in DevScripts already, and only writers can push to
+such a branch. In ProxmoxVE that approval counts as the one approval the
+`main` ruleset requires, so a passing migration PR becomes mergeable; a new
+push dismisses it as stale, and a later run that does not fully pass
+withdraws it. 🖥️ and ⚠️ results are never approved. All other PRs need `/test`.
+
 | Comment | Builds |
 | ------- | ------ |
 | `/test` | The latest commit: every `ct/` script the PR changes, plus the `ct/` entry point of every changed `install/` script |
