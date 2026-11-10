@@ -16,6 +16,7 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_arm64="${var_arm64:-no}" # upstream stages llama.cpp and opencode for linux-x64 only
 var_unprivileged="${var_unprivileged:-1}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2518}"
 
 export var_surfsense_password="${var_surfsense_password:-}"
 
