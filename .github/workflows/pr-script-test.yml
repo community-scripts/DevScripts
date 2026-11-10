@@ -31,7 +31,7 @@ on:
         required: true
         type: number
       sha:
-        description: "The PR head commit you reviewed (at least 12 hex characters)"
+        description: "The PR head commit you reviewed (full 40-character SHA)"
         required: true
         type: string
       scripts:
@@ -101,18 +101,22 @@ jobs:
 
             // The approval names the commit. Reading pr.head.sha alone would build
             // whatever was pushed between the comment and this job starting, i.e.
-            // code nobody looked at. 12 hex characters are 48 bits: too many to
-            // brute-force a colliding commit in the time a review takes.
+            // code nobody looked at. It has to be the full SHA: the author writes
+            // both commits, so a short prefix only takes a birthday collision
+            // (2^24 tries for 12 hex characters) to match a malicious one.
             const tokens = requested.split(/\s+/).filter(Boolean);
-            const approved = tokens.filter(t => /^[0-9a-f]{12,40}$/.test(t));
-            let entries = tokens.filter(t => !/^[0-9a-f]{12,40}$/.test(t));
-            if (approved.length !== 1 || !pr.head.sha.startsWith(approved[0])) {
-              const current = pr.head.sha.slice(0, 12);
+            const isSha = t => /^[0-9a-f]{7,40}$/.test(t);
+            const approved = tokens.filter(isSha);
+            let entries = tokens.filter(t => !isSha(t));
+            if (approved.length !== 1 || approved[0] !== pr.head.sha) {
+              const current = pr.head.sha;
               await sticky([
                 MARK, '### Proxmox script test', '',
-                approved.length
-                  ? `⚠️ \`${approved[0]}\` is not the head of this PR any more: it has been pushed to since. Nothing was built.`
-                  : '⚠️ Nothing was built: `/test` has to name the commit you reviewed.',
+                approved.length !== 1
+                  ? '⚠️ Nothing was built: `/test` has to name the commit you reviewed, as its full 40-character SHA.'
+                  : approved[0].length !== 40 && pr.head.sha.startsWith(approved[0])
+                    ? '⚠️ Nothing was built: a short SHA is not enough, it has to be the full 40 characters.'
+                    : `⚠️ \`${approved[0]}\` is not the head of this PR: it has been pushed to since. Nothing was built.`,
                 '', 'To build the current head, comment:', '', '```', `/test ${current}`, '```',
               ].join('\n'));
               core.notice(`Approval does not match head ${pr.head.sha}`);

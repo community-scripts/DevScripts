@@ -12,11 +12,13 @@ The same file runs in DevScripts and ProxmoxVE.
 
 | Comment | Builds |
 | ------- | ------ |
-| `/test 4b6bedca5a92` | Every `ct/` script the PR changes, plus the `ct/` entry point of every changed `install/` script |
-| `/test 4b6bedca5a92 ct/foo.sh ct/bar.sh` | Only these scripts |
+| `/test <sha>` | Every `ct/` script the PR changes, plus the `ct/` entry point of every changed `install/` script |
+| `/test <sha> ct/foo.sh ct/bar.sh` | Only these scripts |
 
 - Only users with write access can trigger it. Anyone else's `/test` is ignored.
-- The SHA is the commit you reviewed, at least 12 characters. If the PR has been
+- `<sha>` is the commit you reviewed, all 40 characters. A short SHA is refused:
+  the PR author writes both commits, so making a malicious one share a short
+  prefix with the reviewed one is a quick birthday collision. If the PR has been
   pushed to since, nothing is built, and the bot replies with the command for
   the current head. A plain `/test` gets the same reply, so you never have to
   look the SHA up yourself.
