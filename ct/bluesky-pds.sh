@@ -15,6 +15,7 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 var_arm64=1
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2528}"
 export var_pds_hostname="${var_pds_hostname:-}"
 
 header_info "$APP"
