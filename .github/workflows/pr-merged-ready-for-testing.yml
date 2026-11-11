@@ -94,6 +94,14 @@ jobs:
 
             const prBody = (pr.body || "").replace(/\r/g, "");
             const ticked = re => new RegExp(`^\\s*-\\s*\\[[xX]\\]\\s*\\**\\s*${re}`, "m").test(prBody);
+            // "**Tool:** text" in the template's Script section; the HTML hint comment is dropped.
+            const field = label => {
+              const m = prBody.match(new RegExp(`^\\s*\\*\\*${label}:\\*\\*(.*)$`, "m"));
+              return m ? m[1].replace(/<!--[\s\S]*?-->/g, "").trim() : "";
+            };
+            const prTool = field("Tool");
+            const prCategory = ["ct", "vm", "addon", "pve"]
+              .find(t => ticked({ ct: "CT\\b", vm: "VM\\b", addon: "Addon\\b", pve: "PVE Tool\\b" }[t]));
 
             const TYPE_LABELS = {
               ct: "CT (LXC Container)",
@@ -144,7 +152,7 @@ jobs:
 
               // No issue yet: open one in the New Script template's format, so
               // the other workflows read it like one a person filed.
-              const type = data.type in TYPE_LABELS ? data.type : "ct";
+              const type = data.type in TYPE_LABELS ? data.type : (prCategory || "ct");
               const script = data.install_methods?.[0]?.script;
               const defaultPath = `${TYPE_DIRS[type]}/${slug}.sh`;
 
@@ -165,7 +173,7 @@ jobs:
                 `- [${ticked("Proxmox VE") ? "X" : " "}] Proxmox VE`,
                 `- [${ticked("Incus") ? "X" : " "}] Incus`, "",
                 "### 📋 Script Details", "",
-                data.description || "_No response_", "",
+                prTool || data.description || "_No response_", "",
                 `Opened automatically: no issue was found for \`${slug}\` when #${prNumber} by @${pr.user.login} was merged.`,
               ].join("\n");
 
