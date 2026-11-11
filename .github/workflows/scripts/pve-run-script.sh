@@ -44,6 +44,10 @@ URL_WAIT="${URL_WAIT:-120}"
 [[ "$SCRIPT" =~ ^(ct|vm)/[A-Za-z0-9._-]+\.sh$ ]] || { echo "bad SCRIPT" >&2; exit 2; }
 [[ -z "$OS" || "$OS" =~ ^(debian|ubuntu|alpine)$ ]] || { echo "bad OS" >&2; exit 2; }
 [[ "$PLATFORM" =~ ^(pve|incus)$ ]] || { echo "bad PLATFORM" >&2; exit 2; }
+# yes: build with var_arm64=yes. On arm64 the engine refuses to guess for a
+# script that leaves var_arm64 unset; the ARM run builds those anyway, to see.
+VAR_ARM64="${VAR_ARM64:-}"
+[[ -z "$VAR_ARM64" || "$VAR_ARM64" == "yes" ]] || { echo "bad VAR_ARM64" >&2; exit 2; }
 [[ "$PLATFORM" == "pve" || "$SCRIPT" == ct/* ]] || { echo "vm/ scripts run on pve only" >&2; exit 2; }
 [[ "$CTID_BASE" =~ ^[0-9]+$ ]] || { echo "bad CTID_BASE" >&2; exit 2; }
 
@@ -168,11 +172,11 @@ finish() {
     --arg script "$SCRIPT" --arg kind "$kind" --arg platform "$PLATFORM" --arg os "${OS:-default}" --arg status "$status" \
     --arg step "$step" --arg exit_code "$exit_code" --arg sha "$PR_SHA" \
     --arg ctid "$ctid" --arg url "$url" --arg http_code "$http_code" \
-    --arg failed_units "$failed_units" --arg ip "$ct_ip" \
+    --arg failed_units "$failed_units" --arg ip "$ct_ip" --arg arch "$(uname -m)" \
     --arg update_status "$update_status" --arg update_step "$update_step" \
     --argjson duration "$(($(date +%s) - started))" \
     --arg tail "$([[ -f "$LOG" ]] && tail -n 60 "$LOG")" \
-    '{script: $script, kind: $kind, platform: $platform, os: $os, status: $status, step: $step, exit_code: $exit_code,
+    '{script: $script, kind: $kind, platform: $platform, arch: $arch, os: $os, status: $status, step: $step, exit_code: $exit_code,
       sha: $sha, ctid: $ctid, ip: $ip, url: $url, http_code: $http_code,
       failed_units: $failed_units, update_status: $update_status, update_step: $update_step,
       duration: $duration, log_tail: $tail}' >"$RESULT"
@@ -353,6 +357,7 @@ else
 fi
 touch "$RAW_LOG.start"
 [[ -n "$OS" ]] && build_env+=(var_os="$OS")
+[[ -n "$VAR_ARM64" ]] && build_env+=(var_arm64=yes)
 # Both engines turn var_github_token into GITHUB_TOKEN inside the container.
 [[ -n "${GH_API_TOKEN:-}" ]] && build_env+=(var_github_token="$GH_API_TOKEN")
 
