@@ -67,6 +67,15 @@ jobs:
         if: steps.plan.outputs.arm64 != 'no'
         run: |
           start=$(date +%s)
+          # Ubuntu 24.04's own incus is 6.0.0, which lacks `-f csv,noheader`;
+          # the engine then finds no storage pool. Zabbly (the Incus
+          # maintainers' packages) has the current 6.0 LTS, as Debian 13 does.
+          sudo mkdir -p /etc/apt/keyrings
+          sudo curl -fsSL https://pkgs.zabbly.com/key.asc -o /etc/apt/keyrings/zabbly.asc
+          printf '%s\n' 'Enabled: yes' 'Types: deb' 'URIs: https://pkgs.zabbly.com/incus/lts-6.0' \
+            "Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")" 'Components: main' \
+            "Architectures: $(dpkg --print-architecture)" 'Signed-By: /etc/apt/keyrings/zabbly.asc' |
+            sudo tee /etc/apt/sources.list.d/zabbly-incus-lts-6.0.sources >/dev/null
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq incus jq >/dev/null
           # Docker on the runner sets the FORWARD policy to DROP, which cuts
