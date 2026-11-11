@@ -547,7 +547,7 @@ check_health screenshot.png || fail "$health_problem"
 # A fresh install is already on the latest release, so a plain `update` would
 # only say "No update available" and never run update_script's real path. The
 # version files the install wrote (~/.<app>, one per fetch_and_deploy_gh_release)
-# are set back to 0.0.0-ci first; check_for_gh_release then sees an update and
+# that update_script checks are set back to 0.0.0-ci first; check_for_gh_release then sees an update and
 # runs it all. `update` is the /usr/bin/update the install generated: it pulls
 # ct/<app>.sh from the URL this container was built from, i.e. the PR's tree.
 UPDATE_FAKE="0.0.0-ci"
@@ -563,6 +563,15 @@ version_files=$(guest_exec sh -c '
     case "$f" in */.install-* | *.pending | *.bak | */.bash* | */.profile | */.hushlogin | */.viminfo | */.lesshst | */.wget-hsts | */.selected_editor) continue ;; esac
     [ "$(wc -l <"$f")" -le 1 ] && grep -qE "^v?[0-9]+(\.[0-9A-Za-z_+-]+)+$" "$f" && echo "$f"
   done' 2>/dev/null | grep -E '^/root/\.[A-Za-z0-9._-]+$')
+# Only set back what update_script checks: the names it passes to
+# check_for_*release. The install can also deploy helpers the update never
+# touches (immich: ~/.mise); those would stay 0.0.0-ci and fail the run. A
+# name that is a variable can't be read here, so then all of them are set back.
+tracked=$(grep -oE 'check_for_[a-z]*_?release[[:space:]]+("[^"]*"|[^[:space:]]+)' "$tree/$SCRIPT" |
+  sed -E 's/^check_for_[a-z]*_?release[[:space:]]+//; s/^"(.*)"$/\1/' | tr -d ' ' | tr '[:upper:]' '[:lower:]' | sort -u)
+if [[ -n "$tracked" && "$tracked" != *'$'* ]]; then
+  version_files=$(grep -xF -f <(sed 's|^|/root/.|' <<<"$tracked") <<<"$version_files" || true)
+fi
 for f in $version_files; do
   guest_exec sh -c "echo '$UPDATE_FAKE' > '$f'; rm -f '$f.pending'" ||
     update_fail "could not reset $f"

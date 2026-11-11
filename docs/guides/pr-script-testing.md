@@ -60,7 +60,9 @@ withdraws it. 🖥️ and ⚠️ results are never approved. All other PRs need 
    minutes. Redirects are followed, so a jump to a login page is fine. Scripts
    that print no URL skip this check.
 5. **Update:** the installed app is set back (every version file the install
-   wrote, `~/.<app>`, becomes `0.0.0-ci`), and `update` runs inside the
+   wrote, `~/.<app>`, whose name the script passes to `check_for_*release`
+   becomes `0.0.0-ci`; helpers the update never checks, like `~/.mise`, stay
+   as they are), and `update` runs inside the
    container the way a user would run it, pulling the PR's `ct/` script. It has
    to finish without an error and report "Updated successfully"; then checks 3
    and 4 run again. An app without a version file (apt, npm, ...) only gets
