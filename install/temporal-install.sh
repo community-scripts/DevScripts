@@ -76,7 +76,6 @@ services:
       grpcPort: 7233
       membershipPort: 6933
       bindOnIP: "0.0.0.0"
-      httpPort: 7243
 
   matching:
     rpc:
@@ -107,7 +106,6 @@ clusterMetadata:
       initialFailoverVersion: 1
       rpcName: "frontend"
       rpcAddress: "127.0.0.1:7233"
-      httpAddress: "127.0.0.1:7243"
 
 dcRedirectionPolicy:
   policy: "noop"
@@ -196,7 +194,10 @@ systemctl enable -q --now temporal temporal-ui
 msg_ok "Created Services"
 
 msg_info "Creating Default Namespace"
-until temporal operator cluster health &>/dev/null; do sleep 1; done
+for _ in {1..60}; do
+  temporal operator cluster health &>/dev/null && break
+  sleep 1
+done
 $STD temporal operator namespace create --namespace default
 msg_ok "Created Default Namespace"
 

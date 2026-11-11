@@ -34,7 +34,7 @@
   },
   "notes": [
     {
-      "text": "The gRPC endpoint on port 7233, the HTTP API on 7243 and the UI on 8080 have no authentication. Keep the container on a trusted network or put it behind a firewall and a TLS proxy.",
+      "text": "The gRPC endpoint on port 7233 and the UI on 8080 have no authentication. Keep the container on a trusted network or put it behind a firewall and a TLS proxy.",
       "type": "warning"
     },
     {
