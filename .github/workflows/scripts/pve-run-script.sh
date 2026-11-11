@@ -505,7 +505,9 @@ take_screenshot() {
   local dir
   dir=$(mktemp -d)
   chown ci-shot "$dir"
-  runuser -u ci-shot -- timeout 60 chromium --headless=new --disable-gpu --hide-scrollbars \
+  # HOME: runuser keeps root's, which ci-shot cannot write; Playwright's
+  # Chromium (the ARM runner) then crashes in its crash handler.
+  runuser -u ci-shot -- env HOME="$dir" timeout 60 chromium --headless=new --disable-gpu --hide-scrollbars \
     --ignore-certificate-errors --no-first-run --window-size=1280,800 --virtual-time-budget=10000 \
     --user-data-dir="$dir/profile" --screenshot="$dir/shot.png" "$url" &>/dev/null
   # Only a plausible PNG leaves this function.

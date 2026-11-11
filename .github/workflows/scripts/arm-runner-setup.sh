@@ -112,7 +112,9 @@ shots() {
   local dir
   dir=$(mktemp -d)
   chown ci-shot "$dir"
-  runuser -u ci-shot -- timeout 60 chromium --headless=new --disable-gpu --hide-scrollbars \
+  # HOME: runuser keeps root's, which ci-shot cannot write; Playwright's
+  # Chromium (the ARM runner) then crashes in its crash handler.
+  runuser -u ci-shot -- env HOME="$dir" timeout 60 chromium --headless=new --disable-gpu --hide-scrollbars \
     --no-first-run --window-size=320,200 --user-data-dir="$dir/profile" \
     --screenshot="$dir/shot.png" 'data:text/html,<h1>ci</h1>' &>"$dir/chromium.log" || true
   if [[ ! -s "$dir/shot.png" ]]; then
