@@ -12,6 +12,8 @@
   "documentation": "https://hindsight.vectorize.io/developer/installation",
   "website": "https://hindsight.vectorize.io/",
   "repository": "https://github.com/vectorize-io/hindsight",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
   "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/hindsight.webp",
   "description": "Hindsight is an open-source memory server for AI agents. Agents retain conversations and documents into memory banks, then recall facts, entities and their history, or reflect on them, through a REST API, SDKs and an MCP server.",
   "install_methods": [
