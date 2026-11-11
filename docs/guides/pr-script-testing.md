@@ -105,15 +105,19 @@ The engine fetches everything from `raw.githubusercontent.com/<repo>/main`: the
 every upstream `main` URL in it to point at its own HTTP server, and builds from
 there. Engine changes in the PR are tested along with the script.
 
-## The test host
+## The test hosts
+
+Two identical hosts. Each has a runner for both repositories, so GitHub hands
+every job to whichever is free: two builds per repository can run at once.
 
 | | |
 | - | - |
-| Host | VM 200 `pve-ci` on prox1, `10.201.146.117`, Proxmox VE 9 |
-| Disk | 250 GB on `SAN_SHARED`. `local-lvm` on prox1 manages only ~4 fsyncs/s, which turns every `dpkg --configure` into minutes |
-| Runners | `/opt/actions-runner/<repo>`, label `proxmox-test`, one per repository |
+| Hosts | VM 200 `pve-ci` (`10.201.146.117`) and VM 201 `pve-ci-2` (`10.201.146.231`), both on prox1, Proxmox VE 9 |
+| CPU | Xeon E5-2650 (Sandy Bridge): AVX, no AVX2. prox3 has the same CPU |
+| Disk | 250 GB each on `SAN_SHARED`. `local-lvm` on prox1 manages only ~4 fsyncs/s, which turns every `dpkg --configure` into minutes |
+| Runners | `/opt/actions-runner/<repo>`, named `<host>-<repo>`, label `proxmox-test`, one per repository per host |
 | Containers | Bridge `vmbr1`, `10.99.0.0/24`, NAT to the lab network, DHCP and DNS from dnsmasq |
-| Container IDs | DevScripts `9000–9049`, ProxmoxVE `9050–9099` |
+| Container IDs | DevScripts `9000–9049`, ProxmoxVE `9050–9099`, on each host (every host is its own Proxmox) |
 | PR trees | `/srv/ci`, served on `10.99.0.1:18080` |
 | Sweeper | `ci-sweep.timer`, every 3 hours: removes containers no running job holds |
 
