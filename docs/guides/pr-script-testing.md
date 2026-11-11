@@ -2,9 +2,10 @@
 
 A maintainer comments `/test` on a pull request, and self-hosted runners build
 every `ct/` and `vm/` script the PR touches: each `ct/` script on a real Proxmox
-VE host **and** on an Incus host, each `vm/` script on Proxmox. The result
-comes back as a **Proxmox script test** check run and as a single PR comment
-that is kept up to date.
+VE host **and** on an Incus host, each `vm/` script on Proxmox. On top of that,
+each `ct/` script is built on ARM64, as information only. The result comes back
+as a **Proxmox script test** check run and as a single PR comment that is kept
+up to date.
 
 The workflow is [`pr-script-test.yml`](../../.github/workflows/pr-script-test.yml).
 The same file runs in DevScripts and ProxmoxVE.
@@ -44,12 +45,38 @@ withdraws it. 🖥️ and ⚠️ results are never approved. All other PRs need 
   a row per platform.
 - Scripts that ask for the OS (`msg_menu "Choose the container OS"`) are built
   twice per platform, once on Debian and once on Alpine.
-- At most 10 scripts per run (each can be up to four builds).
+- Every `ct/` script is also built on **ARM64** (`arm64` in the comment), see
+  below. That row is information only.
+- At most 10 scripts per run (each can be up to six builds).
 - `tools/` and `turnkey/` scripts are not built yet, and ARM64-only VM scripts
   (`vm_require_arch arm64`) never are: the test hosts are amd64. The comment
   lists them under "Not built".
 - You can also start it from the Actions tab (`workflow_dispatch`) with a PR
   number.
+
+## ARM64 (information only)
+
+Every `ct/` script is also built on GitHub's own arm64 runner
+(`ubuntu-24.04-arm`): a fresh Ubuntu VM per job, on which
+[`arm-runner-setup.sh`](../../.github/workflows/scripts/arm-runner-setup.sh)
+sets up Incus (6.0 LTS from Zabbly, key pinned; Ubuntu's own 6.0.0 lacks the
+`csv,noheader` output the engine uses) and the screenshot browser. The build
+is the Incus one, unchanged, on native ARM: about as fast as on x86.
+
+- **Never decides anything.** The ARM rows are shown in the table, but the
+  headline, the check run, "changes requested" and the approval only count
+  Proxmox and Incus. The ARM job runs with `continue-on-error`, so a failed
+  ARM build, or one GitHub cannot run at all, never turns the run red.
+- **`var_arm64`:** a script with `var_arm64="${var_arm64:-no}"` is not built
+  on ARM (listed under "Not built"). `yes` is built as is. A script that leaves
+  it unset (the engine would refuse to guess on ARM) is built with
+  `var_arm64=yes`, to show whether setting it would work.
+- **Cost:** standard GitHub-hosted runners, arm64 included, are free for
+  public repositories. Jobs count against the organisation's concurrency
+  limit, shared with every other workflow.
+- **Without a PR:** the *ARM script test (manual)* workflow
+  ([`arm-script-test.yml`](../../.github/workflows/arm-script-test.yml)) builds
+  one script and branch on ARM from the Actions tab and posts nothing.
 
 ## What counts as passing
 
