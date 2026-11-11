@@ -124,7 +124,17 @@ shots() {
     --screenshot="$dir/shot.png" 'data:text/html,<h1>ci</h1>' &>"$dir/chromium.log" || true
   if [[ ! -s "$dir/shot.png" ]]; then
     echo "Chromium could not take a test screenshot:"
-    tail -n 12 "$dir/chromium.log"
+    grep -vE 'crashpad|--help' "$dir/chromium.log" | head -n 15
+    # What it takes to find out why, next time.
+    echo "userns: $(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>&1)," \
+      "max_user_namespaces: $(sysctl -n user.max_user_namespaces 2>&1)," \
+      "unprivileged_userns_clone: $(sysctl -n kernel.unprivileged_userns_clone 2>&1)"
+    rm -f "$dir/shot.png"
+    runuser -u ci-shot -- env HOME="$dir" timeout 60 chromium --headless=new --no-sandbox --disable-gpu \
+      --no-first-run --window-size=320,200 --user-data-dir="$dir/profile2" \
+      --screenshot="$dir/shot.png" 'data:text/html,<h1>ci</h1>' &>/dev/null || true
+    [[ -s "$dir/shot.png" ]] && echo "Diagnosis: works without the sandbox, so the sandbox is what fails (not used that way)" ||
+      echo "Diagnosis: fails without the sandbox too"
     rm -rf -- "$dir"
     return 1
   fi
