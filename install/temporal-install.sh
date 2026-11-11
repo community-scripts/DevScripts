@@ -14,7 +14,7 @@ network_check
 update_os
 
 PG_VERSION="17" setup_postgresql
-PG_DB_NAME="temporal" PG_DB_USER="temporal" setup_postgresql_db
+PG_DB_NAME="temporal" PG_DB_USER="temporal" PG_DB_SCHEMA_PERMS="true" setup_postgresql_db
 
 fetch_and_deploy_gh_release "temporal" "temporalio/temporal" "prebuild" "latest" "/opt/temporal" "temporal_*_linux_$(arch_resolve).tar.gz"
 fetch_and_deploy_gh_release "temporal-ui" "temporalio/ui-server" "prebuild" "latest" "/opt/temporal-ui" "ui-server_*_linux_$(arch_resolve).tar.gz"
@@ -148,7 +148,7 @@ msg_ok "Configured Temporal"
 
 msg_info "Initializing Temporal Database"
 set -a && source /etc/temporal/temporal.env && set +a
-$STD sudo -u postgres psql -c "CREATE DATABASE temporal_visibility WITH OWNER temporal ENCODING 'UTF8' TEMPLATE template0;"
+$STD /opt/temporal/temporal-sql-tool --db temporal_visibility create-database
 $STD /opt/temporal/temporal-sql-tool --db temporal setup-schema -v 0.0
 $STD /opt/temporal/temporal-sql-tool --db temporal update-schema --schema-name postgresql/v12/temporal
 $STD /opt/temporal/temporal-sql-tool --db temporal_visibility setup-schema -v 0.0
