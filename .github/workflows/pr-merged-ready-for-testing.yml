@@ -1,0 +1,179 @@
+name: Mark merged scripts Ready For Testing
+
+# When a PR that adds a new script is merged, find the script's issue and add
+# the "Ready For Testing" label; open the issue first if there is none.
+# The label is what publishes the script (push_json_to_pocketbase.yml) and
+# announces it, so it is set with an app token: a label set with GITHUB_TOKEN
+# raises no `issues: labeled` event and nothing downstream would run.
+#
+# pull_request_target so the secrets are there for PRs from forks. Nothing from
+# the PR is checked out or run: the new JSON files are read through the API at
+# the merge commit, which is already on main.
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Merged pull request number"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-merged-ready-for-testing
+  cancel-in-progress: false
+
+jobs:
+  ready-for-testing:
+    runs-on: ubuntu-latest
+    if: >-
+      github.repository == 'community-scripts/DevScripts' &&
+      (github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true)
+    steps:
+      - name: Generate a token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.GHAPP_SYNC_ID }}
+          private-key: ${{ secrets.GHAPP_SYNC_PRIVATE_KEY }}
+          owner: community-scripts
+          repositories: DevScripts
+          permission-issues: write
+          permission-contents: read
+          permission-pull-requests: read
+
+      - name: Label or open the script issues
+        uses: actions/github-script@v8
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const LABEL = "Ready For Testing";
+            const { owner, repo } = context.repo;
+            const prNumber = Number(process.env.PR_NUMBER);
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            if (!pr.merged) {
+              core.info(`#${prNumber} is not merged, nothing to do.`);
+              return;
+            }
+
+            // New scripts = JSON files the PR added. The JSON is what gets
+            // published, so a script without one has nothing to test yet.
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner, repo, pull_number: prNumber, per_page: 100,
+            });
+            const added = files
+              .filter(f => f.status === "added" && /^json\/[^/]+\.json$/.test(f.filename))
+              .map(f => f.filename);
+            if (added.length === 0) {
+              core.info(`#${prNumber} adds no json/*.json, no new script.`);
+              return;
+            }
+
+            // Same slug rule as push_json_to_pocketbase.yml / move-to-main-repo.yaml:
+            // the "Name of the Script" field, else the title, lowercased, spaces -> dashes.
+            const slugify = s => (s || "").replace(/\r/g, "").trim().toLowerCase().replace(/\s+/g, "-");
+            const loose = s => slugify(s).replace(/[^a-z0-9]/g, "");
+            const issueSlug = issue => {
+              const m = (issue.body || "").replace(/\r/g, "")
+                .match(/^###[ \t]*Name of the Script[ \t]*\n+([^\n#][^\n]*)/m);
+              return slugify(m ? m[1] : issue.title);
+            };
+
+            const openIssues = (await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: "open", per_page: 100,
+            })).filter(i => !i.pull_request);
+
+            const prBody = (pr.body || "").replace(/\r/g, "");
+            const ticked = re => new RegExp(`^\\s*-\\s*\\[[xX]\\]\\s*\\**\\s*${re}`, "m").test(prBody);
+
+            const TYPE_LABELS = {
+              ct: "CT (LXC Container)",
+              vm: "VM (Virtual Machine)",
+              addon: "Addon (tools/addon)",
+              pve: "PVE Tool (tools/pve)",
+            };
+            const TYPE_DIRS = { ct: "ct", vm: "vm", addon: "tools/addon", pve: "tools/pve" };
+
+            for (const path of added) {
+              const slug = path.slice("json/".length, -".json".length);
+
+              let data;
+              try {
+                const res = await github.rest.repos.getContent({ owner, repo, path, ref: pr.merge_commit_sha });
+                data = JSON.parse(Buffer.from(res.data.content, "base64").toString("utf8"));
+              } catch (e) {
+                core.warning(`${path}: cannot read or parse (${e.message}), skipped.`);
+                continue;
+              }
+              if (!data.slug) {
+                core.info(`${path} has no .slug (not a script JSON), skipped.`);
+                continue;
+              }
+
+              // Exact match is what push_json_to_pocketbase.yml needs to find the JSON.
+              let issue = openIssues.find(i => issueSlug(i) === slug);
+              if (!issue) {
+                issue = openIssues.find(i => loose(issueSlug(i)) === loose(slug) || loose(i.title) === loose(data.name));
+                if (issue) {
+                  core.warning(`#${issue.number} matches ${slug} only loosely; its "Name of the Script" should be "${slug}" so the JSON gets published.`);
+                }
+              }
+
+              if (issue) {
+                if ((issue.labels || []).some(l => (l.name || l) === LABEL)) {
+                  core.info(`#${issue.number} (${slug}) already has "${LABEL}".`);
+                  continue;
+                }
+                await github.rest.issues.addLabels({ owner, repo, issue_number: issue.number, labels: [LABEL] });
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: issue.number,
+                  body: `#${prNumber} was merged, marking this script ${LABEL}.`,
+                });
+                core.info(`#${issue.number} (${slug}): added "${LABEL}".`);
+                continue;
+              }
+
+              // No issue yet: open one in the New Script template's format, so
+              // the other workflows read it like one a person filed.
+              const type = data.type in TYPE_LABELS ? data.type : "ct";
+              const script = data.install_methods?.[0]?.script;
+              const defaultPath = `${TYPE_DIRS[type]}/${slug}.sh`;
+
+              let arm64;
+              if (ticked("arm64 supported")) arm64 = "arm64 supported";
+              else if (ticked("arm64 not supported")) arm64 = "arm64 not supported";
+              else if (ticked("arm64 not tested")) arm64 = "arm64 not tested";
+              else arm64 = (data.architectures || []).includes("arm64") ? "arm64 supported" : "arm64 not tested";
+
+              const name = slugify(data.name) === slug ? data.name : slug;
+              const body = [
+                "### Name of the Script", "", name, "",
+                "### Script Type", "", TYPE_LABELS[type], "",
+                "### Script path", "", script && script !== defaultPath ? script : "_No response_", "",
+                "### Where does it run?", "", "_No response_", "",
+                "### Does this script support arm64?", "", arm64, "",
+                "### Tested on", "",
+                `- [${ticked("Proxmox VE") ? "X" : " "}] Proxmox VE`,
+                `- [${ticked("Incus") ? "X" : " "}] Incus`, "",
+                "### 📋 Script Details", "",
+                data.description || "_No response_", "",
+                `Opened automatically: no issue was found for \`${slug}\` when #${prNumber} by @${pr.user.login} was merged.`,
+              ].join("\n");
+
+              const { data: created } = await github.rest.issues.create({
+                owner, repo, title: data.name || slug, body, labels: ["task"],
+              });
+              // Added on its own so it raises an `issues: labeled` event for this label.
+              await github.rest.issues.addLabels({ owner, repo, issue_number: created.number, labels: [LABEL] });
+              openIssues.push(created);
+              core.info(`#${created.number} (${slug}): opened with "${LABEL}".`);
+            }
