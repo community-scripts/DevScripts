@@ -1,0 +1,63 @@
+{
+  "name": "Zulip",
+  "slug": "zulip",
+  "categories": [
+    22
+  ],
+  "date_created": "2026-11-10",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 443,
+  "documentation": "https://zulip.readthedocs.io/en/stable/production/",
+  "website": "https://zulip.com/",
+  "repository": "https://github.com/zulip/zulip",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/zulip.webp",
+  "description": "Zulip is an open-source team chat server that organizes conversations into channels and topics, so discussions stay readable and can be followed up later. It offers search, threads, integrations, bots and desktop and mobile apps.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/zulip.sh",
+      "config_path": "/etc/zulip/settings.py",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 12,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Create your organization with the single-use link in ~/zulip.creds inside the container, then accept the self-signed certificate.",
+      "type": "info"
+    },
+    {
+      "text": "The hostname is fixed at install (default: the container IP). Give the container a static IP or set var_zulip_hostname to a DNS name.",
+      "type": "warning"
+    },
+    {
+      "text": "Invitations and password resets need outgoing email; configure SMTP in /etc/zulip/settings.py.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_zulip_hostname",
+      "label": "Hostname",
+      "type": "text",
+      "help": "Domain or IP users reach Zulip on; defaults to the container IP"
+    },
+    {
+      "name": "var_zulip_email",
+      "label": "Administrator Email",
+      "type": "text",
+      "default": "zulip-admin@zulip.local"
+    }
+  ]
+}
