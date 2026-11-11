@@ -24,6 +24,7 @@ withdraws it. 🖥️ and ⚠️ results are never approved. All other PRs need 
 | `/test` | The latest commit: every `ct/` script the PR changes, plus the `ct/` entry point of every changed `install/` script |
 | `/test ct/foo.sh ct/bar.sh` | Only these scripts |
 | `/test <sha>` | Exactly that commit (all 40 characters), and only while it is the PR head |
+| `/test <app> [<app> ...]` **in an issue** | That app from the default branch as it is now, e.g. to check whether a reported error reproduces. Install and update test as for a PR; no check run, review or approval |
 
 - Only users with write access can trigger it. Anyone else's `/test` is ignored.
 - Only a commit that existed when you wrote the comment is built. Otherwise a
@@ -50,6 +51,14 @@ withdraws it. 🖥️ and ⚠️ results are never approved. All other PRs need 
 4. The URL the script prints (`http://${IP}:PORT/...`) answers **200** within 2
    minutes. Redirects are followed, so a jump to a login page is fine. Scripts
    that print no URL skip this check.
+5. **Update:** the installed app is set back (every version file the install
+   wrote, `~/.<app>`, becomes `0.0.0-ci`), and `update` runs inside the
+   container the way a user would run it, pulling the PR's `ct/` script. It has
+   to finish without an error and report "Updated successfully"; then checks 3
+   and 4 run again. An app without a version file (apt, npm, ...) only gets
+   "nothing to update" (➖), which is not a failure. A GitHub API rate limit
+   during the update is ⚠️ (not tested), not ❌; the job passes its read-only
+   token to the build so that this should not happen.
 
 The container is destroyed afterwards, whether the build passed or failed. The
 full build log is attached to the run as a `result-*` artifact.
