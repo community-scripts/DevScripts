@@ -25,8 +25,10 @@ permissions:
   contents: read
   pull-requests: read
 
+# One group per PR: a group keeps a single pending run, so a shared group
+# would cancel the waiting run of one PR when the next PR is merged.
 concurrency:
-  group: pr-merged-ready-for-testing
+  group: pr-merged-ready-for-testing-${{ github.event.pull_request.number || inputs.pr_number }}
   cancel-in-progress: false
 
 jobs:
