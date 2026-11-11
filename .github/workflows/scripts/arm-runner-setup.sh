@@ -79,9 +79,14 @@ shots() {
   useradd --system --create-home --shell /usr/sbin/nologin ci-shot
   # Ubuntu's apt chromium is a snap wrapper; Playwright ships a plain arm64 build.
   PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npx -y playwright@1.49.1 install --with-deps chromium >/dev/null
+  # The headless shell, which is what Playwright itself runs headless: the full
+  # build's crash handler aborts it when started like this ("--database is
+  # required"). The full build only if the shell is missing.
   local chrome
-  chrome=$(ls -d /opt/pw-browsers/chromium-*/chrome-linux*/chrome 2>/dev/null | head -n1)
+  chrome=$(ls -d /opt/pw-browsers/chromium_headless_shell-*/chrome-linux*/headless_shell \
+    /opt/pw-browsers/chromium-*/chrome-linux*/chrome 2>/dev/null | head -n1)
   [[ -x "$chrome" ]] || { echo "no Chromium binary found"; return 1; }
+  echo "Screenshot browser: ${chrome#/opt/pw-browsers/}"
   chmod -R a+rX /opt/pw-browsers
   ln -sf "$chrome" /usr/local/bin/chromium
   # Ubuntu 24.04 forbids unprivileged user namespaces through AppArmor, and
@@ -119,7 +124,7 @@ shots() {
     --screenshot="$dir/shot.png" 'data:text/html,<h1>ci</h1>' &>"$dir/chromium.log" || true
   if [[ ! -s "$dir/shot.png" ]]; then
     echo "Chromium could not take a test screenshot:"
-    tail -n 5 "$dir/chromium.log"
+    tail -n 12 "$dir/chromium.log"
     rm -rf -- "$dir"
     return 1
   fi
