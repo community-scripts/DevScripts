@@ -77,18 +77,48 @@ echo "Incus $(incus --version) ready after $(($(date +%s) - start))s"
 # 169.254.169.254 and the runner itself).
 shots() {
   useradd --system --create-home --shell /usr/sbin/nologin ci-shot
-  # Ubuntu's apt chromium is a snap wrapper; Playwright ships a plain arm64 build.
-  PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npx -y playwright@1.49.1 install --with-deps chromium >/dev/null
-  # The headless shell, which is what Playwright itself runs headless: the full
-  # build's crash handler aborts it when started like this ("--database is
-  # required"). The full build only if the shell is missing.
-  local chrome
-  chrome=$(ls -d /opt/pw-browsers/chromium_headless_shell-*/chrome-linux*/headless_shell \
-    /opt/pw-browsers/chromium-*/chrome-linux*/chrome 2>/dev/null | head -n1)
-  [[ -x "$chrome" ]] || { echo "no Chromium binary found"; return 1; }
-  echo "Screenshot browser: ${chrome#/opt/pw-browsers/}"
-  chmod -R a+rX /opt/pw-browsers
-  ln -sf "$chrome" /usr/local/bin/chromium
+  # Ubuntu's apt chromium is a snap wrapper; Playwright ships a plain arm64
+  # build. Started directly with --screenshot, that build crashes on this
+  # runner (sandbox or not), so `chromium` here is a stand-in that takes the
+  # harness's arguments and drives the browser through Playwright instead.
+  mkdir -p /opt/pw
+  (cd /opt/pw && npm install --silent --no-audit --no-fund playwright-core@1.49.1 >/dev/null)
+  PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers /opt/pw/node_modules/.bin/playwright-core install --with-deps chromium >/dev/null
+  chmod -R a+rX /opt/pw /opt/pw-browsers
+  cat >/opt/pw/shot.js <<'EOF'
+// node shot.js <url> <out.png> <width> <height>
+const { chromium } = require('/opt/pw/node_modules/playwright-core');
+(async () => {
+  const [url, out, w, h] = process.argv.slice(2);
+  const browser = await chromium.launch({ chromiumSandbox: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: Number(w), height: Number(h) }, ignoreHTTPSErrors: true });
+    await page.goto(url, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
+    await page.waitForTimeout(5000);
+    await page.screenshot({ path: out });
+  } finally {
+    await browser.close();
+  }
+})().catch(e => { console.error(e.message); process.exit(1); });
+EOF
+  cat >/usr/local/bin/chromium <<'EOF'
+#!/usr/bin/env bash
+# Stand-in for `chromium --headless ... --screenshot=<file> --window-size=W,H <url>`
+# on the ARM runner (see arm-runner-setup.sh). Other flags are ignored.
+url="" out="" w=1280 h=800
+for a in "$@"; do
+  case "$a" in
+  --version) echo "Chromium (Playwright $(node -p "require('/opt/pw/node_modules/playwright-core/package.json').version"))"; exit 0 ;;
+  --screenshot=*) out="${a#*=}" ;;
+  --window-size=*) s="${a#*=}"; w="${s%,*}"; h="${s#*,}" ;;
+  -*) ;;
+  *) url="$a" ;;
+  esac
+done
+[[ -n "$url" && -n "$out" ]] || { echo "usage: chromium --screenshot=<file> <url>" >&2; exit 2; }
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers exec node /opt/pw/shot.js "$url" "$out" "$w" "$h"
+EOF
+  chmod 755 /usr/local/bin/chromium
   # Ubuntu 24.04 forbids unprivileged user namespaces through AppArmor, and
   # Chromium's sandbox needs them. The sandbox stays on; the restriction goes,
   # on a VM that exists for this one job.
@@ -117,24 +147,14 @@ shots() {
   local dir
   dir=$(mktemp -d)
   chown ci-shot "$dir"
-  # HOME: runuser keeps root's, which ci-shot cannot write; Playwright's
-  # Chromium (the ARM runner) then crashes in its crash handler.
+  # HOME: runuser keeps root's, which ci-shot cannot write (the harness does the same).
   runuser -u ci-shot -- env HOME="$dir" timeout 60 chromium --headless=new --disable-gpu --hide-scrollbars \
     --no-first-run --window-size=320,200 --user-data-dir="$dir/profile" \
     --screenshot="$dir/shot.png" 'data:text/html,<h1>ci</h1>' &>"$dir/chromium.log" || true
   if [[ ! -s "$dir/shot.png" ]]; then
     echo "Chromium could not take a test screenshot:"
-    grep -vE 'crashpad|--help' "$dir/chromium.log" | head -n 15
-    # What it takes to find out why, next time.
-    echo "userns: $(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>&1)," \
-      "max_user_namespaces: $(sysctl -n user.max_user_namespaces 2>&1)," \
-      "unprivileged_userns_clone: $(sysctl -n kernel.unprivileged_userns_clone 2>&1)"
-    rm -f "$dir/shot.png"
-    runuser -u ci-shot -- env HOME="$dir" timeout 60 chromium --headless=new --no-sandbox --disable-gpu \
-      --no-first-run --window-size=320,200 --user-data-dir="$dir/profile2" \
-      --screenshot="$dir/shot.png" 'data:text/html,<h1>ci</h1>' &>/dev/null || true
-    [[ -s "$dir/shot.png" ]] && echo "Diagnosis: works without the sandbox, so the sandbox is what fails (not used that way)" ||
-      echo "Diagnosis: fails without the sandbox too"
+    head -n 15 "$dir/chromium.log"
+    echo "userns: $(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>&1)"
     rm -rf -- "$dir"
     return 1
   fi
