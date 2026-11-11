@@ -36,30 +36,30 @@ function update_script() {
   check_container_resources
 
   if [[ ! -f /etc/xwiki/xwiki.cfg ]]; then
-    msg_error "No ${APP} Installation Found!"
+    msg_error "No XWiki Installation Found!"
     exit
   fi
 
-  msg_info "Stopping ${APP}"
+  msg_info "Stopping XWiki"
   systemctl stop tomcat10
-  msg_ok "Stopped ${APP}"
+  msg_ok "Stopped XWiki"
 
-  msg_info "Backing up ${APP} configuration"
+  msg_info "Backing up XWiki configuration"
   mkdir -p /opt/xwiki_backup
   cp -a /etc/xwiki "/opt/xwiki_backup/etc-xwiki-$(date +%F)"
-  msg_ok "Backed up ${APP} configuration"
+  msg_ok "Backed up XWiki configuration"
 
-  msg_info "Updating ${APP}"
+  msg_info "Updating XWiki"
   export DEBIAN_FRONTEND=noninteractive
   mapfile -t XWIKI_PKGS < <(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 'xwiki-*' 2>/dev/null | awk '$1 == "ii" {print $2}')
   $STD apt update
   $STD apt install -y --only-upgrade -o Dpkg::Options::=--force-confold "${XWIKI_PKGS[@]}"
-  msg_ok "Updated ${APP}"
+  msg_ok "Updated XWiki"
 
-  msg_info "Starting ${APP}"
+  msg_info "Starting XWiki"
   systemctl start tomcat10
-  msg_ok "Started ${APP}"
-  msg_ok "Updated successfully! After a major upgrade, open ${APP} in the browser and finish the Distribution Wizard."
+  msg_ok "Started XWiki"
+  msg_ok "Updated successfully! After a major upgrade, open XWiki in the browser and finish the Distribution Wizard."
   exit
 }
 
