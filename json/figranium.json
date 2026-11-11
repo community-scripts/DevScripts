@@ -6,6 +6,7 @@
   ],
   "date_created": "2026-10-04",
   "type": "ct",
+  "platforms": ["pve"],
   "updateable": true,
   "privileged": false,
   "interface_port": 11345,

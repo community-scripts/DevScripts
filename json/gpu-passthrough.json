@@ -6,6 +6,8 @@
   ],
   "date_created": "2026-10-17",
   "type": "pve",
+  "platforms": ["pve"],
+  "architectures": ["amd64"],
   "updateable": false,
   "privileged": false,
   "interface_port": null,

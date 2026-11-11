@@ -4,6 +4,8 @@
   "categories": [13],
   "date_created": "2026-09-20",
   "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64"],
   "updateable": true,
   "privileged": false,
   "interface_port": 6080,

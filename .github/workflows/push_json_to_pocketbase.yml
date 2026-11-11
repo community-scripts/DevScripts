@@ -279,9 +279,15 @@ jobs:
               payload.architectures = data.architectures.filter(function (a) { return a === 'amd64' || a === 'arm64'; });
             } else if (data.has_arm !== undefined) {
               payload.architectures = (data.has_arm === true || data.has_arm === 'true') ? ['amd64', 'arm64'] : ['amd64'];
+            } else {
+              var armScript = (data.install_methods || []).map(function (im) { return im.script; }).filter(function (s) { return s && fs.existsSync(s); })[0];
+              var armMatch = armScript && fs.readFileSync(armScript, 'utf8').match(/^\s*var_arm64="\$\{var_arm64:-(yes|no)\}"/m);
+              payload.architectures = armMatch && armMatch[1] === 'yes' ? ['amd64', 'arm64'] : ['amd64'];
             }
-            if (Array.isArray(data.platforms)) {
+            if (Array.isArray(data.platforms) && data.platforms.length) {
               payload.platforms = data.platforms.filter(function (p) { return p === 'pve' || p === 'incus'; });
+            } else {
+              payload.platforms = ['pve'];
             }
             if (Array.isArray(data.app_vars)) payload.app_vars = data.app_vars;
             if (data.repository !== undefined) payload.repository = data.repository;

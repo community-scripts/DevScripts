@@ -6,6 +6,7 @@
   ],
   "date_created": "2026-08-31",
   "type": "vm",
+  "platforms": ["pve"],
   "updateable": false,
   "privileged": false,
   "architectures": ["amd64"],
