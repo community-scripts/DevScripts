@@ -16,14 +16,7 @@ var_disk="${var_disk:-16}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
-# amd64 only: the XWiki Debian packages are architecture independent, but
-# they are not tested on arm64 yet.
 var_arm64="${var_arm64:-no}"
-
-# Read by install/xwiki-install.sh
-export var_xwiki_db="${var_xwiki_db:-pgsql}"
-export var_xwiki_channel="${var_xwiki_channel:-stable}"
-export var_xwiki_xmx="${var_xwiki_xmx:-}"
 
 header_info "$APP"
 variables
@@ -44,22 +37,20 @@ function update_script() {
   systemctl stop tomcat10
   msg_ok "Stopped XWiki"
 
-  msg_info "Backing up XWiki configuration"
-  mkdir -p /opt/xwiki_backup
-  cp -a /etc/xwiki "/opt/xwiki_backup/etc-xwiki-$(date +%F)"
-  msg_ok "Backed up XWiki configuration"
+  create_backup /etc/xwiki
 
   msg_info "Updating XWiki"
-  export DEBIAN_FRONTEND=noninteractive
-  mapfile -t XWIKI_PKGS < <(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 'xwiki-*' 2>/dev/null | awk '$1 == "ii" {print $2}')
-  $STD apt update
-  $STD apt install -y --only-upgrade -o Dpkg::Options::=--force-confold "${XWIKI_PKGS[@]}"
+  apt_update_safe
+  $STD apt install -y --only-upgrade -o Dpkg::Options::=--force-confold \
+    xwiki-common xwiki-pgsql-common xwiki-tomcat10-common xwiki-tomcat10-pgsql
   msg_ok "Updated XWiki"
+
+  restore_backup
 
   msg_info "Starting XWiki"
   systemctl start tomcat10
   msg_ok "Started XWiki"
-  msg_ok "Updated successfully! After a major upgrade, open XWiki in the browser and finish the Distribution Wizard."
+  msg_ok "Updated successfully!"
   exit
 }
 

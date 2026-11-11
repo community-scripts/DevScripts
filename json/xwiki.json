@@ -37,7 +37,7 @@
       "type": "info"
     },
     {
-      "text": "The database (PostgreSQL by default, MariaDB optional) and its random password are created by the Debian package; the connection is stored in /etc/xwiki/hibernate.cfg.xml.",
+      "text": "The PostgreSQL database and its random password are created by the Debian package; the connection is stored in /etc/xwiki/hibernate.cfg.xml.",
       "type": "info"
     },
     {
