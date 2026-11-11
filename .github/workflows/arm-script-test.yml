@@ -5,6 +5,8 @@ name: ARM script test (prototype)
 # pr-script-test.yml. Started by hand from the Actions tab only, and it posts
 # nothing anywhere: the result is in the job summary and the artifact.
 #
+# Screenshots come from Playwright's arm64 Chromium; they are in the artifact.
+#
 # Public repositories get the standard hosted runners, arm64 included, at no
 # cost. Each job is a fresh VM that is thrown away afterwards, so the script
 # under test never touches the lab.
@@ -109,6 +111,40 @@ jobs:
           sudo sh -c 'nohup python3 -m http.server 18080 --bind 10.98.0.1 --directory /srv/ci >/tmp/ci-serve.log 2>&1 &'
           incus --version
           echo "Incus ready after $(($(date +%s) - start))s"
+
+      # The harness takes a screenshot only when `chromium` exists, the user
+      # ci-shot exists and the CI_SHOT chain keeps that user off private
+      # addresses. Here that is the cloud metadata service (169.254.169.254)
+      # and the runner itself. Ubuntu's apt chromium is a snap wrapper, so
+      # Playwright's arm64 build is used instead.
+      - name: Set up screenshots
+        if: steps.plan.outputs.arm64 != 'no'
+        continue-on-error: true
+        run: |
+          start=$(date +%s)
+          sudo useradd --system --create-home --shell /usr/sbin/nologin ci-shot
+          sudo PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npx -y playwright@1.49.1 install --with-deps chromium >/dev/null
+          chrome=$(ls -d /opt/pw-browsers/chromium-*/chrome-linux*/chrome | head -n1)
+          [[ -x "$chrome" ]] || { echo "::warning::no Chromium binary found, no screenshots"; exit 1; }
+          sudo chmod -R a+rX /opt/pw-browsers
+          sudo ln -sf "$chrome" /usr/local/bin/chromium
+          uid=$(id -u ci-shot)
+          for fw in iptables ip6tables; do
+            sudo $fw -w -N CI_SHOT
+            sudo $fw -w -I OUTPUT -m owner --uid-owner "$uid" -j CI_SHOT
+          done
+          sudo iptables -w -A CI_SHOT -d 10.98.0.1 -j REJECT
+          sudo iptables -w -A CI_SHOT -d 10.98.0.0/24 -j ACCEPT
+          sudo iptables -w -A CI_SHOT -d 127.0.0.53 -p udp --dport 53 -j ACCEPT
+          sudo iptables -w -A CI_SHOT -d 127.0.0.53 -p tcp --dport 53 -j ACCEPT
+          for net in 0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16 224.0.0.0/3; do
+            sudo iptables -w -A CI_SHOT -d "$net" -j REJECT
+          done
+          for net in ::1/128 fc00::/7 fe80::/10 ff00::/8; do
+            sudo ip6tables -w -A CI_SHOT -d "$net" -j REJECT
+          done
+          chromium --version
+          echo "Screenshots ready after $(($(date +%s) - start))s"
 
       - name: Build and check ${{ inputs.script }}
         if: steps.plan.outputs.arm64 != 'no'
