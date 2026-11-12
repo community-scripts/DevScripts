@@ -1,0 +1,51 @@
+{
+  "name": "Martin",
+  "slug": "martin",
+  "categories": [
+    21
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3000,
+  "documentation": "https://maplibre.org/martin/",
+  "website": "https://maplibre.org/martin/",
+  "repository": "https://github.com/maplibre/martin",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/maplibre/martin@main/graphics/m.svg",
+  "description": "Martin is a fast, lightweight map tile server from the MapLibre project. It generates vector tiles on the fly from PostGIS tables and functions and serves PMTiles and MBTiles archives, sprites, fonts and styles, with a built-in web UI to browse and inspect every source.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/martin.sh",
+      "config_path": "/opt/martin_data/config.yaml",
+      "resources": {
+        "cpu": 1,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Copy .pmtiles or .mbtiles files into /opt/martin_data/tiles; Martin publishes them without a restart.",
+      "type": "info"
+    },
+    {
+      "text": "For PostGIS, add a postgres connection_string to /opt/martin_data/config.yaml and restart Martin. It then publishes every spatial table and function that database user can read.",
+      "type": "info"
+    },
+    {
+      "text": "Martin has no authentication: the web UI and every source are open to anyone who can reach port 3000.",
+      "type": "warning"
+    }
+  ]
+}
