@@ -22,7 +22,7 @@ fetch_and_deploy_gh_release "temporal-cli" "temporalio/cli" "prebuild" "latest" 
 
 msg_info "Configuring Temporal"
 mkdir -p /etc/temporal/config/dynamicconfig /etc/temporal/ui
-ln -sf /opt/temporal-cli/temporal /usr/local/bin/temporal
+ln -sf /opt/temporal-cli/temporal /usr/bin/temporal
 cat <<EOF >/etc/temporal/temporal.env
 SQL_PLUGIN=postgres12
 SQL_HOST=127.0.0.1
