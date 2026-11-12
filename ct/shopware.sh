@@ -60,6 +60,7 @@ EOF
     create_backup /opt/shopware/.env.local /opt/shopware/config/packages/prod
     $STD php bin/console system:update:prepare
     $STD composer config --json --merge policy.advisories.ignore-id '{"PKSA-s52d-n7sx-trsg":"Affects only the mcp/sdk OAuth middleware, which Shopware does not use (shopware/shopware#22776)."}'
+    $STD composer require --no-interaction --no-update "shopware/core:~$(cut -d. -f1,2 ~/.shopware).0"
     if ! $STD composer update --no-interaction --no-dev --prefer-dist --with-all-dependencies; then
       restore_backup
       $STD php bin/console sales-channel:maintenance:disable --all
