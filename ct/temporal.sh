@@ -14,7 +14,7 @@ var_ram="${var_ram:-2048}"
 var_disk="${var_disk:-8}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
-#var_arm64="${var_arm64:-yes}" # unset = ask the user; server, UI and CLI all ship linux_arm64 assets, but not yet run on arm64
+var_arm64="${var_arm64:-no}" # unset = ask the user; server, UI and CLI all ship linux_arm64 assets, but not yet run on arm64
 var_unprivileged="${var_unprivileged:-1}"
 var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2533}"
 
