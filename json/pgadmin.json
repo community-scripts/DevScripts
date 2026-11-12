@@ -1,0 +1,65 @@
+{
+  "name": "pgAdmin 4",
+  "slug": "pgadmin",
+  "categories": [
+    8
+  ],
+  "date_created": "2026-11-12",
+  "type": "addon",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://www.pgadmin.org/docs/pgadmin4/latest/",
+  "website": "https://www.pgadmin.org/",
+  "repository": "https://github.com/pgadmin-org/pgadmin4",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/pgadmin.webp",
+  "description": "pgAdmin 4 is the web-based administration and development platform for PostgreSQL. It browses and edits database objects, runs queries in a SQL editor with explain plans, and handles backups, restores, roles and server monitoring for any number of PostgreSQL servers.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "tools/addon/pgadmin.sh",
+      "resources": {
+        "cpu": null,
+        "ram": null,
+        "hdd": null,
+        "os": null,
+        "version": null
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Run it inside an existing Debian or Ubuntu LXC (amd64 only), typically the one running PostgreSQL. pgAdmin is served at http://<IP>/pgadmin4.",
+      "type": "info"
+    },
+    {
+      "text": "The login email and a generated password are shown once at the end of the install and are not saved anywhere else.",
+      "type": "warning"
+    },
+    {
+      "text": "Lost the password: run `/usr/pgadmin4/venv/bin/python3 /usr/pgadmin4/web/setup.py update-user <email> --password <new>` in the container. Saved server passwords must then be entered again.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_pgadmin_email",
+      "label": "Login Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_pgadmin_port",
+      "label": "Port",
+      "type": "number",
+      "default": "",
+      "help": "Empty uses 80, or 5050 when port 80 is taken; ignored when Apache is already installed"
+    }
+  ]
+}
