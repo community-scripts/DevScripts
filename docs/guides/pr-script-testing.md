@@ -24,9 +24,18 @@ withdraws it. 🖥️ and ⚠️ results are never approved. All other PRs need 
 | Comment | Builds |
 | ------- | ------ |
 | `/test` | The latest commit: every `ct/` and `vm/` script the PR changes, plus the `ct/` entry point of every changed `install/` script |
-| `/test ct/foo.sh vm/bar-vm.sh` | Only these scripts |
+| `/test ct/foo.sh vm/bar-vm.sh` or `/test foo bar-vm` | Only these scripts. An app name means its `ct/` script, or its `vm/` script if there is no `ct/` one |
+| `/test arm` | Every platform word limits where it builds: `pve` (or `proxmox`), `incus`, `arm` (or `arm64`) |
+| `/test arm pve foo bar` | Combined: `foo` and `bar`, on ARM64 and Proxmox only. The words can come in any order |
 | `/test <sha>` | Exactly that commit (all 40 characters), and only while it is the PR head |
-| `/test <app> [<app> ...]` **in an issue** | That app from the default branch as it is now, e.g. to check whether a reported error reproduces. Install and update test as for a PR; no check run, review or approval. A name without a `ct/` script is looked up in `vm/` (`/test debian-vm`) |
+| `/test <app> [<app> ...]` **in an issue** | That app from the default branch as it is now, e.g. to check whether a reported error reproduces. Install and update test as for a PR; no check run, review or approval. Platform words work here too (`/test arm bark-server`) |
+
+A run on only some platforms is a partial test. It reports under its own
+check (`Proxmox script test (pve only)`), so it never stands in for the full
+one. Its pass never approves a PR and never lifts an earlier "changes
+requested"; a failure still requests changes. `/test arm` alone counts for
+nothing: its check is neutral. VM scripts are built on `pve` only, so a run
+without `pve` lists them under "Not built".
 
 - Only users with write access can trigger it. Anyone else's `/test` is ignored.
 - Only a commit that existed when you wrote the comment is built. Otherwise a
@@ -42,7 +51,7 @@ withdraws it. 🖥️ and ⚠️ results are never approved. All other PRs need 
 - Every `ct/` script is built on both platforms, Proxmox VE (`pve`) and Incus
   (`incus`): the same files, which community-scripts/core runs through its
   Incus backend when it finds `incus` instead of `pveversion`. The comment has
-  a row per platform.
+  a row per platform. Platform words in the `/test` narrow this down.
 - Scripts that ask for the OS (`msg_menu "Choose the container OS"`) are built
   twice per platform, once on Debian and once on Alpine.
 - Every `ct/` script is also built on **ARM64** (`arm64` in the comment), see
@@ -52,7 +61,8 @@ withdraws it. 🖥️ and ⚠️ results are never approved. All other PRs need 
   (`vm_require_arch arm64`) never are: the test hosts are amd64. The comment
   lists them under "Not built".
 - You can also start it from the Actions tab (`workflow_dispatch`) with a PR
-  number.
+  number; its `scripts` field takes the same app names, paths and platform
+  words.
 
 ## ARM64 (information only)
 
