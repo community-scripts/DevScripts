@@ -16,6 +16,9 @@
   "architectures": [
     "amd64"
   ],
+  "platforms": [
+    "pve"
+  ],
   "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/langfuse.webp",
   "description": "Langfuse is an open-source LLM engineering platform. It records traces, token usage and costs from LLM applications and agents, and adds evaluations, prompt management and analytics dashboards.",
   "install_methods": [
