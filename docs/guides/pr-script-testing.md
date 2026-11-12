@@ -199,9 +199,53 @@ there. Engine changes in the PR are tested along with the script.
 
 ## The test hosts
 
-Two Proxmox hosts and two Incus hosts. Each has a runner for both
-repositories, so GitHub hands every job to whichever host of its platform is
-free: two builds per repository and platform can run at once.
+Two Proxmox hosts and two Incus hosts, all **single-use**: every job starts
+on a host that was just reset, and the host is reset again afterwards. Each
+host serves one repository, so each repository has one Proxmox and one Incus
+host and runs one build per platform at a time.
+
+| Host | VM | Repository |
+| ---- | -- | ---------- |
+| `pve-ci` | 200 | DevScripts |
+| `pve-ci-2` | 201 | ProxmoxVE |
+| `incus-ci` | 202 | DevScripts |
+| `incus-ci-2` | 203 | ProxmoxVE |
+
+### Single-use hosts
+
+PR code runs as root on these hosts, forks included and without anyone
+looking first. A long-lived host would let one PR plant something that fakes
+the results of the next, or copy the runner's credentials and pose as a
+runner elsewhere. So a controller on prox1, which never runs PR code, keeps
+each host single-use
+([`ci-vm-controller.sh`](../../.github/workflows/scripts/ci-vm-controller.sh),
+one `ci-vm-controller@<vmid>` service per VM):
+
+1. It rolls the VM back to its `clean` snapshot and boots it (about 1.5
+   minutes).
+2. It registers a just-in-time runner for the host's repository
+   (`generate-jitconfig`). That runner takes exactly one job, and GitHub
+   deletes it afterwards, so its credentials are worthless once the job is
+   over. It has only the label `proxmox-test` or `incus-test`, never
+   `self-hosted`.
+3. When GitHub reports the runner gone, it starts over. When a job is over is
+   read from GitHub, never from the VM, which may be compromised by then.
+
+One repository per host, because a job could read the waiting runner of
+another repository on the same host and use it elsewhere before it is
+withdrawn.
+
+The controller's GitHub token is in `/etc/ci-controller/token` on prox1: a
+fine-grained token for DevScripts and ProxmoxVE with only Administration:
+read and write. Per-VM settings are in `/etc/ci-controller/<vmid>.conf`;
+[`ci-controller-setup.sh`](../../.github/workflows/scripts/ci-controller-setup.sh)
+installs all of it. Logs: `journalctl -u ci-vm-controller@200`.
+
+Stopping a controller leaves its VM as it is; starting it resets the VM, which
+also ends a job that is still running there.
+
+The VM disks are on the thin pool `SAN_PROX1_CI` (in `SAN_PROX1`, prox1
+only), because shared LVM (`SAN_SHARED`) cannot take snapshots.
 
 ### Proxmox VE
 
@@ -209,22 +253,22 @@ free: two builds per repository and platform can run at once.
 | - | - |
 | Hosts | VM 200 `pve-ci` (`10.201.146.232`) and VM 201 `pve-ci-2` (`10.201.146.231`), both on prox1, Proxmox VE 9 |
 | CPU | Xeon E5-2650 (Sandy Bridge): AVX, no AVX2. prox3 has the same CPU |
-| Disk | 250 GB each on `SAN_SHARED`. `local-lvm` on prox1 manages only ~4 fsyncs/s, which turns every `dpkg --configure` into minutes |
-| Runners | `/opt/actions-runner/<repo>`, named `<host>-<repo>`, label `proxmox-test`, one per repository per host |
+| Disk | 250 GB each (thin) on `SAN_PROX1_CI`. `local-lvm` on prox1 manages only ~4 fsyncs/s, which turns every `dpkg --configure` into minutes |
+| Runners | Single-use, from `/opt/actions-runner/<repo>`, named `<host>-<repo>-<time>`, label `proxmox-test` |
 | Containers | Bridge `vmbr1`, `10.99.0.0/24`, NAT to the lab network, DHCP and DNS from dnsmasq |
 | Container IDs | DevScripts `9000–9049`, ProxmoxVE `9050–9099`, on each host (every host is its own Proxmox) |
 | VM IDs | DevScripts `9100–9149`, ProxmoxVE `9150–9199`. Nested KVM: prox1 has `nested=Y` and the hosts' CPU type is `host` |
-| Image cache | VM images and ISOs stay in `/var/lib/vz/template/{cache,iso}` between builds; the sweeper removes any unused for a week |
+| Image cache | Container templates are in the snapshot. VM images and ISOs a job downloads are gone with the next reset |
 | PR trees | `/srv/ci`, served on `10.99.0.1:18080` |
-| Sweeper | `ci-sweep.timer`, every 3 hours: removes containers and VMs no running job holds. A job holds its guest with a lock in `/run/ci-jobs`; a lock older than 3 hours (longer than any job runs) is a killed job's and is ignored and removed |
+| Sweeper | `ci-sweep.timer` is still installed, but the reset after every job already removes whatever a job leaves behind |
 
 ### Incus
 
 | | |
 | - | - |
 | Hosts | VM 202 `incus-ci` (`10.201.146.233`) and VM 203 `incus-ci-2` (`10.201.146.234`), both on prox1, Debian 13 with Incus 6.0 LTS |
-| Size | 8 cores, 16 GB RAM, 150 GB on `SAN_SHARED` each; storage pool `default` (dir) |
-| Runners | `/opt/actions-runner/<repo>`, named `<host>-<repo>`, label `incus-test` |
+| Size | 8 cores, 16 GB RAM, 150 GB (thin) on `SAN_PROX1_CI` each; storage pool `default` (dir) |
+| Runners | Single-use, from `/opt/actions-runner/<repo>`, named `<host>-<repo>-<time>`, label `incus-test` |
 | Containers | Bridge `incusbr0`, `10.98.0.0/24`, NAT; DHCP and DNS from Incus |
 | Container names | `ci-9000`–`ci-9049` (DevScripts), `ci-9050`–`ci-9099` (ProxmoxVE), set through `var_ctid` |
 | PR trees | `/srv/ci`, served on `10.98.0.1:18080` |
@@ -242,18 +286,30 @@ then run `pve-ci-host-setup.sh` (or `incus-ci-host-setup.sh`):
 bash pve-ci-host-setup.sh
 ```
 
-To register a runner, get a registration token first. It is valid for one hour.
+Then install the runner software for the host's repository, without
+registering anything:
 
 ```bash
-gh api -X POST repos/community-scripts/DevScripts/actions/runners/registration-token --jq .token
+bash pve-ci-host-setup.sh community-scripts/DevScripts jit
+```
+
+On prox1, shut the VM down, take the snapshot the controller resets to, and
+start its controller (after adding the VM to `ci-controller-setup.sh` if it
+is new). Every disk of the VM must be on storage that can take snapshots,
+the EFI disk included:
+
+```bash
+qm shutdown <vmid> && qm snapshot <vmid> clean
 ```
 
 ```bash
-bash pve-ci-host-setup.sh community-scripts/DevScripts <token>
+systemctl enable --now ci-vm-controller@<vmid>
 ```
 
-Run the second command once per repository. The Incus script takes the same
-arguments.
+To update a host (packages, templates, runner version), stop its controller,
+start the VM, change it, shut it down, and replace the snapshot
+(`qm delsnapshot <vmid> clean`, then `qm snapshot <vmid> clean`). Never
+snapshot a VM that has run a job since its last reset.
 
 Give a new host a static address in cloud-init from its first boot: the lab
 DHCP once gave a new host the address of an existing one.
@@ -264,5 +320,8 @@ DHCP once gave a new host the address of an existing one.
 - `test` runs on a self-hosted runner with a read-only token and no secrets.
   The harness comes from the default branch; only the script under test comes
   from the PR.
+- Every job gets a freshly reset host and a runner that is valid for that one
+  job (see [Single-use hosts](#single-use-hosts)). Nothing a PR does on a
+  host survives into the next job, and no runner credential outlives it.
 - Every value that reaches the host (repository, commit, path, OS, platform)
   is checked against a strict pattern before use.
