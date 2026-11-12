@@ -132,15 +132,34 @@ EOF
 -Xms1g
 -Xmx1g
 EOF
-  systemctl enable -q --now opensearch
-  for _ in {1..60}; do curl -fsS http://127.0.0.1:9200 >/dev/null 2>&1 && break; sleep 2; done
+  mkdir -p /etc/systemd/system/opensearch.service.d
+  cat <<EOF >/etc/systemd/system/opensearch.service.d/override.conf
+[Service]
+TimeoutStartSec=300
+EOF
+  systemctl daemon-reload
   msg_ok "Installed OpenSearch"
+  if systemctl enable -q --now opensearch; then
+    for _ in {1..60}; do curl -fsS http://127.0.0.1:9200 >/dev/null 2>&1 && break; sleep 2; done
+  fi
+  if curl -fsS http://127.0.0.1:9200 >/dev/null 2>&1; then
+    msg_ok "Started OpenSearch"
+  else
+    msg_warn "OpenSearch did not start, Shopware will search through MariaDB instead"
+    journalctl -u opensearch --no-pager -n 30
+    systemctl disable -q --now opensearch
+    systemctl reset-failed opensearch
+    var_opensearch="no"
+  fi
 fi
 
 msg_info "Installing Shopware"
 export COMPOSER_ALLOW_SUPERUSER=1
-$STD composer create-project shopware/production /opt/shopware --no-interaction --no-dev --prefer-dist
+$STD composer create-project shopware/production /opt/shopware --no-interaction --no-dev --prefer-dist --no-install
 cd /opt/shopware
+# Upstream workaround until mcp/sdk 0.9 ships: https://github.com/shopware/shopware/issues/22776
+$STD composer config --json --merge policy.advisories.ignore-id '{"PKSA-s52d-n7sx-trsg":"Affects only the mcp/sdk OAuth middleware, which Shopware does not use (shopware/shopware#22776)."}'
+$STD composer install --no-interaction --no-dev --prefer-dist
 $STD composer require --no-interaction --update-no-dev symfony/redis-messenger
 rm -rf /opt/shopware/var/cache/*
 ES_ENABLED=0

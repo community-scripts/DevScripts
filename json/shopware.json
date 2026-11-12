@@ -12,6 +12,9 @@
     "amd64",
     "arm64"
   ],
+  "platforms": [
+    "pve"
+  ],
   "interface_port": 80,
   "documentation": "https://developer.shopware.com/docs/",
   "website": "https://www.shopware.com/",
