@@ -1,0 +1,67 @@
+{
+  "name": "New API",
+  "slug": "new-api",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3000,
+  "documentation": "https://docs.newapi.ai/en/docs",
+  "website": "https://www.newapi.ai/",
+  "repository": "https://github.com/QuantumNous/new-api",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/new-api.webp",
+  "description": "New API is a self-hosted LLM gateway that puts one OpenAI-compatible API in front of OpenAI, Claude, Gemini and many other providers. Its web console manages channels, users, API keys, quotas, model pricing and billing, and it converts requests between the OpenAI, Claude and Gemini formats.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/new-api.sh",
+      "config_path": "/opt/new-api_data/.env",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in with the admin user and password stored in /opt/new-api_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Self-registration is open by default. Turn it off under System Settings > Basic Authentication if others can reach the instance.",
+      "type": "warning"
+    },
+    {
+      "text": "Behind an HTTPS reverse proxy, set SESSION_COOKIE_SECURE=true and SESSION_COOKIE_TRUSTED_URL to the public origin in /opt/new-api_data/.env, then restart new-api.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin",
+      "help": "At most 12 characters"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "At least 8 characters, generated when left empty"
+    }
+  ]
+}
