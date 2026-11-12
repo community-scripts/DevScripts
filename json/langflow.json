@@ -1,0 +1,62 @@
+{
+  "name": "Langflow",
+  "slug": "langflow",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 7860,
+  "documentation": "https://docs.langflow.org/",
+  "website": "https://www.langflow.org/",
+  "repository": "https://github.com/langflow-ai/langflow",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/langflow.webp",
+  "description": "Langflow is a visual low-code builder for AI agents and RAG workflows. Drag components such as language models, vector stores and tools onto a canvas, test the flow in the built-in playground, and serve it as an API or MCP server. It works with OpenAI-compatible endpoints, local models through Ollama and the major cloud providers.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/langflow.sh",
+      "config_path": "/opt/langflow_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in with LANGFLOW_SUPERUSER and LANGFLOW_SUPERUSER_PASSWORD from /opt/langflow_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Model servers, vector stores and databases on your LAN are blocked until you add their host or subnet (e.g. 192.168.1.0/24) to LANGFLOW_SSRF_ALLOWED_HOSTS in /opt/langflow_data/.env and restart Langflow.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "langflow"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}
