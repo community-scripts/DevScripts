@@ -1,0 +1,44 @@
+{
+  "name": "ScreenGuard",
+  "slug": "screenguard",
+  "categories": [
+    4
+  ],
+  "date_created": "2026-12-11",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64", "arm64"],
+  "updateable": true,
+  "privileged": false,
+  "has_arm": true,
+  "interface_port": 5000,
+  "documentation": "https://github.com/tenox7/wrp#readme",
+  "website": "https://github.com/adambie/screenguard",
+  "logo": "🛡️",
+  "config_path": "/etc/screenguard",
+  "description": "Parental controls for Linux computers. Set how long and when each child may use the computer, which apps and games they can play and for how long, and which websites are off limits — from a web page on your own network or from your phone.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/screenguard.sh",
+      "config_path": "etc/screenguard",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Parental Controls for Linux",
+      "type": "info"
+    }
+  ]
+}
