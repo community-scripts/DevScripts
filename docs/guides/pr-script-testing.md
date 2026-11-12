@@ -1,6 +1,6 @@
 # Testing PR Scripts on Proxmox and Incus
 
-A maintainer comments `/test` on a pull request, and self-hosted runners build
+Every push to a pull request (drafts excepted) makes self-hosted runners build
 every `ct/` and `vm/` script the PR touches: each `ct/` script on a real Proxmox
 VE host **and** on an Incus host, each `vm/` script on Proxmox. On top of that,
 each `ct/` script is built on ARM64, as information only. The result comes back
@@ -12,14 +12,27 @@ The same file runs in DevScripts and ProxmoxVE.
 
 ## Using it
 
-**Automatic for scripts moving over from DevScripts (ProxmoxVE):** PRs that the
-`push-app-to-main` app opens on a branch of the repository itself are built on
-every push without anyone asking, and approved when every script passes. They
-were reviewed and tested in DevScripts already, and only writers can push to
-such a branch. In ProxmoxVE that approval counts as the one approval the
-`main` ruleset requires, so a passing migration PR becomes mergeable; a new
-push dismisses it as stale, and a later run that does not fully pass
-withdraws it. 🖥️ and ⚠️ results are never approved. All other PRs need `/test`.
+**Automatic on every PR, forks included:** each push to a PR that changes a
+`ct/`, `install/` or `vm/` script is built without anyone asking. That means
+contributors' code runs unattended on the lab hosts, a decision taken on
+2026-11-12: the hosts are isolated, hold no secret and are treated as
+compromised anyway. A draft is built once it is marked ready for review.
+
+Each PR has one queue. A push while a test is running waits for it and then
+builds the newest commit; pushes in between are skipped. A running test is
+never cancelled, because a cancelled job leaves its container behind.
+
+**Approved automatically: only scripts moving over from DevScripts
+(ProxmoxVE).** PRs that the `push-app-to-main` app opens on a branch of the
+repository itself are approved when every script passes. They were reviewed
+and tested in DevScripts already, and only writers can push to such a branch.
+In ProxmoxVE that approval counts as the one approval the `main` ruleset
+requires, so a passing migration PR becomes mergeable; a new push dismisses it
+as stale, and a later run that does not fully pass withdraws it. 🖥️ and ⚠️
+results are never approved. Every other PR gets the report and the check, and
+"changes requested" when a script really fails.
+
+`/test` is for building again, or for picking scripts and platforms:
 
 | Comment | Builds |
 | ------- | ------ |
@@ -37,7 +50,7 @@ requested"; a failure still requests changes. `/test arm` alone counts for
 nothing: its check is neutral. VM scripts are built on `pve` only, so a run
 without `pve` lists them under "Not built".
 
-- Only users with write access can trigger it. Anyone else's `/test` is ignored.
+- Only users with write access can comment `/test`. Anyone else's is ignored.
 - Only a commit that existed when you wrote the comment is built. Otherwise a
   contributor could push unreviewed code in the seconds between your comment
   and the build. For a PR from a fork, the gate checks when that fork was last
