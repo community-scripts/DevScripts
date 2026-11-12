@@ -118,7 +118,34 @@ is the Incus one, unchanged, on native ARM: about as fast as on x86.
    and 4 run again. An app without a version file (apt, npm, ...) only gets
    "nothing to update" (➖), which is not a failure. A GitHub API rate limit
    during the update is ⚠️ (not tested), not ❌; the job passes its read-only
-   token to the build so that this should not happen.
+   token to the build so that this should not happen. Apps deployed from a
+   branch (`check_for_gh_branch`) store a commit hash instead of a version;
+   it is set back the same way.
+6. **Second update:** right after a real update, `update` runs again. It must
+   finish without an error and leave the app working (checks 3 and 4). If it
+   updates again although nothing changed, that is a note, not a failure.
+7. **Stays up:** for 60 seconds nobody touches the container; no service (and
+   no Docker container) may restart in that time, and checks 3 and 4 must
+   still pass afterwards. That catches crash loops that look "active" at any
+   single moment.
+
+**Upgrade test (`pve · upgrade`).** A `ct/` script that already exists on the
+PR's base branch is built once more on Proxmox: installed from the base branch
+as it is now, then updated with the PR's script (checks 5 to 7), the way a
+user who installed before the merge would update. New scripts have nothing to
+upgrade from and skip it. If the install from the base branch fails, that row
+is ⚠️ (not tested), not the PR's failure.
+
+**Notes (information only, never counted):**
+
+- **Resources:** disk used against the size, RAM in use at rest (without the
+  page cache) against the limit, and OOM kills over the container's life, the
+  build included. Shown in a collapsed "Resources" table; disk over 90 %, RAM
+  at rest over 80 % of `var_ram`, or any OOM kill becomes a note that
+  `var_disk`/`var_ram` may be too small.
+- **Journal:** error lines in the container's journal since boot, with the
+  two most frequent.
+- A second update that updated again.
 
 ### VM scripts (`vm/`)
 
