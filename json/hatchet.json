@@ -1,0 +1,67 @@
+{
+  "name": "Hatchet",
+  "slug": "hatchet",
+  "categories": [
+    19,
+    20
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8888,
+  "documentation": "https://docs.hatchet.run/self-hosting",
+  "website": "https://hatchet.run/",
+  "repository": "https://github.com/hatchet-dev/hatchet",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/hatchet-dev/hatchet@main/frontend/app/public/favicon.svg",
+  "description": "Hatchet is a platform for background tasks and durable workflows built on PostgreSQL. Workers written with its Python, TypeScript, Go or Ruby SDKs pick up tasks with retries, scheduling, cron triggers, concurrency control and rate limits, while the dashboard shows every run, its logs and its timing.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/hatchet.sh",
+      "config_path": "/opt/hatchet_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin@example.com",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in at http://<IP>:8888 with ADMIN_EMAIL and ADMIN_PASSWORD from /opt/hatchet_data/.env. Sign-up is off; set SERVER_ALLOW_SIGNUP=t there to allow it.",
+      "type": "info"
+    },
+    {
+      "text": "Workers need an API token from the dashboard and HATCHET_CLIENT_TLS_STRATEGY=none, because gRPC on port 7077 runs without TLS.",
+      "type": "info"
+    },
+    {
+      "text": "Tokens and logins are bound to the container IP in the .env. Use a static IP, or after a change update SERVER_URL, SERVER_GRPC_BROADCAST_ADDRESS and SERVER_AUTH_COOKIE_DOMAIN and create new tokens.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "8-64 characters with an upper case letter, a lower case letter and a digit; generated when empty or invalid"
+    }
+  ]
+}
