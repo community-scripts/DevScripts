@@ -1,0 +1,40 @@
+{
+  "name": "Ansible",
+  "slug": "ansible",
+  "categories": [19],
+  "date_created": "2026-10-05",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://docs.ansible.com/",
+  "website": "https://www.ansible.com/",
+  "repository": "https://github.com/ansible/ansible",
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/ansible.webp",
+  "description": "Ansible automation control node with ansible-core and the community collection bundle, installed in an isolated uv environment.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/ansible.sh",
+      "config_path": "/etc/ansible/ansible.cfg",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {"text": "Command-line control node; use the container console. No web interface or application daemon.", "type": "info"},
+    {"text": "Inventory is /etc/ansible/hosts. Store playbooks and custom roles or collections in /opt/ansible-data.", "type": "info"},
+    {"text": "Updates install the latest compatible stable Ansible package from PyPI. Review Ansible porting guides before upgrading.", "type": "info"},
+    {"text": "Proxmox installation and arm64 support have not yet been tested.", "type": "warning"}
+  ]
+}
