@@ -1,0 +1,52 @@
+{
+  "name": "Convex",
+  "slug": "convex",
+  "categories": [
+    8,
+    20
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 6791,
+  "documentation": "https://docs.convex.dev/self-hosting",
+  "website": "https://www.convex.dev/",
+  "repository": "https://github.com/get-convex/convex-backend",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/get-convex/convex-backend@main/npm-packages/dashboard-self-hosted/public/convex-logo-only.svg",
+  "description": "Convex is an open-source reactive database and backend for app developers. Queries, mutations and actions are TypeScript functions, and clients subscribe to query results that update in realtime. File storage, scheduled jobs, crons, text and vector search and a web dashboard are built in.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/convex.sh",
+      "config_path": "/opt/convex_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Log in to the dashboard with the deployment URL http://<IP>:3210 and CONVEX_SELF_HOSTED_ADMIN_KEY from /opt/convex_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "To deploy a project, put CONVEX_SELF_HOSTED_URL=http://<IP>:3210 and the same admin key into its .env.local and run npx convex dev.",
+      "type": "info"
+    },
+    {
+      "text": "Behind a domain or reverse proxy, set CONVEX_CLOUD_ORIGIN and CONVEX_SITE_ORIGIN in /opt/convex_data/.env to the public URLs and restart convex.",
+      "type": "info"
+    }
+  ]
+}
