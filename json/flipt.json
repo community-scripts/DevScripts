@@ -1,0 +1,63 @@
+{
+  "name": "Flipt",
+  "slug": "flipt",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://docs.flipt.io/v2/introduction",
+  "website": "https://www.flipt.io/",
+  "repository": "https://github.com/flipt-io/flipt",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/flipt-io/flipt@v2/ui/public/favicon.svg",
+  "description": "Flipt is a Git-native feature flag and remote configuration platform. Flags, segments and rollouts are stored as files in a Git repository and managed through a web UI or the REST and gRPC APIs, with OpenFeature support and SDKs for many languages.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/flipt.sh",
+      "config_path": "/opt/flipt_data/config.yml",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 2,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in to the web UI with the admin user and password from /opt/flipt_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "API and SDK clients authenticate with API_TOKEN from /opt/flipt_data/.env as a Bearer token, over HTTP on port 8080 or gRPC on port 9000.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Web UI login for the user admin, generated when left empty"
+    },
+    {
+      "name": "var_api_key",
+      "label": "API Token",
+      "type": "password",
+      "secret": true,
+      "help": "Bearer token for API and SDK clients, letters and digits only, generated when left empty"
+    }
+  ]
+}
