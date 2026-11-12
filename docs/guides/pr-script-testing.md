@@ -111,7 +111,9 @@ is the Incus one, unchanged, on native ARM: about as fast as on x86.
    that print no URL skip this check.
 5. **Update:** the installed app is set back (every version file the install
    wrote, `~/.<app>`, whose name the script passes to `check_for_*release`
-   becomes `0.0.0-ci`; helpers the update never checks, like `~/.mise`, stay
+   gets `-dev` appended, e.g. `6.7.16.0-dev`, which the engine ranks below the
+   release while scripts that read the installed series still see `6.7`; a
+   commit hash becomes `0.0.0-ci`; helpers the update never checks, like `~/.mise`, stay
    as they are), and `update` runs inside the
    container the way a user would run it, pulling the PR's `ct/` script. It has
    to finish without an error and report "Updated successfully"; then checks 3
