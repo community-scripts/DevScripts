@@ -46,7 +46,6 @@ fetch_and_deploy_gh_release "seaweedfs" "seaweedfs/seaweedfs" "prebuild" "latest
 msg_info "Building Langfuse"
 cd /opt/langfuse
 HUSKY=0 $STD pnpm install --frozen-lockfile
-# DOCKER_BUILD=1 only skips Langfuse's runtime env validation while compiling; no container is involved.
 DOCKER_BUILD=1 NEXT_TELEMETRY_DISABLED=1 CI=true pnpm_config_verify_deps_before_run=false $STD pnpm turbo run build --filter=web... --filter=worker... --concurrency=1
 cp -r web/.next/static web/.next/standalone/web/.next/
 cp -r web/public web/.next/standalone/web/
@@ -226,7 +225,6 @@ systemctl restart redis-server clickhouse-server
 systemctl enable -q --now langfuse-storage
 $STD curl --retry 30 --retry-delay 2 --retry-connrefused -fsS http://127.0.0.1:9333/cluster/status
 $STD /opt/seaweedfs/weed shell -master=127.0.0.1:9333 <<<"s3.bucket.create -name langfuse"
-# Pass S3 authentication over stdin, not process arguments or build logs.
 $STD curl --config - --retry 30 --retry-delay 2 --retry-connrefused -fsS http://127.0.0.1:8333/langfuse <<EOF
 aws-sigv4 = "aws:amz:us-east-1:s3"
 user = "langfuse:${S3_SECRET}"
@@ -237,7 +235,6 @@ $STD curl --retry 30 --retry-delay 2 --retry-connrefused -fsS http://127.0.0.1:3
 msg_ok "Created Services"
 
 msg_info "Saving Credentials"
-# The first start created the admin, project and API keys; later restarts must not re-create them.
 sed -i '/^LANGFUSE_INIT_/d' /opt/langfuse_data/.env
 cat <<EOF >>~/langfuse.creds
 

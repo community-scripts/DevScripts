@@ -58,7 +58,6 @@ function update_script() {
     systemctl stop langfuse-web langfuse-worker
     msg_ok "Stopped Langfuse"
 
-    # Keep the old version marker until the new services pass their health checks.
     create_backup "$HOME/.langfuse"
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "langfuse" "langfuse/langfuse" "tarball"
     restore_backup
@@ -68,7 +67,6 @@ function update_script() {
     msg_info "Building Langfuse"
     cd /opt/langfuse
     HUSKY=0 $STD pnpm install --frozen-lockfile
-    # DOCKER_BUILD=1 only skips Langfuse's runtime env validation while compiling; no container is involved.
     DOCKER_BUILD=1 NEXT_TELEMETRY_DISABLED=1 CI=true pnpm_config_verify_deps_before_run=false $STD pnpm turbo run build --filter=web... --filter=worker... --concurrency=1
     cp -r web/.next/static web/.next/standalone/web/.next/
     cp -r web/public web/.next/standalone/web/
