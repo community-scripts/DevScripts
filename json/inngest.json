@@ -1,0 +1,48 @@
+{
+  "name": "Inngest",
+  "slug": "inngest",
+  "categories": [
+    19,
+    20
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8288,
+  "documentation": "https://www.inngest.com/docs/self-hosting",
+  "website": "https://www.inngest.com/",
+  "repository": "https://github.com/inngest/inngest",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/inngest/inngest@main/ui/apps/dashboard/public/favicon.svg",
+  "description": "Inngest is a durable execution engine for background jobs, queues, scheduled tasks and event-driven workflows. Apps define functions with retried steps, sleeps and waits through the Inngest SDKs, the server triggers them from events or cron schedules, and its dashboard shows every run, step and event.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/inngest.sh",
+      "config_path": "/opt/inngest_data/.env",
+      "resources": {
+        "cpu": 1,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The dashboard on port 8288 has no login: anyone who can reach it can read event data and cancel or rerun functions. Keep it on a trusted network or put an authenticating proxy in front.",
+      "type": "warning"
+    },
+    {
+      "text": "Connect your apps with INNGEST_DEV=0, INNGEST_BASE_URL=http://<IP>:8288 and the INNGEST_EVENT_KEY and INNGEST_SIGNING_KEY from /opt/inngest_data/.env.",
+      "type": "info"
+    }
+  ]
+}
