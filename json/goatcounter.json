@@ -1,0 +1,68 @@
+{
+  "name": "GoatCounter",
+  "slug": "goatcounter",
+  "categories": [
+    9
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://www.goatcounter.com/help/start",
+  "website": "https://www.goatcounter.com/",
+  "repository": "https://github.com/arp242/goatcounter",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/goatcounter.webp",
+  "description": "GoatCounter is lightweight, privacy-friendly web analytics without tracking cookies or unique identifiers. It records pageviews, referrers, campaigns, browsers, screen sizes and locations through a small script, a no-JavaScript pixel, a REST API or imported server logs, and shows them on a simple, accessible dashboard.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/goatcounter.sh",
+      "config_path": "/opt/goatcounter_data/.env",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 2,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin@goatcounter.local",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in at http://<IP>:8080 with the email and password from /opt/goatcounter_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "The tracking code on the dashboard points to https://<site domain>/count. Serve GoatCounter on that domain through an HTTPS reverse proxy, or change the URLs to http://<IP>:8080.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@goatcounter.local"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "8 to 50 characters; generated when left empty"
+    },
+    {
+      "name": "var_goatcounter_domain",
+      "label": "Site Domain",
+      "type": "text",
+      "help": "Domain GoatCounter is served on, e.g. stats.example.com; the container IP when left empty"
+    }
+  ]
+}
