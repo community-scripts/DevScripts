@@ -1,0 +1,53 @@
+{
+  "name": "Weaviate",
+  "slug": "weaviate",
+  "categories": [
+    8,
+    20
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://docs.weaviate.io/weaviate",
+  "website": "https://weaviate.io/",
+  "repository": "https://github.com/weaviate/weaviate",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/weaviate.webp",
+  "description": "Weaviate is an open-source vector database that stores objects together with their vector embeddings. It combines vector similarity search with keyword and hybrid search, structured filtering and multi-tenancy, and is used through REST, GraphQL and gRPC APIs with client libraries for Python, TypeScript, Go and Java.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/weaviate.sh",
+      "config_path": "/opt/weaviate_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "There is no web UI. Clients connect to REST on port 8080 and gRPC on port 50051 with the API key from AUTHENTICATION_APIKEY_ALLOWED_KEYS in /opt/weaviate_data/.env.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_api_key",
+      "label": "API Key",
+      "type": "password",
+      "secret": true,
+      "help": "Root API key for the admin user. Generated when left empty"
+    }
+  ]
+}
