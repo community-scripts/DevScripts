@@ -16,18 +16,12 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 #var_arm64="${var_arm64:-no}" # unset = ask the user; set yes/no only when verified
 var_unprivileged="${var_unprivileged:-1}"
-
-export var_region="${var_region:-}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2521}"
 
 header_info "$APP"
 variables
 color
 catch_errors
-
-if [[ -n "${mode:-}" && -z "${var_region:-}" ]]; then
-  msg_error "var_region is required for unattended installs (e.g. var_region=eu868)."
-  exit 1
-fi
 
 function update_script() {
   header_info
