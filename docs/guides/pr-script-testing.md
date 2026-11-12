@@ -129,11 +129,13 @@ is the Incus one, unchanged, on native ARM: about as fast as on x86.
    still pass afterwards. That catches crash loops that look "active" at any
    single moment.
 
-**Upgrade test (`pve · upgrade`).** A `ct/` script that already exists on the
-PR's base branch is built once more on Proxmox: installed from the base branch
-as it is now, then updated with the PR's script (checks 5 to 7), the way a
-user who installed before the merge would update. New scripts have nothing to
-upgrade from and skip it. If the install from the base branch fails, that row
+**Upgrade test (`pve · upgrade`, ProxmoxVE only).** When a PR changes
+`update_script()` in a `ct/` script that already exists on the base branch,
+the script is built once more on Proxmox: installed from the base branch as
+it is now, then updated with the PR's script (checks 5 to 7), the way a user
+who installed before the merge would update. With unchanged update code an
+existing install updates exactly as it does today, so there is nothing new to
+test; new scripts have nothing to upgrade from. DevScripts never runs it. If the install from the base branch fails, that row
 is ⚠️ (not tested), not the PR's failure.
 
 **Notes (information only, never counted):**
@@ -226,15 +228,17 @@ there. Engine changes in the PR are tested along with the script.
 
 ## The test hosts
 
-Two Proxmox hosts and two Incus hosts, all **single-use**: every job starts
+Three Proxmox hosts and two Incus hosts, all **single-use**: every job starts
 on a host that was just reset, and the host is reset again afterwards. Each
-host serves one repository, so each repository has one Proxmox and one Incus
-host and runs one build per platform at a time.
+host serves one repository: ProxmoxVE has two Proxmox hosts (so an upgrade
+row does not hold up the normal one), DevScripts one; each has one Incus
+host.
 
 | Host | VM | Repository |
 | ---- | -- | ---------- |
 | `pve-ci` | 200 | DevScripts |
 | `pve-ci-2` | 201 | ProxmoxVE |
+| `pve-ci-3` | 204 | ProxmoxVE |
 | `incus-ci` | 202 | DevScripts |
 | `incus-ci-2` | 203 | ProxmoxVE |
 
@@ -278,7 +282,7 @@ only), because shared LVM (`SAN_SHARED`) cannot take snapshots.
 
 | | |
 | - | - |
-| Hosts | VM 200 `pve-ci` (`10.201.146.232`) and VM 201 `pve-ci-2` (`10.201.146.231`), both on prox1, Proxmox VE 9 |
+| Hosts | VM 200 `pve-ci` (`10.201.146.232`), VM 201 `pve-ci-2` (`10.201.146.231`) and VM 204 `pve-ci-3` (`10.201.146.235`, 8 cores, 16 GB), all on prox1, Proxmox VE 9 |
 | CPU | Xeon E5-2650 (Sandy Bridge): AVX, no AVX2. prox3 has the same CPU |
 | Disk | 250 GB each (thin) on `SAN_PROX1_CI`. `local-lvm` on prox1 manages only ~4 fsyncs/s, which turns every `dpkg --configure` into minutes |
 | Runners | Single-use, from `/opt/actions-runner/<repo>`, named `<host>-<repo>-<time>`, label `proxmox-test` |
