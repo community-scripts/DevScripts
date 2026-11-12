@@ -1,0 +1,56 @@
+{
+  "name": "Warpgate",
+  "slug": "warpgate",
+  "categories": [
+    6
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8888,
+  "documentation": "https://warpgate.null.page/",
+  "website": "https://warpgate.null.page/",
+  "repository": "https://github.com/warp-tech/warpgate",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/warpgate.webp",
+  "description": "Warpgate is a transparent bastion host and PAM for SSH, HTTPS, Kubernetes, MySQL, PostgreSQL, RDP and VNC that needs no client software. Users connect straight through to their targets with their usual tools, every session is recorded and can be replayed in the web UI, and access is controlled per user and role with passwords, keys, TOTP and OIDC SSO.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/warpgate.sh",
+      "config_path": "/opt/warpgate_data/warpgate.yaml",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open https://<IP>:8888/@warpgate, accept the self-signed certificate and sign in as admin with the password from /opt/warpgate_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Users reach a target through Warpgate with their normal client, e.g. ssh <user>:<target>@<IP> -p 2222.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}
