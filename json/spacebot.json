@@ -1,0 +1,69 @@
+{
+  "name": "Spacebot",
+  "slug": "spacebot",
+  "categories": [
+    20,
+    22
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 19898,
+  "documentation": "https://docs.spacebot.sh/",
+  "website": "https://spacebot.sh/",
+  "repository": "https://github.com/spacedriveapp/spacebot",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/spacedriveapp/spacebot@main/.github/Ball.png",
+  "description": "Spacebot is a self-hosted AI agent for teams and communities that talks to many people at once on Discord, Slack, Telegram, email and its own web chat. Conversation, thinking and work run as separate processes, so the agent stays responsive while workers run shell, browser and coding tasks, and it keeps a shared memory graph, tasks and schedules in embedded databases.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/spacebot.sh",
+      "config_path": "/opt/spacebot_data/config.toml",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The web UI and API have no login. Anyone who reaches port 19898 controls the agent, which can run shell commands, so keep it on a trusted network or behind an authenticating reverse proxy.",
+      "type": "warning"
+    },
+    {
+      "text": "Without a preset endpoint, add an LLM provider key under Settings in the web UI before the agent can reply.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_llm_base_url",
+      "label": "OpenAI-compatible Base URL",
+      "type": "text",
+      "help": "Including /v1, e.g. http://192.168.1.10:11434/v1 for Ollama. Leave empty to add a provider in the web UI"
+    },
+    {
+      "name": "var_llm_api_key",
+      "label": "LLM API Key",
+      "type": "password",
+      "secret": true,
+      "help": "Key for the base URL above, if the endpoint needs one"
+    },
+    {
+      "name": "var_llm_model",
+      "label": "LLM Model",
+      "type": "text",
+      "help": "Model used by every agent process, required with the base URL"
+    }
+  ]
+}
