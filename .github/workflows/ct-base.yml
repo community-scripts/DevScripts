@@ -21,7 +21,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Every ct/ script names this repo as its scripts base
         run: |
