@@ -12,7 +12,9 @@ network_check
 update_os
 
 msg_info "Installing"
-curl -fsSL https://github.com/adambie/screenguard/releases/latest/download/install.sh | bash
+curl -fsSL https://github.com/adambie/screenguard/releases/latest/download/install.sh -o /tmp/install.sh
+bash /tmp/install.sh </dev/tty
+rm -f /tmp/install.sh
 msg_ok "Installed"
 
 motd_ssh
