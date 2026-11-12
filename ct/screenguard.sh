@@ -27,7 +27,9 @@ function update_script() {
   check_container_storage
   check_container_resources
   msg_info "Updating $APP LXC"
-  curl -fsSL https://github.com/adambie/screenguard/releases/latest/download/install.sh | sudo bash -s -- --update
+  curl -fsSL https://github.com/adambie/screenguard/releases/latest/download/install.sh -o /tmp/install.sh
+  bash /tmp/install.sh -s -- --update </dev/tty
+  rm -f /tmp/install.sh
   msg_ok "Updated $APP LXC"
   exit
 }
