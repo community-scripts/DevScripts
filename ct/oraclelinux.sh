@@ -20,6 +20,7 @@ var_os="${var_os:-oracle}"
 var_version="${var_version:-9}"
 var_arm64="${var_arm64:-yes}"
 var_unprivileged="${var_unprivileged:-1}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2558}"
 
 header_info "$APP"
 variables

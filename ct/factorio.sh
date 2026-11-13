@@ -16,6 +16,7 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 var_arm64="${var_arm64:-yes}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2502}"
 
 header_info "$APP"
 variables
