@@ -1,0 +1,48 @@
+{
+  "name": "Cryptgeon",
+  "slug": "cryptgeon",
+  "categories": [
+    6,
+    12
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 443,
+  "documentation": "https://github.com/cupcakearmy/cryptgeon#readme",
+  "website": "https://cryptgeon.org/",
+  "repository": "https://github.com/cupcakearmy/cryptgeon",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/cryptgeon.webp",
+  "description": "Cryptgeon is a secure note and file sharing service in the style of PrivNote. Notes are encrypted in the browser before upload, the server only keeps the ciphertext in memory and deletes it once the set number of views or the expiry time is reached.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/cryptgeon.sh",
+      "config_path": "/opt/cryptgeon_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open https://<IP> and accept the self-signed certificate; the browser only allows the encryption over HTTPS.",
+      "type": "info"
+    },
+    {
+      "text": "There is no login: anyone who reaches the page can create notes. Limits like SIZE_LIMIT and MAX_VIEWS are set in /opt/cryptgeon_data/.env.",
+      "type": "warning"
+    }
+  ]
+}
