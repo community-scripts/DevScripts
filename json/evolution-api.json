@@ -1,0 +1,64 @@
+{
+  "name": "Evolution API",
+  "slug": "evolution-api",
+  "categories": [
+    22
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://docs.evolutionfoundation.com.br/evolution-api",
+  "website": "https://evolutionfoundation.com.br/",
+  "repository": "https://github.com/evolution-foundation/evolution-api",
+  "architectures": [
+    "amd64"
+  ],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/evolution-foundation/evolution-api@main/public/images/evolution-logo.png",
+  "description": "Evolution API is an open-source WhatsApp integration API. Connect WhatsApp numbers as instances through WhatsApp Web (Baileys) or the official Cloud API, then send and receive messages over a REST API and webhooks, with built-in bridges to Chatwoot, Typebot, n8n, Dify, Flowise and OpenAI and a web manager.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/evolution-api.sh",
+      "config_path": "/opt/evolution-api_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open http://<IP>:8080/manager and sign in with the server URL and the global API key (AUTHENTICATION_API_KEY in /opt/evolution-api_data/.env).",
+      "type": "info"
+    },
+    {
+      "text": "WhatsApp Web instances use an unofficial protocol; WhatsApp can ban numbers used for bulk or automated messaging.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_api_key",
+      "label": "Global API Key",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    },
+    {
+      "name": "var_server_url",
+      "label": "Public Server URL",
+      "type": "text",
+      "help": "Defaults to http://<container IP>:8080; set it when the API sits behind a reverse proxy"
+    }
+  ]
+}
