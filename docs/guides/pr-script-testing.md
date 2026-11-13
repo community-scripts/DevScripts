@@ -106,8 +106,10 @@ is the Incus one, unchanged, on native ARM: about as fast as on x86.
 1. The script exits 0 within 45 minutes and prints `Completed successfully`.
 2. The container is running.
 3. No failed systemd units (Alpine: no crashed OpenRC services).
-4. The URL the script prints (`http://${IP}:PORT/...`) answers **200** within 2
-   minutes. Redirects are followed, so a jump to a login page is fine. Scripts
+4. The URL the script prints (`http://${IP}:PORT/...`) answers within 2
+   minutes, and not with an error: no answer, 404/410, any 5xx, or a redirect
+   loop fail it; anything else passes, including 401/403 from a login wall.
+   Redirects are followed, so a jump to a login page is fine. Scripts
    that print no URL skip this check.
 5. **Update:** the installed app is set back (every version file the install
    wrote, `~/.<app>`, whose name the script passes to `check_for_*release`
@@ -163,7 +165,7 @@ on the test network like the containers do. What passes:
 2. The VM is running, and keeps running for the 5-minute boot wait. A VM that
    powers itself off or crashes fails.
 3. Where the script prints a URL built from the address it found
-   (`http://${VM_IP}:9000`), that URL answers **200** within 10 minutes. The
+   (`http://${VM_IP}:9000`), that URL answers within 10 minutes, by the same rule as check 4. The
    address is the one the test network's DHCP gave the VM. A `<VM-IP>` hint
    in a summary is not checked: it usually means "after you ran the
    installer".
