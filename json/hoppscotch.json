@@ -1,0 +1,62 @@
+{
+  "name": "Hoppscotch",
+  "slug": "hoppscotch",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://docs.hoppscotch.io/documentation/self-host/getting-started",
+  "website": "https://hoppscotch.io/",
+  "repository": "https://github.com/hoppscotch/hoppscotch",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/hoppscotch.webp",
+  "description": "Hoppscotch is an open-source API development platform and Postman alternative. It sends REST, GraphQL, WebSocket, SSE, Socket.IO and MQTT requests from the browser and organises them in collections and environments that teams share, with an admin dashboard for users and settings.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/hoppscotch.sh",
+      "config_path": "/opt/hoppscotch_data/.env",
+      "resources": {
+        "cpu": 4,
+        "ram": 6144,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Hoppscotch has no password login: it needs SMTP (magic links) or a GitHub, Google or Microsoft OAuth app. Open http://<IP>/admin to set one up; the first user who signs in there becomes admin.",
+      "type": "warning"
+    },
+    {
+      "text": "Behind a domain or HTTPS proxy, change the URLs in /opt/hoppscotch_data/frontend.env and WHITELISTED_ORIGINS in /opt/hoppscotch_data/.env, then restart hoppscotch-backend and hoppscotch-webapp.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_smtp_url",
+      "label": "SMTP URL",
+      "type": "password",
+      "secret": true,
+      "help": "e.g. smtps://user:pass@smtp.example.com:465; with a sender address it enables email login and skips the setup wizard"
+    },
+    {
+      "name": "var_mail_from",
+      "label": "Sender Address",
+      "type": "text",
+      "help": "e.g. hoppscotch@example.com"
+    }
+  ]
+}
