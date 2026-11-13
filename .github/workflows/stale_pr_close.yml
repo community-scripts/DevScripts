@@ -220,15 +220,22 @@ jobs:
             if (context.eventName === "issues") {
               const issue = context.payload.issue;
               // Triage can label too; a label that can end in deleted files needs
-              // write, as /test does. Without it the label is taken off again.
+              // a person with write, as /test does. Bots (nothing here marks issues
+              // stale through an app) and a failed lookup count as no access, and
+              // the label is taken off again.
               const sender = context.payload.sender;
+              let permission = "none";
               if (sender.type !== "Bot") {
-                const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username: sender.login });
-                if (!["admin", "maintain", "write"].includes(perm.permission)) {
-                  core.notice(`${sender.login} has ${perm.permission} access; marking an issue stale needs write`);
-                  await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: "stale" });
-                  return;
+                try {
+                  ({ data: { permission } } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username: sender.login }));
+                } catch (e) {
+                  core.warning(`Permission lookup for ${sender.login} failed: ${e.message}`);
                 }
+              }
+              if (!["admin", "maintain", "write"].includes(permission)) {
+                core.notice(`${sender.login} (${sender.type}) has ${permission} access; marking an issue stale needs write`);
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: "stale" });
+                return;
               }
               const s = scriptFiles(issue);
               await github.rest.issues.createComment({
