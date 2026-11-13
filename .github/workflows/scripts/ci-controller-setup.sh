@@ -3,7 +3,7 @@
 # token reader, a systemd unit per CI VM, and each VM's config. Run as root
 # on prox1 from a directory that also holds ci-vm-controller.sh:
 #
-#   scp ci-controller-setup.sh ci-vm-controller.sh root@prox1:/root/ci-controller/
+#   scp ci-controller-setup.sh ci-vm-controller.sh gh-dispatch.sh root@prox1:/root/ci-controller/
 #   ssh root@prox1 'cd /root/ci-controller && bash ci-controller-setup.sh'
 #
 # It does not start anything: a VM goes into service with
@@ -66,5 +66,40 @@ conf 204 10.201.146.235 pve-ci-3   proxmox-test community-scripts/ProxmoxVE
 conf 202 10.201.146.233 incus-ci   incus-test   community-scripts/DevScripts
 conf 203 10.201.146.234 incus-ci-2 incus-test   community-scripts/ProxmoxVE
 
+# Hourly telemetry stats: GitHub starts the workflow's own `schedule:` late
+# or not at all, so prox1 dispatches it at :17. Enable with
+#   systemctl enable --now ci-telemetry-dispatch.timer
+# once /etc/ci-controller/dispatch-token holds a fine-grained token for
+# DevScripts with Actions: read and write only.
+if [[ -f gh-dispatch.sh ]]; then
+  install -m 755 gh-dispatch.sh /usr/local/sbin/gh-dispatch.sh
+
+  cat >/etc/systemd/system/ci-telemetry-dispatch.service <<'EOF'
+[Unit]
+Description=Dispatch the DevScripts telemetry stats workflow
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/ci-controller/dispatch-token
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/gh-dispatch.sh community-scripts/DevScripts telemetry-issue-stats.yml main
+EOF
+
+  cat >/etc/systemd/system/ci-telemetry-dispatch.timer <<'EOF'
+[Unit]
+Description=Hourly DevScripts telemetry stats, at :17
+
+[Timer]
+OnCalendar=*-*-* *:17:00
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
+EOF
+fi
+
 systemctl daemon-reload
 echo "Installed. Token: $([[ -s /etc/ci-controller/token ]] && echo present || echo 'MISSING (/etc/ci-controller/token)')"
+[[ -f gh-dispatch.sh ]] && echo "Dispatch token: $([[ -s /etc/ci-controller/dispatch-token ]] && echo present || echo 'MISSING (/etc/ci-controller/dispatch-token)')"
+true
