@@ -87,6 +87,17 @@ const esc = (s) =>
 const clip = (s, max) => (s.length > max ? s.slice(0, max - 1) + "…" : s);
 const day = (iso) => (iso ? iso.slice(0, 16).replace("T", " ") + " UTC" : "—");
 
+function renderEmpty(app, since) {
+  return [
+    MARKER,
+    `### 📊 Install telemetry for \`${app}\``,
+    "",
+    `No installs of the DevScripts version of this script reported yet since this issue was opened (${since}).`,
+    "",
+    `<sub>updated hourly · last refresh ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC</sub>`,
+  ].join("\n");
+}
+
 function render(d, app, days, since) {
   // The dashboard only offers these periods.
   const period = [1, 7, 30, 90, 365].find((p) => p >= days) || 365;
@@ -174,13 +185,11 @@ module.exports = async function ({ github, context, core }) {
       });
       const existing = comments.find((c) => (c.body || "").startsWith(MARKER));
 
-      if (!best || (!best.d.total && !existing)) {
-        core.info(`#${issue.number} (${slug}): no telemetry yet, skipped.`);
-        stats.skipped++;
-        continue;
-      }
-
-      const body = render(best.d, best.key, days, created.toISOString().slice(0, 10));
+      const since = created.toISOString().slice(0, 10);
+      // No runs on any key: the first key is the one read from the script, if any.
+      const body = best && best.d.total
+        ? render(best.d, best.key, days, since)
+        : renderEmpty(best ? best.key : slug, since);
       if (existing && stable(existing.body) === stable(body)) {
         core.info(`#${issue.number} (${slug} -> ${best.key}): unchanged.`);
         stats.unchanged++;

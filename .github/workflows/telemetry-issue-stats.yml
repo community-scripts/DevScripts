@@ -4,8 +4,8 @@ name: Telemetry stats on script issues
 # install telemetry of that script: installs, successful, failed, and the
 # failures grouped by error. Data comes from the public telemetry service
 # (telemetry.community-scripts.org), DevScripts runs only, counted from the day
-# the issue was opened. An issue whose script has reported nothing gets no
-# comment; an existing comment is only edited when the numbers changed.
+# the issue was opened. An issue whose script has reported nothing yet gets a
+# "no data yet" comment; a comment is only edited when the numbers changed.
 
 on:
   schedule:
