@@ -1,0 +1,56 @@
+{
+  "name": "Redmine",
+  "slug": "redmine",
+  "categories": [
+    25
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3000,
+  "documentation": "https://www.redmine.org/projects/redmine/wiki/Guide",
+  "website": "https://www.redmine.org/",
+  "repository": "https://github.com/redmine/redmine",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/redmine.webp",
+  "description": "Redmine is a flexible project management web application. It handles multiple projects with per-project roles, issue tracking with custom fields and workflows, Gantt charts and calendars, wikis, forums, time tracking and repository browsing for Git, Subversion and Mercurial.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/redmine.sh",
+      "config_path": "/opt/redmine_data/configuration.yml",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in as admin with the generated password from /opt/redmine_data/.env inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "Email notifications stay off until email_delivery is set in /opt/redmine_data/configuration.yml; restart the redmine service afterwards.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "At least 8 characters; generated when left empty"
+    }
+  ]
+}
