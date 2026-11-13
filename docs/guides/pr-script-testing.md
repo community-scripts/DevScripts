@@ -42,6 +42,7 @@ results are never approved. Every other PR gets the report and the check, and
 | `/test arm pve foo bar` | Combined: `foo` and `bar`, on ARM64 and Proxmox only. The words can come in any order |
 | `/test <sha>` | Exactly that commit (all 40 characters), and only while it is the PR head |
 | `/test <app> [<app> ...]` **in an issue** | That app from the default branch as it is now, e.g. to check whether a reported error reproduces. Install and update test as for a PR; no check run, review or approval. Platform words work here too (`/test arm bark-server`) |
+| The **Ready For Testing** label on a script issue | No comment needed: the app the issue names (its "Script path" field, else "Name of the Script" as a slug, like `Label Studio` → `label-studio`) is built from the default branch, as `/test <app>` in that issue would. Issues for `tools/` scripts are skipped |
 
 A run on only some platforms is a partial test. It reports under its own
 check (`Proxmox script test (pve only)`), so it never stands in for the full
