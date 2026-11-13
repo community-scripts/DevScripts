@@ -14,7 +14,11 @@ UPSTREAM_SCRIPT_URL="${PVE_BATTERY_SCRIPT_URL:-https://raw.githubusercontent.com
 if [[ ! -f "${BASH_SOURCE[0]:-}" ]]; then
   installer_tmp="$(mktemp)"
   trap 'rm -f "$installer_tmp"' EXIT
-  curl -fsSL --connect-timeout 10 --max-time 60 "$UPSTREAM_SCRIPT_URL" -o "$installer_tmp"
+  if [[ -n "${BASH_EXECUTION_STRING:-}" ]]; then
+    printf '%s\n' "$BASH_EXECUTION_STRING" >"$installer_tmp"
+  else
+    curl -fsSL --connect-timeout 10 --max-time 60 "$UPSTREAM_SCRIPT_URL" -o "$installer_tmp"
+  fi
   bash -n "$installer_tmp"
   PVE_BATTERY_SCRIPT_URL="$UPSTREAM_SCRIPT_URL" bash "$installer_tmp" "$@"
   exit $?
