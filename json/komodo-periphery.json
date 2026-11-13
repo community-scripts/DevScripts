@@ -59,7 +59,7 @@
   ],
   "notes": [
     {
-      "text": "Run as root inside the existing Debian/Ubuntu LXC or VM whose Docker environment you want to manage, not in the Proxmox VE host shell. Docker/Compose is set up during installation.",
+      "text": "Run as root inside an existing Debian/Ubuntu LXC or VM running systemd, not in the Proxmox VE host shell. Existing Docker/Compose is reused. Install Docker/Compose first for unattended runs; interactive runs can offer to install Docker when missing.",
       "type": "info"
     },
     {

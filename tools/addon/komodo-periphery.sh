@@ -28,6 +28,10 @@ if on_pve_host; then
   exit 232
 fi
 require_debian_like
+if ! command -v systemctl &>/dev/null || [[ ! -d /run/systemd/system ]]; then
+  msg_error "Komodo Periphery requires a guest running systemd."
+  exit 1
+fi
 arch_check
 
 if [[ -x "${INSTALL_PATH}/periphery" && -f "$CONFIG_PATH" && -f /etc/systemd/system/periphery.service ]]; then
@@ -60,7 +64,7 @@ if [[ "$type" == "install" ]]; then
     msg_error "Supply var_komodo_onboarding_key or enter a Komodo Server Onboarding Key interactively."
     exit 1
   fi
-  setup_docker
+  ensure_docker
   ensure_dependencies git jq
 fi
 
