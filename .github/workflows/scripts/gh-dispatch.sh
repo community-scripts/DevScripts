@@ -21,8 +21,10 @@ TOKEN_FILE=${DISPATCH_TOKEN_FILE:-/etc/ci-controller/dispatch-token}
 
 out=$(mktemp)
 trap 'rm -f "$out"' EXIT
-status=$(curl -sS -o "$out" -w '%{http_code}' -X POST \
-  -H "Authorization: Bearer $(<"$TOKEN_FILE")" \
+# The token goes in through stdin (--config -), never on the command line,
+# where any local user could read it from the process list.
+status=$(printf 'header = "Authorization: Bearer %s"\n' "$(tr -d '\r\n' <"$TOKEN_FILE")" |
+  curl -sS --config - -o "$out" -w '%{http_code}' -X POST \
   -H 'Accept: application/vnd.github+json' \
   -H 'X-GitHub-Api-Version: 2022-11-28' \
   -d "$(jq -nc --arg r "$REF" '{ref: $r}')" \
