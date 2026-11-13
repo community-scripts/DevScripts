@@ -1,0 +1,57 @@
+name: Telemetry stats on script issues
+
+# Every hour, post or refresh one comment on each open script issue with the
+# install telemetry of that script: installs, successful, failed, and the
+# failures grouped by error. Data comes from the public telemetry service
+# (telemetry.community-scripts.org), DevScripts runs only, counted from the day
+# the issue was opened. An issue whose script has reported nothing gets no
+# comment; an existing comment is only edited when the numbers changed.
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Only this issue (empty = all open issues)"
+        required: false
+        type: string
+      dry_run:
+        description: "Log the comments instead of posting them"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: telemetry-issue-stats
+  cancel-in-progress: false
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    if: github.repository == 'community-scripts/DevScripts'
+    timeout-minutes: 20
+    steps:
+      # json/ and the scripts are read to find the name each script reports under.
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            .github/workflows/scripts
+            json
+            ct
+            vm
+            tools
+
+      - name: Post telemetry comments
+        uses: actions/github-script@v9
+        env:
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        with:
+          script: |
+            await require('./.github/workflows/scripts/telemetry-issue-stats.js')({ github, context, core });
