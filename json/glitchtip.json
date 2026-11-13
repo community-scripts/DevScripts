@@ -1,0 +1,66 @@
+{
+  "name": "GlitchTip",
+  "slug": "glitchtip",
+  "categories": [
+    9
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8000,
+  "documentation": "https://glitchtip.com/documentation",
+  "website": "https://glitchtip.com/",
+  "repository": "https://gitlab.com/glitchtip/glitchtip-backend",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/glitchtip.webp",
+  "description": "GlitchTip is an open-source error tracking platform that accepts events from the Sentry SDKs, so existing apps only need a new DSN. It groups exceptions into issues with stack traces and releases, and also offers uptime monitoring, performance traces, log ingestion and alerts by email, webhook or chat.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/glitchtip.sh",
+      "config_path": "/opt/glitchtip_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Self-signup is off. Add users in the Django admin at /admin/, or set ENABLE_USER_REGISTRATION=True in /opt/glitchtip_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Emails (invites, password resets) only go to the service log until you set EMAIL_URL to your SMTP server in /opt/glitchtip_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Behind a domain or reverse proxy, set GLITCHTIP_DOMAIN in /opt/glitchtip_data/.env: project DSNs are built from it.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}
