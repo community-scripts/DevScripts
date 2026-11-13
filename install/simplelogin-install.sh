@@ -44,18 +44,9 @@ $STD uv venv
 $STD uv pip install setuptools hatchling editables
 export CMAKE_POLICY_VERSION_MINIMUM=3.5
 $STD uv sync --locked --no-dev --no-build-isolation --no-install-package newrelic
-VENV_SITE=$(/opt/simplelogin/.venv/bin/python -c "import site; print(site.getsitepackages()[0])")
-mkdir -p "${VENV_SITE}/newrelic"
-cat <<'STUB' >"${VENV_SITE}/newrelic/__init__.py"
-STUB
-cat <<'STUB' >"${VENV_SITE}/newrelic/agent.py"
-def record_custom_event(*a, **kw): pass
-def initialize(*a, **kw): pass
-STUB
-
 if [[ -f /opt/simplelogin/static/package.json ]]; then
   cd /opt/simplelogin/static
-  npm ci >/dev/null 2>&1 || $STD npm install
+  $STD npm ci
 fi
 msg_ok "Installed SimpleLogin"
 
@@ -93,6 +84,7 @@ chmod 700 /opt/simplelogin/.gnupg
   echo "MEM_STORE_URI=redis://localhost:6379/1"
   echo "OPENID_PRIVATE_KEY_PATH=/opt/simplelogin/openid-rsa.key"
   echo "OPENID_PUBLIC_KEY_PATH=/opt/simplelogin/openid-rsa.pub"
+  echo "METRICS_BACKENDS=noop"
 } >/opt/simplelogin/.env
 
 cd /opt/simplelogin
@@ -114,6 +106,7 @@ export NAMESERVERS="1.1.1.1"
 export MEM_STORE_URI="redis://localhost:6379/1"
 export OPENID_PRIVATE_KEY_PATH="/opt/simplelogin/openid-rsa.key"
 export OPENID_PUBLIC_KEY_PATH="/opt/simplelogin/openid-rsa.pub"
+export METRICS_BACKENDS="noop"
 $STD .venv/bin/alembic upgrade head
 $STD .venv/bin/python init_app.py
 msg_ok "Configured SimpleLogin"

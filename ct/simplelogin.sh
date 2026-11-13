@@ -43,22 +43,30 @@ function update_script() {
       /opt/simplelogin/dkim \
       /opt/simplelogin/openid-rsa.key \
       /opt/simplelogin/openid-rsa.pub \
-      /opt/simplelogin/uploads
+      /opt/simplelogin/uploads \
+      /opt/simplelogin/.gnupg
 
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "simplelogin" "simple-login/app"
 
+    restore_backup
+    grep -q '^METRICS_BACKENDS=' /opt/simplelogin/.env || echo "METRICS_BACKENDS=noop" >>/opt/simplelogin/.env
+
     msg_info "Installing Dependencies"
     cd /opt/simplelogin
-    $STD uv sync --locked --no-dev
+    $STD uv venv
+    $STD uv pip install setuptools hatchling editables
+    export CMAKE_POLICY_VERSION_MINIMUM=3.5
+    $STD uv sync --locked --no-dev --no-build-isolation --no-install-package newrelic
+    if [[ -f /opt/simplelogin/static/package.json ]]; then
+      cd /opt/simplelogin/static
+      $STD npm ci
+    fi
     msg_ok "Installed Dependencies"
 
     msg_info "Running Database Migrations"
     cd /opt/simplelogin
-    cp /opt/simplelogin_env.bak /opt/simplelogin/.env
     $STD .venv/bin/alembic upgrade head
     msg_ok "Ran Database Migrations"
-
-    restore_backup
 
     msg_info "Starting Services"
     systemctl start simplelogin-webapp simplelogin-email simplelogin-job
