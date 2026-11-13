@@ -16,6 +16,7 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_arm64="${var_arm64:-no}" # mage-ai pins psutil 5.9.8, which has no aarch64 wheel and needs a C compiler there
 var_unprivileged="${var_unprivileged:-1}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2616}"
 
 export var_mage_password="${var_mage_password:-}"
 
