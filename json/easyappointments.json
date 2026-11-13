@@ -1,0 +1,73 @@
+{
+  "name": "Easy!Appointments",
+  "slug": "easyappointments",
+  "categories": [
+    19,
+    25
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://github.com/alextselegidis/easyappointments/tree/main/docs",
+  "website": "https://easyappointments.org/",
+  "repository": "https://github.com/alextselegidis/easyappointments",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/easy-appointments.webp",
+  "description": "Easy!Appointments is a self-hosted appointment scheduler that lets customers book appointments online from a public booking page. Admins manage services, providers, working plans and secretaries in a backend calendar, with email notifications, Google Calendar and CalDAV sync, LDAP login and a REST API.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/easyappointments.sh",
+      "config_path": "/opt/easyappointments/config.php",
+      "resources": {
+        "cpu": 1,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in at http://<IP>/index.php/login with the admin login saved in /opt/easyappointments_data/.env inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "Email notifications need an SMTP server: set protocol and the smtp_* values in /opt/easyappointments/application/config/email.php.",
+      "type": "info"
+    },
+    {
+      "text": "Behind a reverse proxy, add fastcgi_param PROXY_IPS <proxy-ip>; to /etc/nginx/sites-available/easyappointments, or all visitors share one login rate limit.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "At least 8 characters, generated when left empty"
+    }
+  ]
+}
