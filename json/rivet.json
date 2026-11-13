@@ -1,0 +1,58 @@
+{
+  "name": "Rivet Engine",
+  "slug": "rivet",
+  "categories": [20],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 6420,
+  "documentation": "https://rivet.dev/docs/deploy/self-host/control-plane/",
+  "website": "https://www.rivet.dev/",
+  "repository": "https://github.com/rivet-dev/rivet",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/rivet-dev/rivet@main/.github/media/platforms/rivet-bg.svg",
+  "description": "Rivet is an open alternative to Cloudflare Durable Objects. Rivet Actors are long-lived stateful processes with their own SQLite database that run inside your Node.js, Bun or Rust apps, while the engine schedules, routes and persists them. This is the self-hosted engine those apps connect to.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/rivet.sh",
+      "config_path": "/opt/rivet_data/config.json",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Connect your RivetKit app with RIVET_ENDPOINT=http://default:<token>@<IP>:6420, using auth.admin_token from /opt/rivet_data/config.json. The default node pool already exists.",
+      "type": "info"
+    },
+    {
+      "text": "Port 6420 is the API and actor gateway, not a web UI; the self-hosted engine ships no dashboard.",
+      "type": "info"
+    },
+    {
+      "text": "The admin token has full access to every namespace. Keep it on your backend and put the engine behind HTTPS before exposing it beyond your LAN.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_token",
+      "label": "Admin Token",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty. Use letters and digits only, it is embedded in RIVET_ENDPOINT"
+    }
+  ]
+}
