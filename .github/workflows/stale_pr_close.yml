@@ -1,4 +1,4 @@
-name: Stale PR Management
+name: Stale PR and Issue Management
 on:
   schedule:
     - cron: "0 0 * * *"
@@ -6,9 +6,13 @@ on:
   pull_request_target:
     types:
       - labeled
+  issues:
+    types:
+      - labeled
 
 jobs:
   stale-prs:
+    if: github.event_name != 'issues'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -131,3 +135,237 @@ jobs:
               });
               await github.rest.pulls.update({ owner, repo, pull_number: pr.number, state: "closed" });
             }
+
+  # A maintainer marks an issue `stale` by hand; nothing labels issues on its own.
+  # Seven days later the issue is closed and, for a script issue, the script's
+  # files are removed from the default branch by the job below.
+  stale-issues:
+    if: >-
+      github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' && github.event.label.name == 'stale' && !github.event.issue.pull_request)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    outputs:
+      closed: ${{ steps.issues.outputs.closed }}
+    steps:
+      - name: Handle stale issues
+        id: issues
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const now = new Date();
+            const { owner, repo } = context.repo;
+            const MAINTAINERS = ["OWNER", "MEMBER", "COLLABORATOR"];
+            const days = d => (now - d) / (1000 * 60 * 60 * 24);
+            const SEG = "[A-Za-z0-9][A-Za-z0-9._-]*";
+
+            // The files a New Script issue stands for, read from the issue form the
+            // same way pr-script-test.yml and delete_new_script.yaml read it.
+            // null: not a script issue, or no path we can trust.
+            const scriptFiles = issue => {
+              const body = (issue.body || "").replace(/\r/g, "");
+              const field = name => {
+                const m = body.match(new RegExp(`^###[ \t]*${name}[ \t]*\n+([^\n#][^\n]*)`, "m"));
+                return m && m[1].trim() !== "_No response_" ? m[1].trim() : "";
+              };
+              const name = field("Name of the Script");
+              if (!name) return null;
+              const slug = name.toLowerCase().replace(/\s+/g, "-");
+              if (!/^[a-z0-9][a-z0-9._-]*$/.test(slug)) return null;
+              const type = field("Script Type");
+              const path = field("Script path").replace(/^\/+/, "");
+              let script;
+              if (new RegExp(`^(ct|vm|tools)/(${SEG}/)?${SEG}\\.sh$`).test(path)) script = path;
+              else if (/^VM\b/.test(type)) script = `vm/${slug}.sh`;
+              else if (/^Addon\b/.test(type)) script = `tools/addon/${slug}.sh`;
+              else if (/^PVE Tool\b/.test(type)) script = `tools/pve/${slug}.sh`;
+              else if (/^CT\b/.test(type)) script = `ct/${slug}.sh`;
+              else if (!type) script = slug.includes("-vm") ? `vm/${slug}.sh` : `ct/${slug}.sh`;
+              else return null;
+              const files = [script];
+              const ct = script.match(/^ct\/(.+)\.sh$/);
+              if (ct) files.push(`install/${ct[1]}-install.sh`);
+              files.push(`json/${slug}.json`);
+              return { slug, files };
+            };
+            const fileList = s => s.files.map(f => `- \`${f}\``).join("\n");
+
+            // The issue body stays editable by its author, so the files are fixed
+            // when the maintainer adds the label: they go into the bot's notice,
+            // where the maintainer sees them, and the daily run reads them only
+            // from there. Editing "Script path" later cannot retarget the delete.
+            const MARK = "<!-- stale-issue-files ";
+            const SELF = "github-actions[bot]";
+            const PATH_RE = new RegExp(`^(ct|vm|tools|install|json)/(${SEG}/)?${SEG}\\.(sh|json)$`);
+            const snapshot = (comments, after) => {
+              const mine = comments.filter(c =>
+                c.user?.login === SELF && c.body?.includes(MARK) && new Date(c.created_at) >= after);
+              if (mine.length === 0) return null;
+              const raw = mine[mine.length - 1].body.split(MARK)[1].split(" -->")[0];
+              try {
+                const s = JSON.parse(raw);
+                if (/^[a-z0-9][a-z0-9._-]*$/.test(s.slug) && Array.isArray(s.files) &&
+                    s.files.length > 0 && s.files.every(f => typeof f === "string" && PATH_RE.test(f))) return s;
+              } catch {}
+              return null;
+            };
+
+            // Only fires for a maintainer's label: labels set with GITHUB_TOKEN raise no event.
+            if (context.eventName === "issues") {
+              const issue = context.payload.issue;
+              const s = scriptFiles(issue);
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issue.number,
+                body: s
+                  ? `@${issue.user.login} This issue has been marked as stale. If no new commit touches the script within 7 days, the issue will be closed and these files removed from the repository:\n\n${fileList(s)}\n\n${MARK}${JSON.stringify(s)} -->`
+                  : `@${issue.user.login} This issue has been marked as stale. It will be closed in 7 days.`
+              });
+              return;
+            }
+
+            const issues = (await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: "open", labels: "stale", per_page: 100
+            })).filter(i => !i.pull_request);
+            const closed = [];
+
+            for (const issue of issues) {
+              const labels = issue.labels.map(l => l.name);
+              const author = issue.user.login;
+
+              if (labels.includes("keep-open")) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: "stale" });
+                continue;
+              }
+
+              const events = await github.paginate(github.rest.issues.listEvents, {
+                owner, repo, issue_number: issue.number, per_page: 100
+              });
+              const staleDates = events
+                .filter(e => e.event === "labeled" && e.label?.name === "stale")
+                .map(e => new Date(e.created_at));
+              if (staleDates.length === 0) continue;
+              const staleLabelDate = new Date(Math.max(...staleDates));
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner, repo, issue_number: issue.number, since: staleLabelDate.toISOString(), per_page: 100
+              });
+              // No notice for this label (e.g. it was set by a token that raises no
+              // event): the issue is still closed, but nothing is deleted.
+              const s = snapshot(comments, staleLabelDate);
+
+              // A commit to the script on the default branch ends the mark.
+              if (s) {
+                let touched = false;
+                for (const path of s.files) {
+                  const { data } = await github.rest.repos.listCommits({
+                    owner, repo, path, since: staleLabelDate.toISOString(), per_page: 1
+                  });
+                  if (data.length > 0) { touched = true; break; }
+                }
+                if (touched) {
+                  await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: "stale" });
+                  await github.rest.issues.createComment({
+                    owner, repo, issue_number: issue.number,
+                    body: `@${author} Recent commits to the script detected. Removing stale label.`
+                  });
+                  continue;
+                }
+              }
+
+              // A maintainer comment after the mark restarts the 7 days.
+              const maintainerDates = comments
+                .filter(c => c.user?.type !== "Bot" && MAINTAINERS.includes(c.author_association) && c.user?.login !== author)
+                .map(c => new Date(c.created_at))
+                .filter(d => d > staleLabelDate);
+              const clockStart = maintainerDates.length > 0 ? new Date(Math.max(...maintainerDates)) : staleLabelDate;
+              if (days(clockStart) <= 7) continue;
+
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issue.number,
+                body: s
+                  ? `@${author} Closing stale issue due to inactivity (no commits to the script for 7 days after stale label). The script's files are being removed from the repository.`
+                  : `@${author} Closing stale issue due to inactivity (7 days after stale label).`
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: issue.number, state: "closed", state_reason: "not_planned"
+              });
+              if (s) closed.push({ number: issue.number, slug: s.slug, files: s.files });
+            }
+
+            core.setOutput("closed", JSON.stringify(closed));
+
+  # One PR for every script whose issue was closed above, merged by the merge bot.
+  delete-stale-scripts:
+    needs: stale-issues
+    if: >-
+      needs.stale-issues.outputs.closed != '' && needs.stale-issues.outputs.closed != '[]' &&
+      github.repository == 'community-scripts/DevScripts'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Generate a token for PR approval and merge
+        id: generate-token-merge
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.GHAPP_MERGEBOT_ID }}
+          private-key: ${{ secrets.GHAPP_MERGEBOT_PRIVATE_KEY }}
+          owner: community-scripts
+          repositories: DevScripts
+
+      - name: Remove the scripts, open and merge the PR
+        env:
+          CLOSED: ${{ needs.stale-issues.outputs.closed }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_TOKEN: ${{ steps.generate-token-merge.outputs.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          branch="stale-script-cleanup-${GITHUB_RUN_ID}"
+          git checkout -b "$branch"
+
+          numbers=()
+          slugs=()
+          lines=""
+          while IFS= read -r item; do
+            number=$(jq -r '.number' <<<"$item")
+            slug=$(jq -r '.slug' <<<"$item")
+            mapfile -t files < <(jq -r '.files[]' <<<"$item")
+            before=$(git diff --cached --name-only | wc -l)
+            git rm -q --ignore-unmatch -- "${files[@]}"
+            if [ "$(git diff --cached --name-only | wc -l)" -gt "$before" ]; then
+              numbers+=("$number")
+              slugs+=("$slug")
+              lines+="- \`${slug}\` (#${number})"$'\n'
+            else
+              echo "#$number ($slug): no files left to remove"
+            fi
+          done < <(jq -c '.[]' <<<"$CLOSED")
+
+          if [ "${#numbers[@]}" -eq 0 ]; then
+            echo "Nothing to remove."
+            exit 0
+          fi
+
+          joined=$(printf '%s, ' "${slugs[@]}")
+          joined="${joined%, }"
+          git commit -m "Delete stale scripts: ${joined}"
+          git push origin "$branch"
+
+          body="Automated cleanup: these script issues were closed as stale (no commits for 7 days after the stale label)."$'\n\n'"${lines}"
+          url=$(gh pr create --base main --head "$branch" --title "Delete stale scripts: ${joined}" --body "$body")
+          pr_number="${url##*/}"
+
+          GH_TOKEN="$MERGE_TOKEN" gh pr review "$pr_number" --approve
+          GH_TOKEN="$MERGE_TOKEN" gh pr merge "$pr_number" --squash --admin --delete-branch
+
+          for n in "${numbers[@]}"; do
+            gh issue comment "$n" --body "Files removed with #${pr_number}."
+          done
