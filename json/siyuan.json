@@ -1,0 +1,52 @@
+{
+  "name": "SiYuan",
+  "slug": "siyuan",
+  "categories": [
+    12
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 6806,
+  "documentation": "https://github.com/siyuan-note/siyuan#docker-hosting",
+  "website": "https://b3log.org/siyuan/en/",
+  "repository": "https://github.com/siyuan-note/siyuan",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/siyuan.webp",
+  "description": "SiYuan is a privacy-first personal knowledge management system with block-level references, bidirectional links and a Markdown WYSIWYG editor. It adds databases, flashcards, PDF annotation and optional end-to-end encrypted sync, all stored as local files in your workspace.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/siyuan.sh",
+      "config_path": "/opt/siyuan_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Unlock the web UI with the access auth code (SIYUAN_ACCESS_AUTH_CODE) from /opt/siyuan_data/.env.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_auth_code",
+      "label": "Access Auth Code",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}
