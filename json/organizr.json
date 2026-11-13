@@ -1,0 +1,64 @@
+{
+  "name": "Organizr",
+  "slug": "organizr",
+  "categories": [
+    10
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 80,
+  "documentation": "https://docs.organizr.app/",
+  "website": "https://organizr.app/",
+  "repository": "https://github.com/causefx/Organizr",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/organizr.webp",
+  "description": "Organizr is a homelab services organizer that puts apps like Sonarr, Radarr, Plex or Home Assistant into tabs of a single web dashboard. It handles users and groups with per-tab access, single sign-on into many supported apps, and a homepage with widgets for downloads, calendars and media.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/organizr.sh",
+      "config_path": "/opt/organizr_data/data/config/config.php",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 3,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The setup wizard is completed during install. Sign in with the admin user and generated password from /opt/organizr_data/.env inside the container.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}
