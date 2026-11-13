@@ -1,0 +1,66 @@
+{
+  "name": "Floppy",
+  "slug": "floppy",
+  "categories": [
+    13
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8000,
+  "documentation": "https://github.com/dannyvfilms/Floppy/wiki",
+  "website": "https://github.com/dannyvfilms/Floppy",
+  "repository": "https://github.com/dannyvfilms/Floppy",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/floppy.webp",
+  "description": "Floppy is a self-hosted media tracker and diary for movies, TV, anime, books, comics, manga, games, board games, music and podcasts, a private alternative to Trakt, Letterboxd and Goodreads. It keeps progress, ratings, lists, collections, a release calendar and yearly statistics, and fills in history from Plex, Jellyfin, Emby, Pocket Casts or Last.fm.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/floppy.sh",
+      "config_path": "/opt/floppy_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in with DJANGO_SUPERUSER_USERNAME and DJANGO_SUPERUSER_PASSWORD from /opt/floppy_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Registration is closed. To let others sign up, set REGISTRATION=True in /opt/floppy_data/.env and run systemctl restart floppy.",
+      "type": "info"
+    },
+    {
+      "text": "Movie, TV and anime search work out of the box. Game search needs your own IGDB (Twitch) client ID and secret under Settings > Metadata.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}
