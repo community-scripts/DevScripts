@@ -39,6 +39,8 @@ if [[ -n "${PASSWORD:-}" ]]; then
   echo "AUTO_SETUP_GLOBAL_PASSWORD=$PASSWORD" >>/boot/dietpi.txt
 fi
 rm -f /etc/apt/sources.list.d/debian.sources
+rm -f /etc/sysctl.d/97-dietpi.conf
+rm -f /etc/systemd/system/local-fs.target.wants/dietpi-fs_partition_resize.service
 msg_ok "Configured DietPi"
 
 customize
