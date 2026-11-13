@@ -1,0 +1,54 @@
+{
+  "name": "ChirpStack",
+  "slug": "chirpstack",
+  "categories": [
+    16
+  ],
+  "date_created": "2026-11-11",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://www.chirpstack.io/docs/",
+  "website": "https://www.chirpstack.io/",
+  "repository": "https://github.com/chirpstack/chirpstack",
+  "logo": "https://raw.githubusercontent.com/chirpstack/chirpstack-docs/refs/heads/master/theme/favicon.svg",
+  "description": "ChirpStack is an open-source LoRaWAN Network Server. It manages gateways, devices and applications, handles device activation and the LoRaWAN MAC layer, and forwards uplink data to MQTT, HTTP and many other integrations.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/chirpstack.sh",
+      "config_path": "/etc/chirpstack/chirpstack.toml",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_region",
+      "label": "Gateway Region ID",
+      "type": "text",
+      "required": true,
+      "help": "ChirpStack region ID used as MQTT topic prefix by the Gateway Bridge, for example eu868, us915_0 or as923_2."
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": "admin"
+  },
+  "notes": [
+    {
+      "text": "Change the default admin password after the first login.",
+      "type": "warning"
+    },
+    {
+      "text": "The install asks for the gateway region ID (e.g. eu868, us915_0); unattended installs must set var_region. It must be listed in enabled_regions in /etc/chirpstack/chirpstack.toml.",
+      "type": "info"
+    }
+  ]
+}
