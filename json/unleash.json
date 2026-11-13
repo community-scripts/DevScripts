@@ -1,0 +1,62 @@
+{
+  "name": "Unleash",
+  "slug": "unleash",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 4242,
+  "documentation": "https://docs.getunleash.io/",
+  "website": "https://www.getunleash.io/",
+  "repository": "https://github.com/Unleash/unleash",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/Unleash/unleash@main/frontend/public/logo-unleash.png",
+  "description": "Unleash is an open-source feature flag management platform. It lets teams turn features on and off without a deploy, roll them out gradually with activation strategies, constraints and segments, and run A/B tests with variants. SDKs for many languages evaluate flags locally against the Unleash API.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/unleash.sh",
+      "config_path": "/opt/unleash_data/.env",
+      "resources": {
+        "cpu": 1,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in with UNLEASH_DEFAULT_ADMIN_USERNAME and UNLEASH_DEFAULT_ADMIN_PASSWORD from /opt/unleash_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Invite and password-reset links use UNLEASH_URL in /opt/unleash_data/.env; change it when Unleash is reached through a domain.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}
