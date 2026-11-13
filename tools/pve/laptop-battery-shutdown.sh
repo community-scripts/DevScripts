@@ -15,7 +15,7 @@ if [[ ! -f "${BASH_SOURCE[0]:-}" ]]; then
   installer_tmp="$(mktemp)"
   trap 'rm -f "$installer_tmp"' EXIT
   if [[ -n "${BASH_EXECUTION_STRING:-}" ]]; then
-    printf '%s\n' "$BASH_EXECUTION_STRING" >"$installer_tmp"
+    printf '%s\n' "${BASH_EXECUTION_STRING%$'\n'}" >"$installer_tmp"
   else
     curl -fsSL --connect-timeout 10 --max-time 60 "$UPSTREAM_SCRIPT_URL" -o "$installer_tmp"
   fi
