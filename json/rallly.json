@@ -1,0 +1,92 @@
+{
+  "name": "Rallly",
+  "slug": "rallly",
+  "categories": [
+    19
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3000,
+  "documentation": "https://support.rallly.co/self-hosting/introduction",
+  "website": "https://rallly.co/",
+  "repository": "https://github.com/lukevella/rallly",
+  "architectures": [
+    "amd64"
+  ],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/rallly.webp",
+  "description": "Rallly is an open-source scheduling and collaboration tool and a self-hosted alternative to Doodle. Create a meeting poll with date and time options, share the link, and participants vote on what suits them without an account; the organizer then picks the final date and everyone gets notified.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/rallly.sh",
+      "config_path": "/opt/rallly_data/.env",
+      "resources": {
+        "cpu": 4,
+        "ram": 6144,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Rallly signs users in with codes sent by email: fill in the SMTP fields when creating the container, or set SMTP_* in /opt/rallly_data/.env and run systemctl restart rallly.",
+      "type": "warning"
+    },
+    {
+      "text": "Without SMTP, request a code on the login page and read it in the container: su postgres -c \"psql rallly -tAc 'select value from verifications'\" (the digits before the colon).",
+      "type": "info"
+    },
+    {
+      "text": "Sign in with the admin email and open /control-panel to claim the admin role. Until registration is turned off there, anyone who reaches the page can create an account.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com",
+      "help": "Support address, and the account that may claim the admin role at /control-panel"
+    },
+    {
+      "name": "var_smtp_host",
+      "label": "SMTP Host",
+      "type": "text",
+      "help": "Required for the sign-in codes"
+    },
+    {
+      "name": "var_smtp_port",
+      "label": "SMTP Port",
+      "type": "number",
+      "default": 587,
+      "help": "465 uses implicit TLS, other ports STARTTLS"
+    },
+    {
+      "name": "var_smtp_user",
+      "label": "SMTP Username",
+      "type": "text"
+    },
+    {
+      "name": "var_smtp_pass",
+      "label": "SMTP Password",
+      "type": "password",
+      "secret": true
+    },
+    {
+      "name": "var_mail_from",
+      "label": "Sender Address",
+      "type": "text",
+      "help": "Defaults to the admin email"
+    }
+  ]
+}
