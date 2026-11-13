@@ -161,7 +161,7 @@ function render(d, app, days, since) {
     "",
   ];
   const last = lastRun(d);
-  if (last) lines.push(`**Last run:** ${ago(last.t)}${last.status ? ` · ${last.status}` : ""}`, "");
+  if (last) lines.push(`**Last run:** ${ago(last.t)}${last.status ? ` · ${clip(esc(last.status), 40)}` : ""}`, "");
   lines.push(
     `Last success: ${day(d.last_success)} · Last failure: ${day(d.last_failure)}` +
       (d.avg_duration ? ` · Avg. install time: ${Math.round(d.avg_duration / 60)} min` : ""),
@@ -214,7 +214,8 @@ async function checkStale({ github, owner, repo, issue, comments, key, d, create
   const total = d.total || 0;
   const labels = (issue.labels || []).map((l) => (typeof l === "string" ? l : l.name));
   const hasStale = labels.includes(STALE_LABEL);
-  const ourNotice = comments.some((c) => (c.body || "").startsWith(STALE_MARKER));
+  // Anyone can paste the marker; only the workflow's own comment counts.
+  const ourNotice = comments.some((c) => c.user?.login === "github-actions[bot]" && (c.body || "").startsWith(STALE_MARKER));
   const ageDays = (Date.now() - created.getTime()) / 86400000;
 
   const eligible = labels.includes(STALE_ONLY) && !labels.some((l) => STALE_EXEMPT.includes(l)) && ageDays >= STALE_MIN_AGE;
