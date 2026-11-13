@@ -1,0 +1,55 @@
+{
+  "name": "PVE Laptop Battery Shutdown",
+  "slug": "laptop-battery-shutdown",
+  "categories": [
+    1
+  ],
+  "date_created": "2026-11-13",
+  "type": "pve",
+  "updateable": false,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://github.com/chrsandb/proxmox-laptop-poweroff-lowbattery/blob/main/README.md",
+  "website": null,
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/proxmox.webp",
+  "description": "Battery monitoring for Proxmox VE on laptop hardware, with compact status logs and estimated runtime. A systemd timer checks battery and AC status and triggers graceful host shutdown after consecutive low-battery readings while external power is disconnected.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "tools/pve/laptop-battery-shutdown.sh",
+      "resources": {
+        "cpu": null,
+        "ram": null,
+        "hdd": null,
+        "os": null,
+        "version": null
+      },
+      "config_path": "/etc/default/pve-battery-monitor"
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Run in the Proxmox host shell. Set DRY_RUN=1 in /etc/default/pve-battery-monitor before testing shutdown behavior.",
+      "type": "warning"
+    },
+    {
+      "text": "A 10% threshold may be suitable for a healthy battery, but 25% or higher may be safer for older batteries or batteries with unstable low-end reporting",
+      "type": "warning"
+    },
+    {
+      "text": "For unattended recovery after shutdown, enable BIOS or UEFI auto power-on on AC restore or a scheduled RTC wake or power-on alarm",
+      "type": "info"
+    }
+  ],
+  "repository": "https://github.com/chrsandb/proxmox-laptop-poweroff-lowbattery",
+  "architectures": [
+    "amd64"
+  ],
+  "platforms": [
+    "pve"
+  ]
+}
