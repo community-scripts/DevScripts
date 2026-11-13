@@ -41,7 +41,7 @@ We do **NOT use Docker** for our installation scripts. All applications are inst
 
 **Scoped exception:** `ensure_docker` / `setup_docker` exist in `tools.func`, but only
 for `tools/addon/*.sh` scripts that intentionally manage a Docker Compose stack (e.g.
-`arcane.sh`, `mqttx.sh`) — never for `ct/`/`install/` app scripts, which stay bare-metal.
+`arcane.sh`) — never for `ct/`/`install/` app scripts, which stay bare-metal.
 
 **If the application can only be installed via Docker, stop.** Do not wrap a container
 runtime, do not translate a `Dockerfile` into `docker run`, do not submit the PR. Say in
