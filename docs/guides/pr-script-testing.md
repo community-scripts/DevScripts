@@ -105,6 +105,8 @@ is the Incus one, unchanged, on native ARM: about as fast as on x86.
 ## What counts as passing
 
 1. The script exits 0 within 45 minutes and prints `Completed successfully`.
+   A script that hands over to upstream's own installer
+   (`run_external_installer`) runs it: CI sets `var_external_installer=yes`.
 2. The container is running.
 3. No failed systemd units (Alpine: no crashed OpenRC services).
 4. The URL the script prints (`http://${IP}:PORT/...`) answers within 2
