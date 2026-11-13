@@ -5,7 +5,7 @@
     3
   ],
   "date_created": "2026-10-14",
-  "type": "ct",
+  "type": "addon",
   "updateable": true,
   "privileged": false,
   "platforms": [
@@ -16,19 +16,12 @@
   "website": "https://komo.do/",
   "repository": "https://github.com/moghtech/komodo",
   "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/komodo.webp",
-  "description": "A Docker LXC with the native Komodo Periphery agent, connecting to an existing Core for centralized container and Compose stack management.",
+  "description": "Install the native Komodo Periphery agent in an existing Debian/Ubuntu Docker LXC or VM to manage its containers and Compose stacks through an existing Komodo Core.",
   "install_methods": [
     {
       "type": "default",
-      "script": "ct/komodo-periphery.sh",
-      "config_path": "/etc/komodo/periphery.config.json",
-      "resources": {
-        "cpu": 2,
-        "ram": 2048,
-        "hdd": 8,
-        "os": "Debian",
-        "version": "13"
-      }
+      "script": "tools/addon/komodo-periphery.sh",
+      "config_path": "/etc/komodo/periphery.config.json"
     }
   ],
   "default_credentials": {
@@ -66,7 +59,15 @@
   ],
   "notes": [
     {
+      "text": "Run as root inside the existing Debian/Ubuntu LXC or VM whose Docker environment you want to manage, not in the Proxmox VE host shell. Docker/Compose is set up during installation.",
+      "type": "info"
+    },
+    {
       "text": "Create an onboarding key in Komodo Core before installation, then confirm the server is connected.",
+      "type": "info"
+    },
+    {
+      "text": "Update the agent inside the guest with update_komodo_periphery. Agent updates preserve configuration, keys and deployed stacks without upgrading Docker.",
       "type": "info"
     }
   ]
