@@ -93,25 +93,40 @@ detect_battery() {
   return 1
 }
 
-detect_ac_device() {
-  local ac=""
-  if [[ -f "$CONFIG_PATH" ]]; then
-    ac="$(awk -F= '/^AC_DEVICE=/{gsub(/"/, "", $2); print $2}' "$CONFIG_PATH" 2>/dev/null || true)"
+read_external_power() {
+  local preferred="${AC_DEVICE:-}" path name supply_type scope online
+  local connected="" disconnected="" uncertain=0
+  if [[ -z "$preferred" && -f "$CONFIG_PATH" ]]; then
+    preferred="$(awk -F= '/^AC_DEVICE=/{gsub(/"/, "", $2); print $2}' "$CONFIG_PATH")"
   fi
-  if [[ -n "$ac" && -f "/sys/class/power_supply/$ac/online" ]]; then
-    printf '%s\n' "$ac"
-    return 0
-  fi
-  if [[ -f /sys/class/power_supply/AC/online ]]; then
-    printf 'AC\n'
-    return 0
-  fi
-  for path in /sys/class/power_supply/*/online; do
-    [[ -f "$path" ]] || continue
-    basename "$(dirname "$path")"
-    return 0
+  for path in /sys/class/power_supply/*; do
+    [[ -f "$path/online" ]] || continue
+    supply_type="$(cat "$path/type" 2>/dev/null || true)"
+    scope="$(cat "$path/scope" 2>/dev/null || true)"
+    [[ "$supply_type" == "Battery" || "$scope" == "Device" ]] && continue
+    name="$(basename "$path")"
+    online="$(cat "$path/online" 2>/dev/null || true)"
+    case "$online" in
+      1)
+        if [[ -z "$connected" || "$name" == "$preferred" ]]; then
+          connected="$name"
+        fi
+        ;;
+      0)
+        if [[ -z "$disconnected" || "$name" == "$preferred" ]]; then
+          disconnected="$name"
+        fi
+        ;;
+      *) uncertain=1 ;;
+    esac
   done
-  return 1
+  if [[ -n "$connected" ]]; then
+    printf '%s 1\n' "$connected"
+  elif ((uncertain == 0)) && [[ -n "$disconnected" ]]; then
+    printf '%s 0\n' "$disconnected"
+  else
+    return 1
+  fi
 }
 
 detect_pve_major() {
@@ -187,21 +202,40 @@ detect_battery() {
   return 1
 }
 
-detect_ac_device() {
-  if [[ -n "${AC_DEVICE}" && -f "/sys/class/power_supply/${AC_DEVICE}/online" ]]; then
-    printf '%s\n' "$AC_DEVICE"
-    return 0
+read_external_power() {
+  local preferred="${AC_DEVICE:-}" path name supply_type scope online
+  local connected="" disconnected="" uncertain=0
+  if [[ -z "$preferred" && -f "$CONFIG_PATH" ]]; then
+    preferred="$(awk -F= '/^AC_DEVICE=/{gsub(/"/, "", $2); print $2}' "$CONFIG_PATH")"
   fi
-  if [[ -f /sys/class/power_supply/AC/online ]]; then
-    printf 'AC\n'
-    return 0
-  fi
-  for path in /sys/class/power_supply/*/online; do
-    [[ -f "$path" ]] || continue
-    basename "$(dirname "$path")"
-    return 0
+  for path in /sys/class/power_supply/*; do
+    [[ -f "$path/online" ]] || continue
+    supply_type="$(cat "$path/type" 2>/dev/null || true)"
+    scope="$(cat "$path/scope" 2>/dev/null || true)"
+    [[ "$supply_type" == "Battery" || "$scope" == "Device" ]] && continue
+    name="$(basename "$path")"
+    online="$(cat "$path/online" 2>/dev/null || true)"
+    case "$online" in
+      1)
+        if [[ -z "$connected" || "$name" == "$preferred" ]]; then
+          connected="$name"
+        fi
+        ;;
+      0)
+        if [[ -z "$disconnected" || "$name" == "$preferred" ]]; then
+          disconnected="$name"
+        fi
+        ;;
+      *) uncertain=1 ;;
+    esac
   done
-  return 1
+  if [[ -n "$connected" ]]; then
+    printf '%s 1\n' "$connected"
+  elif ((uncertain == 0)) && [[ -n "$disconnected" ]]; then
+    printf '%s 0\n' "$disconnected"
+  else
+    return 1
+  fi
 }
 
 read_uevent_value() {
@@ -377,12 +411,13 @@ if ! battery="$(detect_battery)"; then
   exit 0
 fi
 
-if ! ac_device="$(detect_ac_device)"; then
-  emit_status "skip" "clear-state" "$battery" "missing" "unknown" "unknown" "0" "unknown" "no-ac-online-device"
-  logger -t "$LOG_TAG" "No AC online device found; clearing state"
+if ! power_state="$(read_external_power)"; then
+  emit_status "skip" "clear-state" "$battery" "unknown" "unknown" "unknown" "0" "unknown" "external-power-unknown"
+  logger -t "$LOG_TAG" "External power status unavailable; clearing state"
   clear_state
   exit 0
 fi
+read -r ac_device ac_online <<<"$power_state"
 
 uevent="/sys/class/power_supply/${battery}/uevent"
 if [[ ! -f "$uevent" ]]; then
@@ -410,7 +445,6 @@ voltage_now="${voltage_now:-0}"
 status="$(read_uevent_value "$uevent" "POWER_SUPPLY_STATUS")"
 status="${status:-unknown}"
 status_log="${status// /_}"
-ac_online="$(cat "/sys/class/power_supply/${ac_device}/online" 2>/dev/null || echo 1)"
 current_timestamp="$(date +%s)"
 
 if [[ ! "$capacity" =~ ^[0-9]+$ ]] || ((10#$capacity > 100)); then
@@ -585,6 +619,7 @@ Description=Run Proxmox host battery monitor every minute
 [Timer]
 OnBootSec=${interval}s
 OnUnitActiveSec=${interval}s
+AccuracySec=1s
 Unit=pve-battery-monitor.service
 
 [Install]
@@ -619,11 +654,7 @@ validate_environment() {
     exit 1
   fi
 
-  local ac_device ac_online
-  ac_device="$(detect_ac_device || true)"
-  if [[ -z "$ac_device" ]] ||
-    ! ac_online="$(cat "/sys/class/power_supply/${ac_device}/online" 2>/dev/null)" ||
-    [[ ! "$ac_online" =~ ^[01]$ ]]; then
+  if ! read_external_power >/dev/null; then
     echo "No readable AC power indicator returning 0 or 1 was found."
     echo "Set AC_DEVICE to the power-supply directory name in ${CONFIG_PATH}, then retry."
     exit 1
@@ -694,7 +725,8 @@ install_monitor() {
   local battery ac_device
   validate_environment
   battery="$(detect_battery || true)"
-  ac_device="$(detect_ac_device || true)"
+  ac_device="$(read_external_power)"
+  ac_device="${ac_device% *}"
   deploy_monitor "Installed" "$battery" "$ac_device"
 }
 
@@ -713,7 +745,8 @@ update_monitor() {
   fi
   validate_environment
   battery="$(detect_battery || true)"
-  ac_device="$(detect_ac_device || true)"
+  ac_device="$(read_external_power)"
+  ac_device="${ac_device% *}"
   deploy_monitor "Updated" "$battery" "$ac_device"
 }
 
@@ -729,17 +762,17 @@ remove_monitor() {
 }
 
 status_monitor() {
-  local battery="" ac_device="" state="disarmed" capacity="unknown" ac_online="unknown"
+  local battery="" ac_device="" state="disarmed" capacity="unknown" ac_online="unknown" power_state=""
   ensure_root
   header_info
   battery="$(detect_battery || true)"
-  ac_device="$(detect_ac_device || true)"
+  power_state="$(read_external_power || true)"
+  if [[ -n "$power_state" ]]; then
+    read -r ac_device ac_online <<<"$power_state"
+  fi
 
   if [[ -n "$battery" && -f "/sys/class/power_supply/${battery}/uevent" ]]; then
     capacity="$(awk -F= '/^POWER_SUPPLY_CAPACITY=/{print $2}' "/sys/class/power_supply/${battery}/uevent" 2>/dev/null || echo unknown)"
-  fi
-  if [[ -n "$ac_device" && -f "/sys/class/power_supply/${ac_device}/online" ]]; then
-    ac_online="$(cat "/sys/class/power_supply/${ac_device}/online" 2>/dev/null || echo unknown)"
   fi
   if [[ -f "$STATE_PATH" ]]; then
     # shellcheck disable=SC1090
