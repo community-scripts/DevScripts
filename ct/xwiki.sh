@@ -33,25 +33,52 @@ function update_script() {
     exit
   fi
 
+  apt_update_safe
+  if ! apt list --upgradable 2>/dev/null | grep -q '^xwiki-'; then
+    msg_ok "XWiki is already up to date"
+    exit 0
+  fi
+
+  echo
+  msg_warn "The package update may include config file changes."
+  echo -e "${TAB}${YW}How do you want to handle /etc/xwiki?${CL}"
+  echo -e "${TAB}  1) Keep your current config"
+  echo -e "${TAB}  2) Install the new package maintainer's config"
+  if [[ "${PHS_SILENT:-0}" == "1" ]]; then
+    CONFIG_CHOICE="1"
+  else
+    read -rp "  Choose [1/2] (default: 1): " -t 60 CONFIG_CHOICE || CONFIG_CHOICE="1"
+  fi
+  [[ -z "$CONFIG_CHOICE" ]] && CONFIG_CHOICE="1"
+
   msg_info "Stopping XWiki"
   systemctl stop tomcat10
   msg_ok "Stopped XWiki"
 
-  create_backup /etc/xwiki
+  if [[ "$CONFIG_CHOICE" == "2" ]]; then
+    BACKUP_DIR="/opt/xwiki_config_$(date +%Y%m%d%H%M)" create_backup /etc/xwiki
+    DPKG_CONF_OPT="--force-confnew"
+  else
+    create_backup /etc/xwiki
+    DPKG_CONF_OPT="--force-confold"
+  fi
 
   msg_info "Updating XWiki"
-  apt_update_safe
-  $STD apt install -y --only-upgrade -o Dpkg::Options::=--force-confold \
+  $STD apt install -y --only-upgrade -o Dpkg::Options::="$DPKG_CONF_OPT" \
     xwiki-common xwiki-pgsql-common xwiki-tomcat10-common xwiki-tomcat10-pgsql
   msg_ok "Updated XWiki"
 
-  restore_backup
+  if [[ "$CONFIG_CHOICE" == "2" ]]; then
+    msg_warn "New package config installed. Your previous config is in /opt/xwiki_config_*/files/etc/xwiki"
+  else
+    restore_backup
+  fi
 
   msg_info "Starting XWiki"
   systemctl start tomcat10
   msg_ok "Started XWiki"
   msg_ok "Updated successfully!"
-  exit
+  exit 0
 }
 
 start
