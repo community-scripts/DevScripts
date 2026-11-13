@@ -1,0 +1,72 @@
+{
+  "name": "MediaWiki",
+  "slug": "mediawiki",
+  "categories": [
+    12
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://www.mediawiki.org/wiki/Manual:Contents",
+  "website": "https://www.mediawiki.org/",
+  "repository": "https://github.com/wikimedia/mediawiki",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/wikimedia/mediawiki@master/resources/assets/mediawiki_compact.svg",
+  "description": "MediaWiki is the wiki software behind Wikipedia, built for collaborative documentation at any scale. Every page keeps a full revision history, and templates, categories, file uploads and a visual editor make it easy to structure and grow a knowledge base. Thousands of extensions add features like Lua modules, syntax highlighting and two-factor login.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/mediawiki.sh",
+      "config_path": "/opt/mediawiki_data/LocalSettings.php",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "Admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Log in with the admin user and generated password from /opt/mediawiki_data/.env inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "By default anyone can read, edit and create an account. Restrict this with $wgGroupPermissions in /opt/mediawiki_data/LocalSettings.php before exposing the wiki.",
+      "type": "warning"
+    },
+    {
+      "text": "Links and redirects use the container IP. For a domain or reverse proxy, set $wgServer in /opt/mediawiki_data/LocalSettings.php.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_wiki_name",
+      "label": "Wiki Name",
+      "type": "text",
+      "default": "My Wiki"
+    },
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "Admin"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "At least 10 characters; generated when left empty"
+    }
+  ]
+}
