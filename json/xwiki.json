@@ -1,0 +1,52 @@
+{
+  "name": "XWiki",
+  "slug": "xwiki",
+  "categories": [12],
+  "date_created": "2026-11-10",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://www.xwiki.org/xwiki/bin/view/Documentation/",
+  "website": "https://www.xwiki.org/",
+  "repository": "https://github.com/xwiki/xwiki-platform",
+  "architectures": ["amd64"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/xwiki.webp",
+  "description": "XWiki is a free, open source wiki platform written in Java. It offers structured data, applications inside the wiki, a powerful extension system and fine-grained permissions, and is a common alternative to Confluence.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/xwiki.sh",
+      "config_path": "/etc/xwiki/xwiki.cfg",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 16,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "On first start open http://<IP>:8080/xwiki/ and finish the Distribution Wizard: create the admin account and install the XWiki Standard flavor. This takes a few minutes.",
+      "type": "info"
+    },
+    {
+      "text": "The PostgreSQL database and its random password are created by the Debian package; the connection is stored in /etc/xwiki/hibernate.cfg.xml.",
+      "type": "info"
+    },
+    {
+      "text": "The Java heap is set to about 60 % of the container RAM in /etc/default/tomcat10. XWiki needs at least 2 GiB, 4 GiB is recommended.",
+      "type": "info"
+    },
+    {
+      "text": "Take a snapshot or backup before updating; major XWiki upgrades finish with the Distribution Wizard in the browser.",
+      "type": "warning"
+    }
+  ]
+}
