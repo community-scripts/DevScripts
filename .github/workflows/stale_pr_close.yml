@@ -182,8 +182,7 @@ jobs:
               else if (/^Addon\b/.test(type)) script = `tools/addon/${slug}.sh`;
               else if (/^PVE Tool\b/.test(type)) script = `tools/pve/${slug}.sh`;
               else if (/^CT\b/.test(type)) script = `ct/${slug}.sh`;
-              else if (!type) script = slug.includes("-vm") ? `vm/${slug}.sh` : `ct/${slug}.sh`;
-              else return null;
+              else return null; // no type, or "Other" without a path: nothing to delete
               const files = [script];
               const ct = script.match(/^ct\/(.+)\.sh$/);
               if (ct) files.push(`install/${ct[1]}-install.sh`);
@@ -203,7 +202,12 @@ jobs:
               const mine = comments.filter(c =>
                 c.user?.login === SELF && c.body?.includes(MARK) && new Date(c.created_at) >= after);
               if (mine.length === 0) return null;
-              const raw = mine[mine.length - 1].body.split(MARK)[1].split(" -->")[0];
+              // The first one: the notice for this label. Any later bot comment
+              // (other workflows post as the same bot) is never the manifest.
+              mine.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+              const parts = mine[0].body.split(MARK);
+              if (parts.length !== 2) return null;
+              const raw = parts[1].split(" -->")[0];
               try {
                 const s = JSON.parse(raw);
                 if (/^[a-z0-9][a-z0-9._-]*$/.test(s.slug) && Array.isArray(s.files) &&
@@ -215,6 +219,17 @@ jobs:
             // Only fires for a maintainer's label: labels set with GITHUB_TOKEN raise no event.
             if (context.eventName === "issues") {
               const issue = context.payload.issue;
+              // Triage can label too; a label that can end in deleted files needs
+              // write, as /test does. Without it the label is taken off again.
+              const sender = context.payload.sender;
+              if (sender.type !== "Bot") {
+                const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username: sender.login });
+                if (!["admin", "maintain", "write"].includes(perm.permission)) {
+                  core.notice(`${sender.login} has ${perm.permission} access; marking an issue stale needs write`);
+                  await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: "stale" });
+                  return;
+                }
+              }
               const s = scriptFiles(issue);
               await github.rest.issues.createComment({
                 owner, repo, issue_number: issue.number,
