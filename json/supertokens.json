@@ -1,0 +1,54 @@
+{
+  "name": "SuperTokens",
+  "slug": "supertokens",
+  "categories": [6],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3567,
+  "documentation": "https://supertokens.com/docs",
+  "website": "https://supertokens.com/",
+  "repository": "https://github.com/supertokens/supertokens-core",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/supertokens/supertokens-logo@master/images/Artboard%201%402x.png",
+  "description": "SuperTokens is an open-source authentication service and alternative to Auth0, Firebase Auth and Cognito. It handles sessions, email/password, passwordless, social login and multi-factor authentication, while your own backend talks to it through the SuperTokens SDKs.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/supertokens.sh",
+      "config_path": "/opt/supertokens_data/config.yaml",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "There is no web UI: point your backend SDK at http://<IP>:3567 and use the API key from /opt/supertokens_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Keep port 3567 reachable only from your backend, never from browsers or the internet.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_api_key",
+      "label": "API Key",
+      "type": "password",
+      "secret": true,
+      "help": "At least 20 characters of letters, digits, = and -. Generated when left empty"
+    }
+  ]
+}
