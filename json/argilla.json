@@ -1,0 +1,59 @@
+{
+  "name": "Argilla",
+  "slug": "argilla",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 6900,
+  "documentation": "https://docs.argilla.io/latest/",
+  "website": "https://argilla.io/",
+  "repository": "https://github.com/argilla-io/argilla",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/argilla-io/argilla@develop/argilla-frontend/static/images/logo.svg",
+  "description": "Argilla is a collaboration tool for AI engineers and domain experts to build high-quality datasets. Teams annotate records in a web UI, collect human feedback on model outputs, and manage datasets through a Python SDK that integrates with the Hugging Face Hub.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/argilla.sh",
+      "config_path": "/opt/argilla_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 3072,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in as admin with ADMIN_PASSWORD from /opt/argilla_data/.env. ADMIN_API_KEY there is the key for the Python SDK.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_argilla_password",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "At least 8 characters. Generated when left empty"
+    },
+    {
+      "name": "var_argilla_api_key",
+      "label": "Admin API Key",
+      "type": "password",
+      "secret": true,
+      "help": "At least 8 characters. Generated when left empty"
+    }
+  ]
+}
