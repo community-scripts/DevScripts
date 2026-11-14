@@ -60,7 +60,29 @@ function update_script() {
     msg_ok "Built GLKVM Cloud service"
 
     msg_info "Updating configuration"
+    if [[ ! -f /opt/glkvm-cloud-data/database/schema.sql ]]; then
+      cp /opt/glkvm-cloud/internal/store/sqlite/schema.sql /opt/glkvm-cloud-data/database/schema.sql
+    fi
     source /opt/glkvm-cloud-data/.env
+    cat <<EOF >/etc/systemd/system/glkvm-cloud.service
+[Unit]
+Description=GLKVM Cloud
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/glkvm-cloud
+Environment=RTTYS_CONF=/opt/glkvm-cloud-data/rttys.conf
+EnvironmentFile=/opt/glkvm-cloud-data/.env
+ExecStart=/opt/glkvm-cloud/rttys
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    systemctl daemon-reload
     cat <<EOF >/opt/glkvm-cloud-data/rttys.conf
 token: ${RTTYS_TOKEN}
 password: ${RTTYS_PASS}

@@ -45,6 +45,9 @@ msg_ok "Built GLKVM Cloud service"
 
 msg_info "Configuring GLKVM Cloud"
 mkdir -p /opt/glkvm-cloud-data/database /opt/glkvm-cloud-data/certificate
+if [[ ! -f /opt/glkvm-cloud-data/database/schema.sql ]]; then
+  cp /opt/glkvm-cloud/internal/store/sqlite/schema.sql /opt/glkvm-cloud-data/database/schema.sql
+fi
 var_rttys_admin_name="${var_rttys_admin_name:-admin}"
 var_rttys_pass="${var_rttys_pass:-$(random_password 32)}"
 var_glkvm_access_ip="${var_glkvm_access_ip:-$(curl -fsS --max-time 5 https://api.ipify.org 2>/dev/null || echo "$LOCAL_IP")}"
@@ -159,8 +162,9 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/glkvm-cloud
+Environment=RTTYS_CONF=/opt/glkvm-cloud-data/rttys.conf
 EnvironmentFile=/opt/glkvm-cloud-data/.env
-ExecStart=/opt/glkvm-cloud/rttys -c /opt/glkvm-cloud-data/rttys.conf
+ExecStart=/opt/glkvm-cloud/rttys
 Restart=on-failure
 RestartSec=5
 
@@ -186,12 +190,14 @@ systemctl enable -q --now glkvm-cloud glkvm-coturn
 msg_ok "Created Services"
 
 msg_info "Verifying GLKVM Cloud"
-sleep 5
-if ! systemctl is-active --quiet glkvm-cloud; then
+sleep 8
+if [[ "$(systemctl show glkvm-cloud -p SubState --value)" != "running" ]]; then
+  journalctl -u glkvm-cloud --no-pager -n 10 >&2 || true
   msg_error "GLKVM Cloud failed to start"
   exit 1
 fi
-if ! systemctl is-active --quiet glkvm-coturn; then
+if [[ "$(systemctl show glkvm-coturn -p SubState --value)" != "running" ]]; then
+  journalctl -u glkvm-coturn --no-pager -n 10 >&2 || true
   msg_error "GLKVM TURN server failed to start"
   exit 1
 fi
