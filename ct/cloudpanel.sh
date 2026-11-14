@@ -38,9 +38,14 @@ function update_script() {
     exit
   fi
 
+  $STD apt update
+  if [[ -z "$(apt list --upgradable 2>/dev/null | grep '/')" ]]; then
+    msg_ok "No update required. ${APP} is already up to date"
+    exit
+  fi
+
   msg_info "Updating CloudPanel"
   $STD clp-update
-  $STD apt update
   $STD apt -y --with-new-pkgs --allow-downgrades upgrade
   msg_ok "Updated CloudPanel"
   msg_ok "Updated successfully!"

@@ -28,6 +28,10 @@ var_admin_pass="${var_admin_pass:-$(random_password 20)}"
 
 confirm_external_installer "https://www.cloudpanel.io/" "https://installer.cloudpanel.io/ce/v2/install.sh"
 
+msg_info "Installing Dependencies"
+$STD apt install -y openssh-server
+msg_ok "Installed Dependencies"
+
 msg_info "Installing CloudPanel (Patience)"
 curl_with_retry "https://installer.cloudpanel.io/ce/v2/install.sh" /tmp/cloudpanel-install.sh
 if ! sha256sum -c --status <<<"8146dbe0a488e7088b04071b0c34d59aa0ab1fe9dcec382d395fd155c9e6c476  /tmp/cloudpanel-install.sh"; then
