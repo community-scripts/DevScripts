@@ -1,0 +1,79 @@
+{
+  "name": "CloudPanel",
+  "slug": "cloudpanel",
+  "categories": [
+    21
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 8443,
+  "documentation": "https://www.cloudpanel.io/docs/v2/",
+  "website": "https://www.cloudpanel.io/",
+  "repository": "https://github.com/cloudpanel-io/cloudpanel-ce",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/cloudpanel.webp",
+  "description": "CloudPanel is a free server control panel for hosting PHP, Node.js, Python, static sites and reverse proxies. It manages NGINX vhosts, PHP-FPM versions, databases, Let's Encrypt certificates, Varnish page cache, cron jobs, SFTP users and backups from one web interface or the clpctl CLI.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/cloudpanel.sh",
+      "config_path": "",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 20,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "CloudPanel officially supports virtual machines only, not LXC. This script runs its official installer in an unprivileged container; use a VM if you need vendor support.",
+      "type": "warning"
+    },
+    {
+      "text": "Sign in at https://IP:8443 with the admin password saved in ~/cloudpanel.creds inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "Port 8443 is open to everyone by default: limit it to your IPs under Security > Firewall in CloudPanel, or enable Basic Auth with clpctl cloudpanel:enable:basic-auth.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_db_engine",
+      "label": "Database Engine",
+      "type": "select",
+      "options": ["MARIADB_12.3", "MARIADB_11.8", "MYSQL_8.4"],
+      "default": "MARIADB_12.3"
+    },
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}
