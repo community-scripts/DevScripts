@@ -188,6 +188,7 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
+systemctl disable --now coturn 2>/dev/null || true
 systemctl enable -q --now glkvm-cloud glkvm-coturn
 msg_ok "Created Services"
 

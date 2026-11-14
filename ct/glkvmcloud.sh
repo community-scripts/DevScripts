@@ -137,6 +137,7 @@ EOF
     msg_ok "Updated configuration"
 
     msg_info "Starting Services"
+    systemctl disable --now coturn 2>/dev/null || true
     systemctl start glkvm-cloud glkvm-coturn
     msg_ok "Started Services"
     msg_ok "Updated successfully!"
