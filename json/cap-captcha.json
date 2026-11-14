@@ -1,0 +1,59 @@
+{
+  "name": "Cap",
+  "slug": "cap-captcha",
+  "categories": [
+    6
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3000,
+  "documentation": "https://trycap.dev/guide/capd/",
+  "website": "https://trycap.dev/",
+  "repository": "https://github.com/tiagozip/cap",
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/cap-captcha.webp",
+  "description": "Cap is a lightweight, privacy-friendly CAPTCHA alternative to reCAPTCHA and hCaptcha that uses proof-of-work instead of puzzles or tracking. This is its self-hosted server (capd): a dashboard to manage site keys, the challenge endpoints the widget talks to, and a siteverify API your backend uses to check tokens.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/cap-captcha.sh",
+      "config_path": "/opt/cap-captcha_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in to the dashboard with the admin key (ADMIN_KEY in /opt/cap-captcha_data/.env).",
+      "type": "info"
+    },
+    {
+      "text": "Stored site key secrets are encrypted with the admin key. After changing ADMIN_KEY, reset each site key's secret.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_key",
+      "label": "Admin Key",
+      "type": "password",
+      "secret": true,
+      "help": "Dashboard password, at least 12 characters; generated when left empty"
+    }
+  ]
+}
