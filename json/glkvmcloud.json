@@ -1,6 +1,6 @@
 {
   "name": "GLKVM Cloud",
-  "slug": "glkvm-cloud",
+  "slug": "glkvmcloud",
   "categories": [
     6
   ],
@@ -17,12 +17,12 @@
   "documentation": "https://github.com/gl-inet/glkvm-cloud",
   "website": "https://github.com/gl-inet/glkvm-cloud",
   "repository": "https://github.com/gl-inet/glkvm-cloud",
-  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/glkvm-cloud.webp",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/glkvmcloud.webp",
   "description": "GLKVM Cloud lets individuals and small businesses manage GL.iNet KVM devices remotely from their own server. It supports access-code onboarding, in-browser remote control, batch commands, and LDAP/OIDC sign-in, keeping data and bandwidth under your control.",
   "install_methods": [
     {
       "type": "default",
-      "script": "ct/glkvm-cloud.sh",
+      "script": "ct/glkvmcloud.sh",
       "config_path": "/opt/glkvm-cloud-data/.env",
       "resources": {
         "cpu": 2,
