@@ -1,0 +1,49 @@
+{
+  "name": "Obico",
+  "slug": "obico",
+  "categories": [
+    16
+  ],
+  "date_created": "2026-10-19",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3334,
+  "documentation": "https://www.obico.io/docs/server-guides/",
+  "website": "https://www.obico.io/",
+  "repository": "https://github.com/TheSpaghettiDetective/obico-server",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/obico.webp",
+  "description": "Obico is a self-hosted server for 3D printing monitoring and remote control. It links to OctoPrint or Klipper printers and runs an AI failure-detection model (spaghetti detection) on the webcam stream. Print from anywhere, watch live video, and get notified when a print fails.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/obico.sh",
+      "config_path": "/opt/obico/.env",
+      "resources": {
+        "cpu": 4,
+        "ram": 4096,
+        "hdd": 15,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "root@example.com",
+    "password": "supersecret"
+  },
+  "notes": [
+    {
+      "text": "Log in at http://<IP>:3334/admin with root@example.com / supersecret and change the password immediately.",
+      "type": "warning"
+    },
+    {
+      "text": "Point the Obico plugin (OctoPrint) or moonraker-obico (Klipper) at http://<IP>:3334 to link printers.",
+      "type": "info"
+    },
+    {
+      "text": "For Bambuddy's AI failure detection, enter http://<IP>:3333 as the Obico ML URL and the ML_API_TOKEN from /opt/obico/.env.",
+      "type": "info"
+    }
+  ]
+}
