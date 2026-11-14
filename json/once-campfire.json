@@ -1,0 +1,47 @@
+{
+  "name": "Campfire",
+  "slug": "once-campfire",
+  "categories": [
+    22
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64", "arm64"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://github.com/basecamp/once-campfire/blob/main/docs/self-hosting.md",
+  "website": "https://once.com/campfire",
+  "repository": "https://github.com/basecamp/once-campfire",
+  "logo": "https://cdn.jsdelivr.net/gh/basecamp/once-campfire@main/app/assets/images/logos/app-icon-192.png",
+  "description": "Campfire is a self-hosted group chat from 37signals with rooms and access controls, direct messages, @mentions, search and file attachments with previews. Bots can join conversations through its API and webhooks.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/once-campfire.sh",
+      "config_path": "/opt/once-campfire_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 5,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open http://<IP> and create the admin account in the setup wizard; its email address is shown on the sign-in page as the contact for help.",
+      "type": "info"
+    },
+    {
+      "text": "Web Push notifications only work over HTTPS with a trusted certificate, so put Campfire behind a reverse proxy if you want them.",
+      "type": "info"
+    }
+  ]
+}
