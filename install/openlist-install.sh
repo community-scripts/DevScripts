@@ -16,18 +16,17 @@ update_os
 fetch_and_deploy_gh_release "openlist" "OpenListTeam/OpenList" "prebuild" "latest" "/opt/openlist" "openlist-linux-musl-$(arch_resolve "amd64" "arm64").tar.gz"
 
 msg_info "Setting up OpenList"
-ADMIN_PASS="$(head -c 256 /dev/urandom | tr -dc 'A-Za-z0-9')"
-ADMIN_PASS="${ADMIN_PASS:0:16}"
+ADMIN_PASS="$(random_password 16)"
 $STD /opt/openlist/openlist --data /opt/openlist_data admin set "$ADMIN_PASS"
 if [[ ! -f /opt/openlist_data/data.db ]]; then
   msg_error "OpenList did not initialise its database"
   exit 1
 fi
-{
-  echo "OpenList Credentials"
-  echo "Username: admin"
-  echo "Password: ${ADMIN_PASS}"
-} >~/openlist.creds
+cat <<EOF >~/openlist.creds
+OpenList Credentials
+Username: admin
+Password: ${ADMIN_PASS}
+EOF
 chmod 600 ~/openlist.creds
 msg_ok "Set up OpenList"
 
