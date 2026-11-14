@@ -29,7 +29,7 @@ var_admin_pass="${var_admin_pass:-$(random_password 20)}"
 confirm_external_installer "https://www.cloudpanel.io/" "https://installer.cloudpanel.io/ce/v2/install.sh"
 
 msg_info "Installing Dependencies"
-$STD apt install -y openssh-server
+$STD apt install -y openssh-server wget
 msg_ok "Installed Dependencies"
 
 msg_info "Installing CloudPanel (Patience)"
