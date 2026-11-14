@@ -146,6 +146,8 @@ lt-cred-mech
 user=${TURN_USER}:${TURN_PASS}
 realm=glkvm
 no-multicast-peers
+no-tls
+no-dtls
 external-ip=${GLKVM_ACCESS_IP}
 EOF
 ln -sfn /opt/glkvm-cloud-data/database /home/database

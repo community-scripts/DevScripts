@@ -130,6 +130,8 @@ lt-cred-mech
 user=${TURN_USER}:${TURN_PASS}
 realm=glkvm
 no-multicast-peers
+no-tls
+no-dtls
 external-ip=${GLKVM_ACCESS_IP}
 EOF
     msg_ok "Updated configuration"
