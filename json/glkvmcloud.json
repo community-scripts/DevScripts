@@ -1,0 +1,76 @@
+{
+  "name": "GLKVM Cloud",
+  "slug": "glkvmcloud",
+  "categories": [
+    6
+  ],
+  "date_created": "2026-11-14",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "interface_port": 443,
+  "documentation": "https://github.com/gl-inet/glkvm-cloud",
+  "website": "https://github.com/gl-inet/glkvm-cloud",
+  "repository": "https://github.com/gl-inet/glkvm-cloud",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/glkvmcloud.webp",
+  "description": "GLKVM Cloud lets individuals and small businesses manage GL.iNet KVM devices remotely from their own server. It supports access-code onboarding, in-browser remote control, batch commands, and LDAP/OIDC sign-in, keeping data and bandwidth under your control.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/glkvmcloud.sh",
+      "config_path": "/opt/glkvm-cloud-data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_rttys_admin_name",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin",
+      "help": "Letters and digits only"
+    },
+    {
+      "name": "var_rttys_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated randomly when left empty"
+    },
+    {
+      "name": "var_glkvm_access_ip",
+      "label": "Server Access IP",
+      "type": "text",
+      "help": "Public IP by default; set the internal IP when devices are on the local network"
+    }
+  ],
+  "notes": [
+    {
+      "text": "Opening the platform by IP shows a browser certificate warning because GLKVM Cloud generates its own certificate on first start. Use your own domain and certificate to remove it.",
+      "type": "warning"
+    },
+    {
+      "text": "The admin password is stored as RTTYS_PASS in /opt/glkvm-cloud-data/.env inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "Allow ports 443, 10443, 5915 and 3478 (TCP and UDP) toward the container. KVM devices need firmware v1.11.0 or later for access-code onboarding.",
+      "type": "info"
+    }
+  ]
+}
