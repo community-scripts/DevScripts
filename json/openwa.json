@@ -1,0 +1,58 @@
+{
+  "name": "OpenWA",
+  "slug": "openwa",
+  "categories": [
+    22
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 2785,
+  "documentation": "https://github.com/rmyndharis/OpenWA/tree/main/docs",
+  "website": "https://github.com/rmyndharis/OpenWA",
+  "repository": "https://github.com/rmyndharis/OpenWA",
+  "architectures": [
+    "amd64"
+  ],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/openwa.webp",
+  "description": "OpenWA is a free, self-hosted WhatsApp API gateway with a built-in dashboard. Pair WhatsApp numbers as sessions by QR code, then send and receive messages over a REST API, webhooks, an MCP server and plugins.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/openwa.sh",
+      "config_path": "/opt/openwa_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in to the dashboard with the admin API key (API_MASTER_KEY in /opt/openwa_data/.env).",
+      "type": "info"
+    },
+    {
+      "text": "WhatsApp Web sessions use an unofficial protocol; WhatsApp can ban numbers used for bulk or automated messaging.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_api_key",
+      "label": "Admin API Key",
+      "type": "password",
+      "secret": true,
+      "help": "At least 32 characters; generated when left empty"
+    }
+  ]
+}
