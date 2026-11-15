@@ -16,6 +16,7 @@ update_os
 msg_info "Installing VoiceStudio system dependencies"
 $STD apt install -y \
   build-essential \
+  gnupg \
   libsndfile1
 msg_ok "Installed VoiceStudio system dependencies"
 
