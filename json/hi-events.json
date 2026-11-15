@@ -1,0 +1,83 @@
+{
+  "name": "Hi.Events",
+  "slug": "hi-events",
+  "categories": [
+    25
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 443,
+  "documentation": "https://hi.events/docs",
+  "website": "https://hi.events/",
+  "repository": "https://github.com/HiEventsDev/hi.events",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/hi-events.webp",
+  "description": "Hi.Events is an event management and ticketing platform for conferences, concerts, workshops and club nights. Organizers sell free or paid tickets through Stripe with custom check-out questions, promo codes and capacity limits, manage attendees, check them in with the browser-based check-in app and embed ticket widgets in their own website.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/hi-events.sh",
+      "config_path": "/opt/hi-events_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 6144,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open https://<IP>/auth/register, accept the self-signed certificate (sign-in only works over HTTPS) and create the first organizer. Sign-up stays open until you set APP_DISABLE_REGISTRATION=true in /opt/hi-events_data/.env.",
+      "type": "warning"
+    },
+    {
+      "text": "Without SMTP presets, emails only go to the log in /opt/hi-events_data/storage/logs. For a domain or new IP, change the URLs in /opt/hi-events_data/.env and frontend.env, then restart the hi-events services.",
+      "type": "info"
+    },
+    {
+      "text": "Hi.Events is AGPL-3.0 with an added term: the \"Powered by Hi.Events\" footer must stay visible unless you buy a licence.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_smtp_host",
+      "label": "SMTP Host",
+      "type": "text",
+      "help": "Leave empty to write emails to the log instead of sending them"
+    },
+    {
+      "name": "var_smtp_port",
+      "label": "SMTP Port",
+      "type": "number",
+      "default": 587,
+      "help": "465 uses implicit TLS, other ports STARTTLS"
+    },
+    {
+      "name": "var_smtp_user",
+      "label": "SMTP Username",
+      "type": "text"
+    },
+    {
+      "name": "var_smtp_pass",
+      "label": "SMTP Password",
+      "type": "password",
+      "secret": true
+    },
+    {
+      "name": "var_mail_from",
+      "label": "Sender Address",
+      "type": "text",
+      "default": "noreply@example.com"
+    }
+  ]
+}
