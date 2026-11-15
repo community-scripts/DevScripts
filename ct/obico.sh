@@ -14,7 +14,7 @@ var_ram="${var_ram:-4096}"
 var_disk="${var_disk:-15}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
-#var_arm64="${var_arm64:-yes}" # unset = ask the user; set yes/no only when verified
+var_arm64="${var_arm64:-yes}" # arm64 verified: CI install + health check passed
 var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
@@ -39,8 +39,6 @@ function update_script() {
 
     create_backup /opt/obico/.env
 
-    # No CLEAN_INSTALL: db.sqlite3, media, static_build, .venv and .env are
-    # gitignored in the upstream repo and survive reset --hard + clean -fd.
     fetch_and_deploy_gh_branch "obico" "TheSpaghettiDetective/obico-server" "release" "/opt/obico"
     sed -i "s/^VERSION=.*/VERSION=$(cat ~/.obico)/" /opt/obico/.env
 
@@ -53,12 +51,13 @@ function update_script() {
       msg_ok "Updated Moonraker Metadata Library"
     fi
 
+    IMPORTLIB_METADATA_PIN=$(grep -oP 'importlib_metadata==\K[0-9.]+' /opt/obico/backend/Dockerfile.base)
     msg_info "Updating Python Environments"
     cd /opt/obico/backend
     $STD uv pip install -p .venv/bin/python -r requirements.txt
-    $STD uv pip install -p .venv/bin/python importlib_metadata==8.2.0
+    $STD uv pip install -p .venv/bin/python "importlib_metadata==${IMPORTLIB_METADATA_PIN}"
     cd /opt/obico/ml_api
-    $STD uv pip install -p .venv/bin/python -r requirements.txt onnxruntime==1.31.0 opencv-python-headless==4.12.0.88
+    $STD uv pip install -p .venv/bin/python -r requirements.txt onnxruntime opencv-python-headless
     msg_ok "Updated Python Environments"
 
     if [[ "$(tr -d '\r' </opt/obico/ml_api/model/model-weights.onnx.sha256)" != "$(sha256sum /model_cache/ml_api/onnx/model-weights.onnx | cut -d' ' -f1)" ]]; then

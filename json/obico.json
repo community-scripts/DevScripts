@@ -12,6 +12,10 @@
   "documentation": "https://www.obico.io/docs/server-guides/",
   "website": "https://www.obico.io/",
   "repository": "https://github.com/TheSpaghettiDetective/obico-server",
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
   "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/obico.webp",
   "description": "Obico is a self-hosted server for 3D printing monitoring and remote control. It links to OctoPrint or Klipper printers and runs an AI failure-detection model (spaghetti detection) on the webcam stream. Print from anywhere, watch live video, and get notified when a print fails.",
   "install_methods": [

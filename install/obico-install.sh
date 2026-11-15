@@ -26,32 +26,28 @@ fetch_and_deploy_gh_branch "obico" "TheSpaghettiDetective/obico-server" "release
 PYTHON_VERSION="3.12" setup_uv
 
 msg_info "Setting up Python Environments"
+IMPORTLIB_METADATA_PIN=$(grep -oP 'importlib_metadata==\K[0-9.]+' /opt/obico/backend/Dockerfile.base) # tracked from upstream's Dockerfile.base
 cd /opt/obico/backend
 $STD uv venv --python 3.12 .venv
 $STD uv pip install -p .venv/bin/python -r requirements.txt
-# Pinned the same way as backend/Dockerfile.base for the moonraker metadata parser
-$STD uv pip install -p .venv/bin/python importlib_metadata==8.2.0
+$STD uv pip install -p .venv/bin/python "importlib_metadata==${IMPORTLIB_METADATA_PIN}"
 cd /opt/obico/ml_api
 $STD uv venv --python 3.12 .venv
-# CPU inference stack, mirroring ml_api/Containerfile.cpu (onnxruntime 1.16.3 has no cp312 wheels)
-$STD uv pip install -p .venv/bin/python -r requirements.txt onnxruntime==1.31.0 opencv-python-headless==4.12.0.88
+$STD uv pip install -p .venv/bin/python -r requirements.txt onnxruntime opencv-python-headless
 msg_ok "Set up Python Environments"
 
 msg_info "Installing Moonraker Metadata Library"
-# Same pinned clone as backend/Dockerfile.base; gcode metadata parsing imports moonraker via PYTHONPATH
-MOONRAKER_SHA=$(grep -oP 'checkout \K[a-f0-9]{40}' /opt/obico/backend/Dockerfile.base)
+MOONRAKER_SHA=$(grep -oP 'checkout \K[a-f0-9]{40}' /opt/obico/backend/Dockerfile.base) # pinned clone as in backend/Dockerfile.base, imported via PYTHONPATH
 $STD git clone https://github.com/Arksine/moonraker.git /opt/moonraker
 $STD git -C /opt/moonraker checkout "$MOONRAKER_SHA"
 msg_ok "Installed Moonraker Metadata Library"
 
 msg_info "Downloading Failure Detection Model"
 mkdir -p /model_cache/ml_api/onnx
-# Upstream's own checksum-verifying downloader, reading URL and sha256 from the repo's sidecar files
-bash /opt/obico/ml_api/scripts/fetch_verified.sh "$(tr -d '\r' </opt/obico/ml_api/model/model-weights.onnx.url)" /model_cache/ml_api/onnx/model-weights.onnx 50000000 "$(tr -d '\r' </opt/obico/ml_api/model/model-weights.onnx.sha256)"
+bash /opt/obico/ml_api/scripts/fetch_verified.sh "$(tr -d '\r' </opt/obico/ml_api/model/model-weights.onnx.url)" /model_cache/ml_api/onnx/model-weights.onnx 50000000 "$(tr -d '\r' </opt/obico/ml_api/model/model-weights.onnx.sha256)" # upstream's checksum-verifying downloader, URL and sha256 from sidecar files
 msg_ok "Downloaded Failure Detection Model"
 
 msg_info "Configuring Obico"
-# secrets.token_urlsafe() is exactly what `manage.py gen_site_secret` prints, without booting Django before the DB exists
 DJANGO_SECRET_KEY=$(cd /opt/obico/backend && .venv/bin/python -c 'import secrets; print(secrets.token_urlsafe())' 2>/dev/null)
 ML_API_TOKEN=$(random_password 32)
 cat <<EOF >/opt/obico/.env
@@ -90,10 +86,7 @@ Type=simple
 User=root
 WorkingDirectory=/opt/obico/ml_api
 EnvironmentFile=/opt/obico/.env
-# Bound to 0.0.0.0 because external clients (e.g. Bambuddy's Obico integration)
-# call the ML API directly; ML_API_TOKEN from /opt/obico/.env gates every
-# endpoint but the health check.
-ExecStart=/opt/obico/ml_api/.venv/bin/gunicorn --bind 0.0.0.0:3333 --workers 1 --timeout 120 wsgi
+ExecStart=/opt/obico/ml_api/.venv/bin/gunicorn --bind 0.0.0.0:3333 --workers 1 --timeout 120 wsgi # 0.0.0.0 for external clients (e.g. Bambuddy); ML_API_TOKEN gates everything but the health check
 Restart=on-failure
 RestartSec=5
 
