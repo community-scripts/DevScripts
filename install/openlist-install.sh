@@ -13,25 +13,25 @@ setting_up_container
 network_check
 update_os
 
-fetch_and_deploy_gh_release "openlist" "OpenListTeam/OpenList" "prebuild" "latest" "/opt/openlist" "openlist-linux-musl-$(arch_resolve "amd64" "arm64").tar.gz"
+setup_deb_based() {
+  fetch_and_deploy_gh_release "openlist" "OpenListTeam/OpenList" "prebuild" "latest" "/opt/openlist" "openlist-linux-musl-$(arch_resolve "amd64" "arm64").tar.gz"
 
-msg_info "Setting up OpenList"
-ADMIN_PASS="$(random_password 16)"
-$STD /opt/openlist/openlist --data /opt/openlist_data admin set "$ADMIN_PASS"
-if [[ ! -f /opt/openlist_data/data.db ]]; then
-  msg_error "OpenList did not initialise its database"
-  exit 1
-fi
-cat <<EOF >~/openlist.creds
+  msg_info "Configuring OpenList"
+  ADMIN_PASS="$(random_password 16)"
+  $STD /opt/openlist/openlist --data /opt/openlist_data admin set "$ADMIN_PASS"
+  if [[ ! -f /opt/openlist_data/data.db ]]; then
+    msg_error "OpenList did not initialise its database"
+    exit 1
+  fi
+  cat <<EOF >~/openlist.creds
 OpenList Credentials
 Username: admin
 Password: ${ADMIN_PASS}
 EOF
-chmod 600 ~/openlist.creds
-msg_ok "Set up OpenList"
+  chmod 600 ~/openlist.creds
+  msg_ok "Configured OpenList"
 
-setup_deb_based() {
-  msg_info "Creating OpenList Service"
+  msg_info "Creating Service"
   cat <<EOF >/etc/systemd/system/openlist.service
 [Unit]
 Description=OpenList
@@ -49,37 +49,46 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
   systemctl enable -q --now openlist
-  msg_ok "Created OpenList Service"
+  msg_ok "Created Service"
 }
 
 setup_alpine() {
-  msg_info "Creating OpenList Service"
-  cat <<'EOF' >/etc/init.d/openlist
-#!/sbin/openrc-run
-name="OpenList"
-description="OpenList - a file list program that supports multiple storages"
+  fetch_and_deploy_gh_release "openlist" "OpenListTeam/OpenList" "prebuild" "latest" "/opt/openlist" "openlist-linux-musl-$(arch_resolve "amd64" "arm64").tar.gz"
 
+  msg_info "Configuring OpenList"
+  ADMIN_PASS="$(random_password 16)"
+  $STD /opt/openlist/openlist --data /opt/openlist_data admin set "$ADMIN_PASS"
+  if [[ ! -f /opt/openlist_data/data.db ]]; then
+    msg_error "OpenList did not initialise its database"
+    exit 1
+  fi
+  cat <<EOF >~/openlist.creds
+OpenList Credentials
+Username: admin
+Password: ${ADMIN_PASS}
+EOF
+  chmod 600 ~/openlist.creds
+  msg_ok "Configured OpenList"
+
+  msg_info "Creating Service"
+  cat <<EOF >/etc/init.d/openlist
+#!/sbin/openrc-run
+name="openlist"
+description="OpenList Daemon"
+directory="/opt/openlist"
 command="/opt/openlist/openlist"
 command_args="server --data /opt/openlist_data"
-supervisor=supervise-daemon
-directory="/opt/openlist"
-output_log="/var/log/openlist.log"
-error_log="/var/log/openlist.log"
-respawn_delay=10
+command_background="yes"
+pidfile="/run/openlist.pid"
 
 depend() {
-  need net
-  after firewall
-}
-
-start_pre() {
-  checkpath -f -m 0640 "$output_log"
+    need net
 }
 EOF
   chmod +x /etc/init.d/openlist
   $STD rc-update add openlist default
   $STD rc-service openlist start
-  msg_ok "Created OpenList Service"
+  msg_ok "Created Service"
 }
 
 run_os_setup
