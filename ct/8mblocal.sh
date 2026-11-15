@@ -7,7 +7,7 @@ source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_
 # License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
 # Source: https://github.com/JMS1717/8mb.local
 
-APP="8mb.local"
+APP="8mbLocal"
 var_tags="${var_tags:-media;video;compression}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-2048}"
@@ -20,8 +20,6 @@ var_gpu="${var_gpu:-yes}"
 
 header_info "$APP"
 variables
-NSAPP="8mblocal"
-var_install="${NSAPP}-install"
 var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2361}"
 color
 catch_errors

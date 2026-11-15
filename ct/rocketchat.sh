@@ -10,7 +10,7 @@ source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_
 # License: MIT | https://github.com/community-scripts/ProxmoxVED/raw/main/LICENSE
 # Source: https://www.rocket.chat/
 
-APP="Rocket.Chat"
+APP="RocketChat"
 var_tags="${var_tags:-chat;messaging}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-4096}"
@@ -24,8 +24,6 @@ export var_admin_email="${var_admin_email:-}"
 
 header_info "$APP"
 variables
-NSAPP="rocketchat"
-var_install="${NSAPP}-install"
 var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2422}"
 color
 catch_errors

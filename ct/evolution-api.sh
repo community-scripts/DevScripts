@@ -7,7 +7,7 @@ source "$_cs_boot" 2>/dev/null || source <(curl -fsSL "${COMMUNITY_SCRIPTS_CORE_
 # License: MIT | https://github.com/community-scripts/DevScripts/raw/main/LICENSE
 # Source: https://github.com/evolution-foundation/evolution-api
 
-APP="Evolution API"
+APP="Evolution-API"
 var_tags="${var_tags:-whatsapp;messaging;api}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-4096}"
