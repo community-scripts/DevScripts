@@ -1,0 +1,62 @@
+{
+  "name": "iPerf3",
+  "slug": "iperf3",
+  "categories": [
+    4
+  ],
+  "date_created": "2026-11-15",
+  "type": "ct",
+  "platforms": [
+    "pve"
+  ],
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 5201,
+  "documentation": "https://software.es.net/iperf/",
+  "website": "https://software.es.net/iperf/",
+  "repository": "https://github.com/esnet/iperf",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/iperf3.webp",
+  "description": "iPerf3 is a tool for active measurements of the maximum achievable bandwidth on IP networks. This container runs an always-on iperf3 server on TCP/UDP port 5201 for local LAN and Wi-Fi throughput benchmarking.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/iperf3.sh",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 2,
+        "os": "Debian",
+        "version": "13"
+      }
+    },
+    {
+      "type": "alpine",
+      "script": "ct/iperf3.sh",
+      "resources": {
+        "cpu": 1,
+        "ram": 256,
+        "hdd": 1,
+        "os": "Alpine",
+        "version": "3.24"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Test TCP throughput from any client on your network with: iperf3 -c <CONTAINER_IP>",
+      "type": "info"
+    },
+    {
+      "text": "Test download (server-to-client) throughput with: iperf3 -c <CONTAINER_IP> -R",
+      "type": "info"
+    }
+  ]
+}
