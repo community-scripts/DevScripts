@@ -1,0 +1,66 @@
+{
+  "name": "Coturn",
+  "slug": "coturn",
+  "categories": [
+    4
+  ],
+  "date_created": "2026-11-15",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 3478,
+  "documentation": "https://github.com/coturn/coturn/wiki",
+  "website": "https://github.com/coturn/coturn",
+  "repository": "https://github.com/coturn/coturn",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/coturn.webp",
+  "description": "Coturn is an open-source TURN and STUN server that relays audio, video and data for WebRTC clients that cannot connect directly through NAT or firewalls. It is the relay commonly paired with Matrix (Synapse), Jitsi Meet and Nextcloud Talk, and authenticates clients with time-limited credentials derived from a shared secret.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/coturn.sh",
+      "config_path": "/etc/turnserver.conf",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_coturn_realm",
+      "label": "Realm",
+      "type": "text",
+      "help": "Usually your TURN domain; defaults to the container hostname"
+    },
+    {
+      "name": "var_coturn_secret",
+      "label": "Static Auth Secret",
+      "type": "password",
+      "secret": true,
+      "help": "Shared secret your WebRTC app uses for TURN credentials; generated when empty"
+    }
+  ],
+  "notes": [
+    {
+      "text": "Point your app (e.g. Synapse turn_shared_secret) at the static-auth-secret in /opt/coturn_data/.env. Relaying to private IP ranges is denied; add allowed-peer-ip in /etc/turnserver.conf for internal media servers.",
+      "type": "info"
+    },
+    {
+      "text": "Behind NAT, set external-ip in /etc/turnserver.conf and forward 3478 (UDP/TCP), 5349 (TCP) and UDP 49160-49200 to the container.",
+      "type": "warning"
+    },
+    {
+      "text": "Port 5349 (turns:) uses a self-signed certificate; replace cert and pkey with a trusted one if clients use TLS.",
+      "type": "info"
+    }
+  ]
+}
