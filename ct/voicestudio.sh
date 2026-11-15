@@ -38,7 +38,7 @@ function update_script() {
     msg_ok "Stopped VoiceStudio"
 
     NODE_VERSION="22" NODE_MODULE="bun@1.4.2" setup_nodejs
-    PYTHON_VERSION="3.12" setup_uv
+    PYTHON_VERSION="3.11" setup_uv
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "voicestudio" "debpalash/VoiceStudio" "tarball"
 
     msg_info "Building VoiceStudio"
