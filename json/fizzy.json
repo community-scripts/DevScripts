@@ -1,0 +1,81 @@
+{
+  "name": "Fizzy",
+  "slug": "fizzy",
+  "categories": [
+    25
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://github.com/basecamp/fizzy/blob/main/docs/docker-deployment.md",
+  "website": "https://fizzy.do/",
+  "repository": "https://github.com/basecamp/fizzy",
+  "architectures": [
+    "amd64"
+  ],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/fizzy.webp",
+  "description": "Fizzy is a Kanban tool from 37signals for tracking issues and ideas. Teams organise cards on boards with columns, comment and react on them, get notified about changes, and cards that sit untouched slowly fade into Not Now so boards stay current.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/fizzy.sh",
+      "config_path": "/opt/fizzy_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The first email address that signs up becomes the account owner and sign-up closes after that, so open Fizzy right after the install.",
+      "type": "warning"
+    },
+    {
+      "text": "Without SMTP, read the sign-in code with: sqlite3 /opt/fizzy_data/production.sqlite3 \"select code from magic_links order by created_at desc limit 1\"",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_smtp_host",
+      "label": "SMTP Host",
+      "type": "text",
+      "help": "Sends the sign-in codes"
+    },
+    {
+      "name": "var_smtp_port",
+      "label": "SMTP Port",
+      "type": "number",
+      "default": 587,
+      "help": "465 uses implicit TLS, other ports STARTTLS"
+    },
+    {
+      "name": "var_smtp_user",
+      "label": "SMTP Username",
+      "type": "text"
+    },
+    {
+      "name": "var_smtp_pass",
+      "label": "SMTP Password",
+      "type": "password",
+      "secret": true
+    },
+    {
+      "name": "var_mail_from",
+      "label": "Sender Address",
+      "type": "text",
+      "default": "fizzy@example.com"
+    }
+  ]
+}
