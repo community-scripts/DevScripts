@@ -1,0 +1,67 @@
+{
+  "name": "Kopia",
+  "slug": "kopia",
+  "categories": [
+    7
+  ],
+  "date_created": "2026-11-15",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 51515,
+  "documentation": "https://kopia.io/docs/",
+  "website": "https://kopia.io/",
+  "repository": "https://github.com/kopia/kopia",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/kopia.webp",
+  "description": "Kopia is a fast, encrypted and deduplicating backup tool. In server mode it offers a web UI for snapshots, policies and restores, and serves repositories to remote Kopia clients over HTTPS.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/kopia.sh",
+      "config_path": "/opt/kopia_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_kopia_password",
+      "label": "Web UI Password",
+      "type": "password",
+      "secret": true,
+      "help": "Password for the admin user of the web UI. Generated when empty"
+    },
+    {
+      "name": "var_kopia_repo_password",
+      "label": "Repository Password",
+      "type": "password",
+      "secret": true,
+      "help": "Encryption password of the default repository. Generated when empty, cannot be recovered if lost"
+    }
+  ],
+  "notes": [
+    {
+      "text": "Open https://IP:51515 and accept the self-signed certificate. The UI and repository passwords are in /opt/kopia_data/.env; keep the repository password safe, without it the backups cannot be decrypted.",
+      "type": "info"
+    },
+    {
+      "text": "The default repository lives on the container disk in /opt/kopia_data/repository. For real backups connect a repository on a mount point, NAS or S3/B2 storage from the UI.",
+      "type": "warning"
+    },
+    {
+      "text": "Remote Kopia clients need a user from `kopia server user add` and the certificate fingerprint of /etc/ssl/kopia/kopia.crt.",
+      "type": "info"
+    }
+  ]
+}
