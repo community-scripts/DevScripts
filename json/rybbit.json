@@ -1,0 +1,64 @@
+{
+  "name": "Rybbit",
+  "slug": "rybbit",
+  "categories": [
+    9
+  ],
+  "date_created": "2026-11-15",
+  "type": "ct",
+  "platforms": [
+    "pve"
+  ],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://rybbit.com/docs",
+  "website": "https://rybbit.com/",
+  "repository": "https://github.com/rybbit-io/rybbit",
+  "architectures": [
+    "amd64"
+  ],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/rybbit.webp",
+  "description": "Rybbit is a privacy-friendly, cookieless web and product analytics platform and an open source alternative to Google Analytics. It tracks pageviews, sessions, goals, funnels, user journeys and errors, and can record session replays.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/rybbit.sh",
+      "config_path": "/opt/rybbit_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open https://<IP>/signup and accept the self-signed certificate; the first account becomes the admin. Then set DISABLE_SIGNUP=true in /opt/rybbit_data/.env and restart rybbit-server.",
+      "type": "info"
+    },
+    {
+      "text": "Visitors' browsers only load the tracking script from a trusted HTTPS address. Put Rybbit behind a reverse proxy with a real certificate and pass that URL as var_base_url at install; it is compiled into the web client.",
+      "type": "warning"
+    },
+    {
+      "text": "ClickHouse needs a CPU with AVX2 on x86.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_base_url",
+      "label": "Public URL",
+      "type": "text",
+      "default": "",
+      "help": "e.g. https://analytics.example.com; defaults to https://<container IP>"
+    }
+  ]
+}
