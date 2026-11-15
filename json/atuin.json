@@ -1,0 +1,47 @@
+{
+  "name": "Atuin",
+  "slug": "atuin",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-15",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64", "arm64"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8888,
+  "documentation": "https://docs.atuin.sh/self-hosting/server-setup/",
+  "website": "https://atuin.sh/",
+  "repository": "https://github.com/atuinsh/atuin",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/atuin.webp",
+  "description": "Atuin replaces your shell history with a searchable SQLite database that records context such as exit code, duration and working directory. Its sync server keeps that history end-to-end encrypted and in step across all your machines, so the server never sees your commands in plain text.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/atuin.sh",
+      "config_path": "/opt/atuin_data/server.toml",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 2,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Registration is closed. Create an account inside the container with `ATUIN_CONFIG_DIR=/opt/atuin_data atuin-server admin user create --email you@example.com you`, or set `open_registration = true` in the config to let clients run `atuin register`.",
+      "type": "info"
+    },
+    {
+      "text": "Set `sync_address = \"http://<IP>:8888\"` in each client's ~/.config/atuin/config.toml, then `atuin login` and `atuin sync`. Put a TLS reverse proxy in front before exposing it beyond your LAN.",
+      "type": "info"
+    }
+  ]
+}
