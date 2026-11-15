@@ -16,12 +16,7 @@ update_os
 msg_info "Installing VoiceStudio system dependencies"
 $STD apt install -y \
   build-essential \
-  cmake \
-  libgl1 \
-  libglib2.0-0t64 \
-  libopus-dev \
-  libsndfile1 \
-  pkg-config
+  libsndfile1
 msg_ok "Installed VoiceStudio system dependencies"
 
 setup_ffmpeg
