@@ -1,0 +1,56 @@
+{
+  "name": "VoiceStudio",
+  "slug": "voicestudio",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-15",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3900,
+  "documentation": "https://github.com/debpalash/VoiceStudio/blob/main/docs/remote-gpu.md",
+  "website": "https://voicestudio.sh/",
+  "repository": "https://github.com/debpalash/VoiceStudio",
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "platforms": [
+    "pve"
+  ],
+  "logo": "https://cdn.jsdelivr.net/gh/debpalash/VoiceStudio@v0.5.8/docs/logo.svg",
+  "description": "VoiceStudio is a local-first AI voice studio for voice cloning, speech generation, dubbing, transcription and audiobooks. It provides a browser-based interface backed by a self-hosted inference service.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/voicestudio.sh",
+      "config_path": "/opt/voicestudio_data/.env",
+      "resources": {
+        "cpu": 6,
+        "ram": 12288,
+        "hdd": 50,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The administrator API key is stored in /opt/voicestudio_data/.env as OMNIVOICE_API_KEY. For first browser access, append #api_key=<key> to the VoiceStudio URL; the browser exchanges it for a session.",
+      "type": "info"
+    },
+    {
+      "text": "This installation uses CPU-only PyTorch. Speech generation can be slow with larger engines; install smaller CPU-friendly engines for better responsiveness.",
+      "type": "warning"
+    },
+    {
+      "text": "Voice models are downloaded when selected in VoiceStudio and are stored under /opt/voicestudio_data/huggingface. Allow additional disk space for models.",
+      "type": "info"
+    }
+  ]
+}
