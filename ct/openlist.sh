@@ -15,7 +15,7 @@ var_unprivileged="${var_unprivileged:-1}"
 if [[ -z "${var_os:-}" ]] && command -v pveversion >/dev/null 2>&1; then
   var_os=$(msg_menu "Choose the container OS" \
     "debian" "Debian 13" \
-    "alpine" "Alpine 3.24 (smaller)")
+    "alpine" "Alpine 3.24 (smaller footprint)")
 fi
 
 if [[ "${var_os:-}" == "alpine" ]]; then
@@ -32,13 +32,6 @@ header_info "$APP"
 variables
 color
 catch_errors
-
-function update_script() {
-  header_info
-  check_container_storage
-  check_container_resources
-  run_os_update
-}
 
 update_deb_based() {
   if [[ ! -f /opt/openlist/openlist ]]; then
@@ -82,6 +75,13 @@ update_alpine() {
     msg_ok "Started OpenList"
     msg_ok "Updated successfully!"
   fi
+}
+
+function update_script() {
+  header_info
+  check_container_storage
+  check_container_resources
+  run_os_update
 }
 
 start
