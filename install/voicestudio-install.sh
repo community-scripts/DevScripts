@@ -22,7 +22,7 @@ msg_ok "Installed VoiceStudio system dependencies"
 
 setup_ffmpeg
 NODE_VERSION="22" NODE_MODULE="bun@1.4.2" setup_nodejs
-PYTHON_VERSION="3.12" setup_uv
+PYTHON_VERSION="3.11" setup_uv
 
 fetch_and_deploy_gh_release "voicestudio" "debpalash/VoiceStudio" "tarball"
 
