@@ -13,8 +13,7 @@
   "website": "https://voicestudio.sh/",
   "repository": "https://github.com/debpalash/VoiceStudio",
   "architectures": [
-    "amd64",
-    "arm64"
+    "amd64"
   ],
   "platforms": [
     "pve"
