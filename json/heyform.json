@@ -1,0 +1,51 @@
+{
+  "name": "HeyForm",
+  "slug": "heyform",
+  "categories": [
+    25
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 443,
+  "documentation": "https://docs.heyform.net/open-source/self-hosting",
+  "website": "https://heyform.net/",
+  "repository": "https://github.com/heyform/heyform",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/heyform.webp",
+  "description": "HeyForm is an open-source form builder for conversational forms, surveys, quizzes and polls. Forms support conditional logic, hidden fields, themes and payments, and the dashboard shows submissions and analytics or forwards them to webhooks and integrations.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/heyform.sh",
+      "config_path": "/opt/heyform_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 3072,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open https://<IP>, accept the self-signed certificate and sign up. Sign-up asks for no email code until you set SMTP_* and VERIFY_USER_EMAIL=true in /opt/heyform_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Anyone who can reach the URL can create an account: after signing up, set APP_DISABLE_REGISTRATION=true in /opt/heyform_data/.env and run systemctl restart heyform.",
+      "type": "warning"
+    },
+    {
+      "text": "MongoDB 8 needs a CPU with AVX; set the VM/host CPU type to host (not kvm64) on older Proxmox setups.",
+      "type": "warning"
+    }
+  ]
+}

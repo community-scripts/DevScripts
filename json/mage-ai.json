@@ -1,0 +1,56 @@
+{
+  "name": "Mage",
+  "slug": "mage-ai",
+  "categories": [
+    19
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 6789,
+  "documentation": "https://docs.mage.ai/",
+  "website": "https://www.mage.ai/",
+  "repository": "https://github.com/mage-ai/mage-ai",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/mage-ai/mage-ai@master/docs/favicons/m1.svg",
+  "description": "Mage is an open-source data pipeline tool for building, running and monitoring ETL and ELT pipelines. Pipelines are made of Python, SQL or R blocks edited in a notebook-style UI, and run on schedules, events or API triggers, with data integrations for syncing sources into warehouses.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/mage-ai.sh",
+      "config_path": "/opt/mage-ai_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin@admin.com",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in as admin@admin.com with DEFAULT_OWNER_PASSWORD from /opt/mage-ai_data/.env, then change it in the user settings. The value in .env is only used to create the first owner.",
+      "type": "info"
+    },
+    {
+      "text": "Every signed-in user can run code and open a terminal as root inside the container. Keep port 6789 on a trusted network.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_mage_password",
+      "label": "Owner Password",
+      "type": "password",
+      "secret": true,
+      "help": "Password for admin@admin.com, generated when left empty"
+    }
+  ]
+}

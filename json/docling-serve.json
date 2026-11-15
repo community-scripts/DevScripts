@@ -1,0 +1,56 @@
+{
+  "name": "Docling Serve",
+  "slug": "docling-serve",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 5001,
+  "documentation": "https://github.com/docling-project/docling-serve/tree/main/docs",
+  "website": "https://www.docling.ai/",
+  "repository": "https://github.com/docling-project/docling-serve",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/docling-project/docling@main/docs/assets/logo.svg",
+  "description": "Docling Serve runs IBM's Docling document converter as an API service. It turns PDF, DOCX, PPTX, HTML and images into Markdown, JSON or plain text, with layout analysis, table structure recognition and OCR, and ships a web UI for trying conversions.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/docling-serve.sh",
+      "config_path": "/opt/docling-serve_data/.env",
+      "resources": {
+        "cpu": 4,
+        "ram": 4096,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Every API call needs the X-Api-Key header with DOCLING_SERVE_API_KEY from /opt/docling-serve_data/.env. In the web UI, enter it under Set API key.",
+      "type": "info"
+    },
+    {
+      "text": "Only the default layout, table, picture and OCR models are installed. Enrichments such as code, formula or picture description need theirs first: /opt/docling-serve/.venv/bin/docling-tools models download -o /opt/docling-serve_data/models <model>",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_docling_api_key",
+      "label": "API Key",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}

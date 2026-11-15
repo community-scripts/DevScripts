@@ -18,8 +18,7 @@ msg_warn "The following code is NOT maintained or audited by our repository."
 msg_warn "If you have any doubts or concerns, please review the installer code before proceeding:"
 msg_custom "${TAB3}${GATEWAY}${BGN}${CL}" "\e[1;34m" "→  https://raw.githubusercontent.com/MichaIng/DietPi/master/.build/images/dietpi-installer"
 echo
-read -r -p "${TAB3}Do you want to continue? [y/N]: " CONFIRM
-if [[ ! "$CONFIRM" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+if ! prompt_confirm "${TAB3}Do you want to continue?" "y" 60; then
   msg_error "Aborted by user. No changes have been made."
   exit 10
 fi
@@ -40,6 +39,8 @@ if [[ -n "${PASSWORD:-}" ]]; then
   echo "AUTO_SETUP_GLOBAL_PASSWORD=$PASSWORD" >>/boot/dietpi.txt
 fi
 rm -f /etc/apt/sources.list.d/debian.sources
+rm -f /etc/sysctl.d/97-dietpi.conf
+rm -f /etc/systemd/system/local-fs.target.wants/dietpi-fs_partition_resize.service
 msg_ok "Configured DietPi"
 
 customize

@@ -4,6 +4,7 @@
   "categories": [20],
   "date_created": "2026-11-01",
   "type": "ct",
+  "platforms": ["pve"],
   "updateable": true,
   "privileged": false,
   "architectures": ["amd64", "arm64"],

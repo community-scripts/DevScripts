@@ -16,20 +16,36 @@ Link: #
 
 ---
 
-## 🏗️ arm64 Support (**X** in brackets)
+## 🧩 Script
 
-- [ ] **arm64 supported** - Tested and supported on arm64.
-- [ ] **arm64 not tested** - Assumed to work on arm64, but testing has not been done.
-- [ ] **arm64 not supported** - Confirmed upstream dependencies or binaries do not support arm64.
+> Fill in for a new script. If the script has no issue yet, one is opened from these fields when the PR is merged.
 
----
+**Name:** <!-- as on the website, e.g. SnipeIT -->
 
-## 🖥️ Tested on (**X** in brackets)
+**Tool:** <!-- one or two sentences on what the application does -->
+
+### 🗂️ Category (**X** in brackets)
+
+- [ ] **CT** – LXC container (`ct/` + `install/`)
+- [ ] **VM** – Virtual machine (`vm/`)
+- [ ] **Addon** – `tools/addon/`
+- [ ] **PVE Tool** – `tools/pve/`
+- [ ] **Other** – path given in the Description
+
+### 🖥️ Platform – tested on (**X** in brackets)
 
 - [ ] **Proxmox VE** – Created on a Proxmox VE host and the app works.
 - [ ] **Incus** – Created on an Incus host and the app works.
 
 > Application containers run on both; tick what you actually tested. VMs and host tools are Proxmox only.
+
+### 🏗️ Architecture (**X** in brackets)
+
+- [ ] **arm64 supported** - Tested and supported on arm64.
+- [ ] **arm64 not tested** - Assumed to work on arm64, but testing has not been done.
+- [ ] **arm64 not supported** - Confirmed upstream dependencies or binaries do not support arm64.
+
+> amd64 support is assumed.
 
 ---
 

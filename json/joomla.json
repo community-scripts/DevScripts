@@ -1,0 +1,64 @@
+{
+  "name": "Joomla",
+  "slug": "joomla",
+  "categories": [
+    12
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://docs.joomla.org/",
+  "website": "https://www.joomla.org/",
+  "repository": "https://github.com/joomla/joomla-cms",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/joomla.webp",
+  "description": "Joomla is an open-source content management system for building websites, from blogs and company sites to community portals. It manages articles, categories, menus and media, with fine-grained user groups and access levels, built-in multilingual content and a web services API. Templates control the look, and thousands of extensions add shops, forms, galleries and more.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/joomla.sh",
+      "config_path": "/opt/joomla/configuration.php",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Log in at http://<IP>/administrator with the admin user and the generated password from /opt/joomla_data/.env inside the container.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "At least 12 characters, generated when left empty"
+    },
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    }
+  ]
+}

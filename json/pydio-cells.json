@@ -1,0 +1,50 @@
+{
+  "name": "Pydio Cells",
+  "slug": "pydio-cells",
+  "categories": [11],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://docs.pydio.com/cells-v5/",
+  "website": "https://pydio.com/",
+  "repository": "https://github.com/pydio/cells",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/pydio/cells@v5.1.1/frontend/assets/gui.ajax/res/themes/common/images/PydioLogoSquare.png",
+  "description": "Pydio Cells is a self-hosted document sharing and collaboration platform. It organizes files into workspaces with fine-grained permissions, public and private share links, versioning and automated flows, and connects desktop sync and mobile clients.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/pydio-cells.sh",
+      "config_path": "/opt/pydio-cells_data/pydio.json",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open https://<IP>:8080 and accept the self-signed certificate, the web UI needs HTTPS. Log in as admin with the password from /opt/pydio-cells_data/.env.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Password of the admin account, without single quotes. Generated when left empty"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "name": "Chibisafe",
+  "slug": "chibisafe",
+  "categories": [
+    11
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64", "arm64"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://chibisafe.app/docs",
+  "website": "https://chibisafe.app/",
+  "repository": "https://github.com/chibisafe/chibisafe",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/chibisafe.webp",
+  "description": "Chibisafe is a self-hosted file uploader and sharing service with chunked drag-and-drop uploads, albums, snippets and a built-in URL shortener. It supports user accounts with storage quotas, public or invite-only mode, an admin panel, S3 storage and uploads from ShareX or its API.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/chibisafe.sh",
+      "config_path": "/opt/chibisafe_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 3072,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Log in as admin with the ADMIN_PASSWORD from /opt/chibisafe_data/.env inside the container.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}

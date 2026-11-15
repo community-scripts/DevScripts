@@ -1,0 +1,62 @@
+{
+  "name": "Prefect",
+  "slug": "prefect",
+  "categories": [
+    19
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 4200,
+  "documentation": "https://docs.prefect.io/v3/",
+  "website": "https://www.prefect.io/",
+  "repository": "https://github.com/PrefectHQ/prefect",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/PrefectHQ/prefect@main/docs/logos/favicon.svg",
+  "description": "Prefect is a workflow orchestration platform for Python. Turn any Python function into a flow with retries, caching and schedules, deploy it to a work pool and follow every run, its logs and task states in a web UI. It covers data pipelines, ML jobs and general automation.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/prefect.sh",
+      "config_path": "/opt/prefect_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The UI asks for the full user:password auth string from /opt/prefect_data/.env. Clients need it as PREFECT_API_AUTH_STRING, plus PREFECT_API_URL=http://<IP>:4200/api.",
+      "type": "info"
+    },
+    {
+      "text": "Anyone with the auth string can deploy flows that run as root in this container. Install the packages your flows need with uv pip install --python /opt/prefect/.venv/bin/python.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_prefect_user",
+      "label": "Auth Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_prefect_password",
+      "label": "Auth Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}

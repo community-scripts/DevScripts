@@ -20,6 +20,7 @@ var_os="${var_os:-mint}"
 var_version="${var_version:-zena}"
 var_arm64="${var_arm64:-no}" # linuxcontainers publishes this one for amd64 only
 var_unprivileged="${var_unprivileged:-1}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2560}"
 
 header_info "$APP"
 variables

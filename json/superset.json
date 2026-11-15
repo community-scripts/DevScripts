@@ -1,0 +1,52 @@
+{
+  "name": "Apache Superset",
+  "slug": "superset",
+  "categories": [
+    9
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8088,
+  "documentation": "https://superset.apache.org/user-docs/intro",
+  "website": "https://superset.apache.org/",
+  "repository": "https://github.com/apache/superset",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/apache-superset.webp",
+  "description": "Apache Superset is a data exploration and visualization platform. It connects to most SQL databases, offers SQL Lab for writing queries, a no-code chart builder with dozens of chart types, and interactive dashboards with filters and fine-grained access control.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/superset.sh",
+      "config_path": "/opt/superset_data/superset_config.py",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 5,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Log in as admin with SUPERSET_ADMIN_PASSWORD from /opt/superset_data/.env.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}

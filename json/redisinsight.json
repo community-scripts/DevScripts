@@ -1,0 +1,47 @@
+{
+  "name": "Redis Insight",
+  "slug": "redisinsight",
+  "categories": [
+    8
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64"],
+  "interface_port": 5540,
+  "documentation": "https://redis.io/docs/latest/develop/tools/insight/",
+  "website": "https://redis.io/insight/",
+  "repository": "https://github.com/redis/RedisInsight",
+  "logo": "https://cdn.jsdelivr.net/gh/redis/RedisInsight@main/resources/icons/512x512.png",
+  "description": "Redis Insight is the official GUI for Redis and Valkey. It browses and edits keys of every data type, runs commands in a CLI and a workbench with query autocompletion, and helps analyze memory usage, slow logs and live command traffic with the profiler.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/redisinsight.sh",
+      "config_path": "/opt/redisinsight_data/.env",
+      "resources": {
+        "cpu": 4,
+        "ram": 4096,
+        "hdd": 12,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Redis Insight has no login. Anyone who can reach port 5540 can open and change every database you add, so keep it on a trusted network or behind an authenticating reverse proxy.",
+      "type": "warning"
+    },
+    {
+      "text": "Saved database passwords are encrypted with RI_ENCRYPTION_KEY in /opt/redisinsight_data/.env. Changing or losing that key makes them unreadable.",
+      "type": "info"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "name": "Mixpost",
+  "slug": "mixpost",
+  "categories": [
+    19
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 80,
+  "documentation": "https://docs.mixpost.app/lite/",
+  "website": "https://mixpost.app/",
+  "repository": "https://github.com/inovector/mixpost",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/mixpost.webp",
+  "description": "Mixpost Lite is a self-hosted social media management tool. It lets you create, schedule and publish posts to Facebook pages, X and Mastodon from one place, with a content calendar, a media library and multiple accounts per network.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/mixpost.sh",
+      "config_path": "/opt/mixpost_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin@example.com",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in with ADMIN_EMAIL and ADMIN_PASSWORD from /opt/mixpost_data/.env inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "Connecting social accounts needs a public domain: set APP_URL in /opt/mixpost_data/.env, then run `php artisan optimize` in /opt/mixpost. Facebook and X also need your own developer app keys under Services.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}

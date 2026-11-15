@@ -7,6 +7,8 @@
     ],
     "date_created": "2026-05-26",
     "type": "vm",
+    "platforms": ["pve"],
+    "architectures": ["amd64"],
     "updateable": false,
     "privileged": false,
     "interface_port": null,

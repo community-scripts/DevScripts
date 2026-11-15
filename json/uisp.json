@@ -6,6 +6,7 @@
   ],
   "date_created": "2026-09-29",
   "type": "ct",
+  "platforms": ["pve"],
   "updateable": false,
   "privileged": false,
   "architectures": ["amd64"],

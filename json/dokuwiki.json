@@ -1,0 +1,62 @@
+{
+  "name": "DokuWiki",
+  "slug": "dokuwiki",
+  "categories": [
+    12
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://www.dokuwiki.org/manual",
+  "website": "https://www.dokuwiki.org/",
+  "repository": "https://github.com/dokuwiki/dokuwiki",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/dokuwiki.webp",
+  "description": "DokuWiki is a simple to use and highly versatile wiki that needs no database: pages are stored as plain text files that stay readable outside the wiki. It brings revision history, access control lists, a media manager and full-text search, and over a thousand community plugins and templates extend it.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/dokuwiki.sh",
+      "config_path": "/opt/dokuwiki/conf/local.php",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Log in with the admin user and the generated password from /opt/dokuwiki_data/.env inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "Everyone can read the wiki, only logged-in users can edit and upload. Self-registration is off: add accounts under Admin > User Manager, change the policy under Admin > Access Control List.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}

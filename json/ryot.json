@@ -6,6 +6,8 @@
   ],
   "date_created": "2026-10-07",
   "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64"],
   "updateable": true,
   "privileged": false,
   "interface_port": 8000,

@@ -1,0 +1,44 @@
+{
+  "name": "PG Back Web",
+  "slug": "pgbackweb",
+  "categories": [
+    7,
+    8
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8085,
+  "documentation": "https://github.com/eduardolat/pgbackweb#readme",
+  "website": "https://github.com/eduardolat/pgbackweb",
+  "repository": "https://github.com/eduardolat/pgbackweb",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/pg-back-web.webp",
+  "description": "PG Back Web is a web interface for scheduled PostgreSQL backups with pg_dump. It runs backups of PostgreSQL 13 to 18 servers on cron schedules, stores them on local disk or any number of S3 buckets with retention, and restores or downloads them from the browser, with execution logs and webhooks for monitoring.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/pgbackweb.sh",
+      "config_path": "/opt/pgbackweb_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Create the admin account right after the install: until then anyone who can reach port 8085 can claim it.",
+      "type": "warning"
+    }
+  ]
+}

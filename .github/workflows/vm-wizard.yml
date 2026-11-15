@@ -21,7 +21,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # A branch that needs unreleased engine changes is tested against the core
       # branch of the same name; everything else, and main, uses core's main.
@@ -41,7 +41,7 @@ jobs:
       # The scripts source the engine at runtime; a checkout lets the harness
       # load it from disk instead of over the network on every run.
       - name: Checkout core
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: community-scripts/core
           ref: ${{ steps.core.outputs.ref }}

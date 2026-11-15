@@ -1,0 +1,47 @@
+{
+  "name": "OpnForm",
+  "slug": "opnform",
+  "categories": [
+    25
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 80,
+  "documentation": "https://docs.opnform.com/",
+  "website": "https://opnform.com/",
+  "repository": "https://github.com/OpnForm/OpnForm",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/opnform.webp",
+  "description": "OpnForm is an open-source form builder and alternative to Typeform and Google Forms. Forms support conditional logic, file uploads, payments, custom themes and embedding, and submissions land in a dashboard or go out to email, webhooks, Slack, Discord and Google Sheets.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/opnform.sh",
+      "config_path": "/opt/opnform_data/api.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 6144,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open the URL and create the admin account on the setup page; public registration closes afterwards and free self-hosted instances allow 2 users.",
+      "type": "info"
+    },
+    {
+      "text": "For a domain or reverse proxy, set APP_URL and FRONT_URL in /opt/opnform_data/api.env, then run `php artisan optimize` in /opt/opnform/api.",
+      "type": "info"
+    }
+  ]
+}

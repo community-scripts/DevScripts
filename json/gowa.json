@@ -1,0 +1,63 @@
+{
+  "name": "GOWA",
+  "slug": "gowa",
+  "categories": [
+    22,
+    18
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 443,
+  "documentation": "https://gowa-docs.mintlify.site/",
+  "website": "https://github.com/aldinokemal/go-whatsapp-web-multidevice",
+  "repository": "https://github.com/aldinokemal/go-whatsapp-web-multidevice",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/aldinokemal/go-whatsapp-web-multidevice@main/gallery/gowa.svg",
+  "description": "GOWA (Go WhatsApp Web Multi-Device) is a self-hosted WhatsApp REST API gateway with a built-in web dashboard. Link one or more WhatsApp accounts by QR or pairing code, then send and receive messages, media, stickers and polls, manage groups, forward events to webhooks, and drive it from AI agents through its MCP endpoint.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/gowa.sh",
+      "config_path": "/opt/gowa_data/.env",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open https://<IP>, accept the self-signed certificate and sign in with APP_BASIC_AUTH from /opt/gowa_data/.env. The dashboard does not load over plain HTTP.",
+      "type": "info"
+    },
+    {
+      "text": "GOWA is an unofficial WhatsApp client. WhatsApp can ban a number linked through it, so use one you can afford to lose.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Login User",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Login Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty; must not contain ':' or ','"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "Faraday",
+  "slug": "faraday",
+  "categories": [
+    6
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 5985,
+  "documentation": "https://docs.faradaysec.com/",
+  "website": "https://faradaysec.com/",
+  "repository": "https://github.com/infobyte/faraday",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/infobyte/faraday@master/docs/images/faraday_logo.svg",
+  "description": "Faraday is a vulnerability management platform that collects the output of more than 80 security tools such as Nmap, Nessus, Burp and OpenVAS into shared workspaces. It deduplicates findings, normalizes them across tools and tracks their remediation status through a web UI and a REST API.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/faraday.sh",
+      "config_path": "/opt/faraday_data/.faraday/config/server.ini",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "faraday",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in as faraday with FARADAY_PASSWORD from /opt/faraday_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Run faraday-manage as `FARADAY_HOME=/opt/faraday_data /opt/faraday/venv/bin/faraday-manage <command>`, otherwise it does not find the configuration.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_faraday_password",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Password for the faraday user. Generated when left empty"
+    }
+  ]
+}

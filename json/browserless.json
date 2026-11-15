@@ -1,0 +1,58 @@
+{
+  "name": "Browserless",
+  "slug": "browserless",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3000,
+  "documentation": "https://docs.browserless.io/",
+  "website": "https://www.browserless.io/",
+  "repository": "https://github.com/browserless/browserless",
+  "architectures": [
+    "amd64"
+  ],
+  "logo": "https://cdn.jsdelivr.net/gh/browserless/browserless@main/assets/logo.svg",
+  "description": "Browserless runs headless Chromium as a service that Puppeteer and Playwright scripts connect to over a WebSocket. Its REST API turns a URL or HTML into screenshots, PDFs, rendered content or scraped data and runs custom functions, and a built-in debugger lets you write and test scripts in the browser.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/browserless.sh",
+      "config_path": "/opt/browserless_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Every request needs the token: ws://<IP>:3000?token=<TOKEN> for Puppeteer and Playwright, ?token=<TOKEN> on REST calls and the debugger. It is TOKEN in /opt/browserless_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Browserless is licensed under SSPL-1.0. Using it for commercial or closed-source software requires a commercial licence from browserless.io.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_browserless_token",
+      "label": "API Token",
+      "type": "password",
+      "secret": true,
+      "help": "Optional. Left empty, a random 32-character token is generated"
+    }
+  ]
+}

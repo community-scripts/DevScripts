@@ -1,0 +1,48 @@
+{
+  "name": "VERT",
+  "slug": "vert",
+  "categories": [
+    11,
+    13
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 443,
+  "documentation": "https://github.com/VERT-sh/VERT/tree/main/docs",
+  "website": "https://vert.sh/",
+  "repository": "https://github.com/VERT-sh/VERT",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/vert.webp",
+  "description": "VERT is a file converter that runs in the browser. Images, audio and documents are converted locally with WebAssembly, so files never leave the device; videos the browser cannot handle can be sent to a vertd server.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/vert.sh",
+      "config_path": "/opt/vert_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 3072,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open https://<IP> and accept the self-signed certificate; the converters only work over HTTPS.",
+      "type": "info"
+    },
+    {
+      "text": "Videos the browser cannot convert go to VERT's public vertd servers by default. Set your own vertd instance in the settings to keep them local.",
+      "type": "warning"
+    }
+  ]
+}

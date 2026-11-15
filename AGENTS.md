@@ -41,7 +41,7 @@ We do **NOT use Docker** for our installation scripts. All applications are inst
 
 **Scoped exception:** `ensure_docker` / `setup_docker` exist in `tools.func`, but only
 for `tools/addon/*.sh` scripts that intentionally manage a Docker Compose stack (e.g.
-`arcane.sh`, `mqttx.sh`) — never for `ct/`/`install/` app scripts, which stay bare-metal.
+`arcane.sh`) — never for `ct/`/`install/` app scripts, which stay bare-metal.
 
 **If the application can only be installed via Docker, stop.** Do not wrap a container
 runtime, do not translate a `Dockerfile` into `docker run`, do not submit the PR. Say in
@@ -1604,7 +1604,8 @@ Every application requires a JSON metadata file in `json/<appname>.json`.
 | `documentation`       | string  | Link to official docs                              |
 | `website`             | string  | Link to official website                           |
 | `repository`          | string  | Upstream repository as a full URL. A bare `owner/repo` could only ever mean GitHub, and the release sync also reads GitLab, Gitea, Forgejo and Codeberg |
-| `architectures`       | array   | Must agree with `var_arm64` in the CT script — that is the one `arch_check` obeys. `yes` → `["amd64", "arm64"]`, `no` → `["amd64"]`, unset → omit the field. The site reads an absent field as amd64, so "known broken" and "never tried" look the same there; only `var_arm64` keeps them apart |
+| `architectures`       | array   | Must agree with `var_arm64` in the CT script — that is the one `arch_check` obeys. `yes` → `["amd64", "arm64"]`, `no` or unset → `["amd64"]`. Never omit it: an absent field leaves the site record empty |
+| `platforms`           | array   | `["pve"]`, `["incus"]` or both; `["pve"]` until the script has run on Incus. Never omit it: an absent field leaves the site record empty |
 | `logo`                | string  | URL to application logo (preferably selfhst icons) |
 | `description`         | string  | Brief description of the application               |
 | `install_methods`     | array   | Installation configurations                        |
@@ -1615,7 +1616,6 @@ Every application requires a JSON metadata file in `json/<appname>.json`.
 
 | Field       | Type  | Description                                                                 |
 | ----------- | ----- | --------------------------------------------------------------------------- |
-| `platforms` | array | `["pve"]`, `["incus"]` or both. Omit to mean Proxmox VE                      |
 | `app_vars`  | array | Values the install script accepts up front, so a deployment can run unattended |
 
 `app_vars` describes what the script already reads from the environment. Name

@@ -1,0 +1,62 @@
+{
+  "name": "Label Studio",
+  "slug": "label-studio",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-12",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://labelstud.io/guide/",
+  "website": "https://labelstud.io/",
+  "repository": "https://github.com/HumanSignal/label-studio",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/HumanSignal/label-studio@develop/docs/themes/v2/source/images/favicon.svg",
+  "description": "Label Studio is an open source data labeling tool for images, text, audio, video, HTML and time series. Teams build labeling interfaces from templates or XML configs, annotate tasks together, and export the results in a standardized format or common ML formats to train and evaluate models.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/label-studio.sh",
+      "config_path": "/opt/label-studio_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin@localhost",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in with LABEL_STUDIO_USERNAME and LABEL_STUDIO_PASSWORD from /opt/label-studio_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "Open signup is disabled. Add users through the invite link (Invite Members on the home page).",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@localhost"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ]
+}
