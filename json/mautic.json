@@ -1,0 +1,91 @@
+{
+  "name": "Mautic",
+  "slug": "mautic",
+  "categories": [
+    25
+  ],
+  "date_created": "2026-11-15",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 80,
+  "documentation": "https://docs.mautic.org/en/latest/",
+  "website": "https://www.mautic.org/",
+  "repository": "https://github.com/mautic/mautic",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/mautic.webp",
+  "description": "Mautic is an open-source marketing automation platform. It tracks contacts and sorts them into segments, sends email campaigns and newsletters, and builds landing pages and forms. Campaigns react to what contacts do, and lead scoring shows who is ready to buy.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/mautic.sh",
+      "config_path": "/opt/mautic/config/local.php",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 5,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in as admin with the generated password saved in /opt/mautic_data/.env inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "Without SMTP settings, emails are discarded. Set a mail transport under Settings > Configuration > Email Settings before sending real emails.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    },
+    {
+      "name": "var_smtp_host",
+      "label": "SMTP Host",
+      "type": "text",
+      "help": "Leave empty to discard emails until SMTP is set up"
+    },
+    {
+      "name": "var_smtp_port",
+      "label": "SMTP Port",
+      "type": "text",
+      "default": "587"
+    },
+    {
+      "name": "var_smtp_user",
+      "label": "SMTP Username",
+      "type": "text"
+    },
+    {
+      "name": "var_smtp_pass",
+      "label": "SMTP Password",
+      "type": "password",
+      "secret": true
+    }
+  ]
+}
