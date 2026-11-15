@@ -1,0 +1,68 @@
+{
+  "name": "Drupal",
+  "slug": "drupal",
+  "categories": [
+    12
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 80,
+  "documentation": "https://www.drupal.org/docs",
+  "website": "https://www.drupal.org/",
+  "repository": "https://github.com/drupal/drupal",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/drupal.webp",
+  "description": "Drupal is an open-source content management system for building anything from simple websites to large, structured digital platforms. Content types, fields, taxonomy and Views let you model and list content without code, with granular roles and permissions and built-in multilingual support. Thousands of contributed modules and themes extend it with commerce, search, workflows and more.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/drupal.sh",
+      "config_path": "/opt/drupal/web/sites/default/settings.php",
+      "resources": {
+        "cpu": 2,
+        "ram": 1024,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": "admin",
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Log in at http://<IP>/user/login with the admin user and the generated password from /opt/drupal_data/.env inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "The site is managed with Composer in /opt/drupal: add modules with `composer require drupal/<module>` there, not through the admin UI.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_admin_user",
+      "label": "Admin Username",
+      "type": "text",
+      "default": "admin"
+    },
+    {
+      "name": "var_admin_pass",
+      "label": "Admin Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    },
+    {
+      "name": "var_admin_email",
+      "label": "Admin Email",
+      "type": "text",
+      "default": "admin@example.com"
+    }
+  ]
+}
