@@ -16,6 +16,7 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_arm64="${var_arm64:-no}" # MySQL 8 comes from Oracle's APT repo, which has no arm64 builds for Debian
 var_unprivileged="${var_unprivileged:-1}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2672}"
 
 export var_cap_url="${var_cap_url:-}"
 export var_resend_api_key="${var_resend_api_key:-}"
