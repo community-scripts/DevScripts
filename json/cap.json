@@ -1,0 +1,72 @@
+{
+  "name": "Cap",
+  "slug": "cap",
+  "categories": [
+    13
+  ],
+  "date_created": "2026-11-13",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 443,
+  "documentation": "https://cap.so/docs/self-hosting",
+  "website": "https://cap.so/",
+  "repository": "https://github.com/CapSoftware/Cap",
+  "logo": "https://cdn.jsdelivr.net/gh/CapSoftware/Cap@main/apps/web/public/cap-icon.svg",
+  "description": "Cap is an open-source alternative to Loom. Record your screen and camera with the Cap desktop app or the browser, upload to your own server and share each recording by link, with comments, reactions and viewer analytics.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/cap.sh",
+      "config_path": "/opt/cap_data/.env",
+      "resources": {
+        "cpu": 4,
+        "ram": 8192,
+        "hdd": 20,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Sign in with any email address. Without Resend the login code is printed to the log: `journalctl -u cap-web -n 30`.",
+      "type": "info"
+    },
+    {
+      "text": "Login only works over HTTPS, so accept the self-signed certificate. The desktop app needs a trusted certificate: put Cap behind your own domain and set var_cap_url (or WEB_URL, NEXTAUTH_URL and S3_PUBLIC_ENDPOINT in the .env).",
+      "type": "warning"
+    },
+    {
+      "text": "Anyone who reaches Cap can create an account; restrict sign-ups with CAP_ALLOWED_SIGNUP_DOMAINS in /opt/cap_data/.env.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_cap_url",
+      "label": "Public URL",
+      "type": "text",
+      "help": "e.g. https://cap.example.com behind your reverse proxy; defaults to https://<container IP>"
+    },
+    {
+      "name": "var_resend_api_key",
+      "label": "Resend API Key",
+      "type": "password",
+      "secret": true,
+      "help": "Sends login codes by email; without it they go to the log"
+    },
+    {
+      "name": "var_resend_from_domain",
+      "label": "Resend Sender Domain",
+      "type": "text",
+      "help": "Verified Resend domain, mails come from auth@<domain>"
+    }
+  ]
+}
