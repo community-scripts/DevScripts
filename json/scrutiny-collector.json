@@ -37,7 +37,7 @@
   },
   "notes": [
     {
-      "text": "Run it in the Proxmox VE host shell as root, after installing the Scrutiny container. It asks for the Scrutiny URL, e.g. http://<container-ip>:8080, and collects every 15 minutes.",
+      "text": "Run it as root on any Debian or Ubuntu based machine that has the disks (Proxmox VE, Incus host, TrueNAS SCALE, Ubuntu Server ...). It asks for the Scrutiny URL, e.g. http://<container-ip>:8080, and collects every 15 minutes.",
       "type": "info"
     },
     {

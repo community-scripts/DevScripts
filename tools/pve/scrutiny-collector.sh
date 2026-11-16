@@ -24,12 +24,11 @@ REPO="AnalogJ/scrutiny"
 header_info
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  msg_error "Run this as root on the Proxmox VE or Incus host."
+  msg_error "Run this as root (sudo) on the machine that has the disks."
   exit 1
 fi
-if [[ -S /dev/incus/sock ]] || ! { command -v pveversion &>/dev/null || command -v incus &>/dev/null; }; then
-  msg_error "Run this on the Proxmox VE or Incus host, not inside a container: only the host sees the disks."
-  exit 1
+if systemd-detect-virt -cq 2>/dev/null; then
+  msg_warn "This looks like a container: only disks passed through to it can be read."
 fi
 if ! command -v apt &>/dev/null; then
   msg_error "This tool needs a Debian or Ubuntu based host (apt)."

@@ -36,7 +36,7 @@
   },
   "notes": [
     {
-      "text": "The container cannot read the disks. Run the Scrutiny Collector tool (tools/pve/scrutiny-collector.sh) on the Proxmox host and give it http://<container-ip>:8080.",
+      "text": "The container cannot read the disks. Run the Scrutiny Collector tool (tools/pve/scrutiny-collector.sh) on every machine whose disks you want to monitor and give it http://<container-ip>:8080.",
       "type": "info"
     },
     {
