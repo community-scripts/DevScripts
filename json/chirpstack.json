@@ -12,7 +12,7 @@
   "documentation": "https://www.chirpstack.io/docs/",
   "website": "https://www.chirpstack.io/",
   "repository": "https://github.com/chirpstack/chirpstack",
-  "logo": "https://raw.githubusercontent.com/chirpstack/chirpstack-docs/refs/heads/master/theme/favicon.svg",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/chirpstack.webp",
   "description": "ChirpStack is an open-source LoRaWAN Network Server. It manages gateways, devices and applications, handles device activation and the LoRaWAN MAC layer, and forwards uplink data to MQTT, HTTP and many other integrations.",
   "install_methods": [
     {
