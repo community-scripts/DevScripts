@@ -1,0 +1,63 @@
+{
+  "name": "Roundcube",
+  "slug": "roundcube",
+  "categories": [
+    18
+  ],
+  "date_created": "2026-11-16",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64", "arm64"],
+  "interface_port": 80,
+  "documentation": "https://github.com/roundcube/roundcubemail/wiki",
+  "website": "https://roundcube.net/",
+  "repository": "https://github.com/roundcube/roundcubemail",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/roundcube.webp",
+  "description": "Roundcube is a browser-based IMAP webmail client with a desktop-like interface. It handles folders, search, threads, HTML compose, attachments and an address book, and can be extended with plugins and skins.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/roundcube.sh",
+      "config_path": "/opt/roundcube/config/config.inc.php",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Roundcube is only a mail client: sign in with an account of your existing IMAP server. Without an IMAP host preset, the login page asks for the server.",
+      "type": "info"
+    },
+    {
+      "text": "Without an SMTP host preset, mail is sent through the IMAP server on port 587. Change imap_host and smtp_host in /opt/roundcube/config/config.inc.php if needed.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_imap_host",
+      "label": "IMAP Host",
+      "type": "text",
+      "default": "",
+      "help": "e.g. ssl://mail.example.com:993; empty shows a server field on the login page"
+    },
+    {
+      "name": "var_smtp_host",
+      "label": "SMTP Host",
+      "type": "text",
+      "default": "",
+      "help": "e.g. tls://mail.example.com:587; empty uses the IMAP host on port 587"
+    }
+  ]
+}
