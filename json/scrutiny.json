@@ -36,7 +36,7 @@
   },
   "notes": [
     {
-      "text": "The container cannot read the disks. Install smartmontools and the scrutiny-collector-metrics binary on the Proxmox host and run `scrutiny-collector-metrics run --api-endpoint http://<container-ip>:8080` from cron (see the upstream manual install guide).",
+      "text": "The container cannot read the disks. Run the Scrutiny Collector tool (tools/pve/scrutiny-collector.sh) on the Proxmox host and give it http://<container-ip>:8080.",
       "type": "info"
     },
     {

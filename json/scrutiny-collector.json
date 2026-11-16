@@ -1,0 +1,48 @@
+{
+  "name": "Scrutiny Collector",
+  "slug": "scrutiny-collector",
+  "categories": [
+    1,
+    9
+  ],
+  "date_created": "2026-11-16",
+  "type": "pve",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://github.com/AnalogJ/scrutiny/blob/master/docs/INSTALL_MANUAL.md",
+  "website": "https://github.com/AnalogJ/scrutiny",
+  "repository": "https://github.com/AnalogJ/scrutiny",
+  "architectures": ["amd64", "arm64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/scrutiny.webp",
+  "description": "The Scrutiny collector reads the S.M.A.R.T. data of every physical disk on the host and sends it to a Scrutiny web UI, which keeps the history and warns when a drive starts to fail. It runs on the host because containers cannot see the disks.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "tools/pve/scrutiny-collector.sh",
+      "config_path": "/etc/scrutiny/collector.yaml",
+      "resources": {
+        "cpu": null,
+        "ram": null,
+        "hdd": null,
+        "os": null,
+        "version": null
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Run it in the Proxmox VE host shell as root, after installing the Scrutiny container. It asks for the Scrutiny URL, e.g. http://<container-ip>:8080, and collects every 15 minutes.",
+      "type": "info"
+    },
+    {
+      "text": "Run it again to update or remove the collector.",
+      "type": "info"
+    }
+  ]
+}
