@@ -7,8 +7,11 @@ each `ct/` script is built on ARM64, as information only. The result comes back
 as a **Proxmox script test** check run and as a single PR comment that is kept
 up to date.
 
-The workflow is [`pr-script-test.yml`](../../.github/workflows/pr-script-test.yml).
-The same file runs in DevScripts and ProxmoxVE.
+The workflow is [`pr-script-test.yml`](https://github.com/community-scripts/ci/blob/main/.github/workflows/pr-script-test.yml)
+in [community-scripts/ci](https://github.com/community-scripts/ci), shared by
+DevScripts and ProxmoxVE. Each repository only keeps a small
+[`pr-script-test.yml`](../../.github/workflows/pr-script-test.yml) with the
+triggers that calls it.
 
 ## Using it
 
@@ -82,7 +85,7 @@ without `pve` lists them under "Not built".
 
 Every `ct/` script is also built on GitHub's own arm64 runner
 (`ubuntu-24.04-arm`): a fresh Ubuntu VM per job, on which
-[`arm-runner-setup.sh`](../../.github/workflows/scripts/arm-runner-setup.sh)
+[`arm-runner-setup.sh`](https://github.com/community-scripts/ci/blob/main/scripts/arm-runner-setup.sh)
 sets up Incus (6.0 LTS from Zabbly, key pinned; Ubuntu's own 6.0.0 lacks the
 `csv,noheader` output the engine uses) and the screenshot browser. The build
 is the Incus one, unchanged, on native ARM: about as fast as on x86.
@@ -219,9 +222,11 @@ that the host really lacks that feature; it never makes the check pass.
   leave the review state alone; they are not the PR's fault.
 - **Screenshot:** where the script prints a URL, headless Chromium (as the
   unprivileged user `ci-shot` on the test host) takes a 1280×800 screenshot, on
-  a failed check too. It is stored on the orphan branch `ci-screenshots` as
-  `pr-<n>/<script>.png`, overwritten on every run, and shown in the comment.
-  Never merge that branch.
+  a failed check too. It is stored on the orphan branch `screenshots` of
+  [community-scripts/ci](https://github.com/community-scripts/ci) as
+  `<repository>/pr-<n>/<script>.png`, overwritten on every run, and shown in
+  the comment. That branch is squashed every week to the open PRs and issues,
+  so screenshots of closed PRs disappear.
 - **Install log:** collapsed in the comment for every script, the end of the
   build log as well for failures.
 
