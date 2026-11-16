@@ -16,6 +16,7 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_arm64="${var_arm64:-yes}"
 var_unprivileged="${var_unprivileged:-1}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2671}"
 
 export var_imap_host="${var_imap_host:-}"
 export var_smtp_host="${var_smtp_host:-}"
