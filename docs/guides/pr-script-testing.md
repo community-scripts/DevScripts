@@ -261,7 +261,7 @@ looking first. A long-lived host would let one PR plant something that fakes
 the results of the next, or copy the runner's credentials and pose as a
 runner elsewhere. So a controller on prox1, which never runs PR code, keeps
 each host single-use
-([`ci-vm-controller.sh`](../../.github/workflows/scripts/ci-vm-controller.sh),
+([`ci-vm-controller.sh`](https://github.com/community-scripts/ci/blob/main/scripts/host/ci-vm-controller.sh),
 one `ci-vm-controller@<vmid>` service per VM):
 
 1. It rolls the VM back to its `clean` snapshot and boots it (about 1.5
@@ -281,7 +281,7 @@ withdrawn.
 The controller's GitHub token is in `/etc/ci-controller/token` on prox1: a
 fine-grained token for DevScripts and ProxmoxVE with only Administration:
 read and write. Per-VM settings are in `/etc/ci-controller/<vmid>.conf`;
-[`ci-controller-setup.sh`](../../.github/workflows/scripts/ci-controller-setup.sh)
+[`ci-controller-setup.sh`](https://github.com/community-scripts/ci/blob/main/scripts/host/ci-controller-setup.sh)
 installs all of it. Logs: `journalctl -u ci-vm-controller@200`.
 
 Stopping a controller leaves its VM as it is; starting it resets the VM, which
@@ -323,7 +323,10 @@ secrets on them, and rebuild them rather than repair them.
 ### Rebuilding one
 
 Start from a fresh Proxmox VE 9 install (or, for Incus, a fresh Debian 13),
-then run `pve-ci-host-setup.sh` (or `incus-ci-host-setup.sh`):
+then run `pve-ci-host-setup.sh` (or `incus-ci-host-setup.sh`). These and the
+controller scripts are in
+[community-scripts/ci `scripts/host/`](https://github.com/community-scripts/ci/tree/main/scripts/host),
+shared with ProxmoxVE:
 
 ```bash
 bash pve-ci-host-setup.sh

@@ -1,12 +1,8 @@
 name: PR test command
 
-# Posts a ready-to-paste command for every script a pull request touches, so
-# trying it out is a copy and a paste rather than a URL assembly exercise.
-#
-# pull_request_target so it works for PRs from forks, which is most of them.
-# Nothing from the pull request is checked out or executed: the branch name and
-# the changed files come from the API, and the comment is built in JavaScript,
-# so no attacker-controlled string ever reaches a shell.
+# Posts a ready-to-run test command for the scripts a PR touches. The workflow
+# lives in community-scripts/ci (shared with DevScripts and ProxmoxVE); this
+# file only holds the trigger. Nothing from the PR is checked out or run.
 
 on:
   pull_request_target:
@@ -18,114 +14,11 @@ on:
       - "tools/**"
       - "turnkey/**"
 
-permissions:
-  pull-requests: write
+permissions: {}
 
 jobs:
-  comment:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/github-script@v9
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            const head = pr.head.repo;               // null if the fork is gone
-            if (!head) return;
-
-            if (!/^[A-Za-z0-9._\/-]+$/.test(pr.head.ref)) return;
-            const base = `https://raw.githubusercontent.com/${head.full_name}/${pr.head.ref}`;
-
-            const files = await github.paginate(github.rest.pulls.listFiles, {
-              owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number,
-            });
-            const paths = files.filter(f => f.status !== 'removed').map(f => f.filename);
-
-            // An install script has no entry point of its own, so it is tested
-            // through the ct/ script that pulls it in.
-            const entries = new Set();
-            for (const p of paths) {
-              let m;
-              if ((m = p.match(/^install\/(.*)-install\.sh$/))) entries.add(`ct/${m[1]}.sh`);
-              else if (/^(ct|vm|tools|turnkey)\/.*\.sh$/.test(p)) entries.add(p);
-            }
-            if (entries.size === 0) return;
-
-            // Where a tool runs is read from the script itself; it is never run.
-            const HOST = /(^|[\s;&|(`$])(pct|qm|pveam|pvesm|pvesh|pveversion)\s/m;
-            async function runsOn(path) {
-              if (path.startsWith('ct/')) return 'ct';
-              if (path.startsWith('vm/')) return 'pve';
-              const appliance = (path.split('/').pop().match(/(?:^|-)(pbs|pmg|pdm)(?=[0-9-]|\.sh$)/) || [])[1];
-              if (path.startsWith('tools/pve/')) return appliance || 'pve';
-              let text = '';
-              try {
-                const res = await github.rest.repos.getContent({
-                  owner: head.owner.login, repo: head.name, path, ref: pr.head.sha,
-                });
-                text = Buffer.from(res.data.content || '', 'base64').toString('utf8');
-              } catch (e) {}
-              if (HOST.test(text.replace(/^\s*#.*$/gm, '').replace(/command -v \S+/g, ''))) return 'pve';
-              if (appliance) return appliance;
-              return path.startsWith('tools/addon/') ? 'guest' : 'unknown';
-            }
-            const WHERE = {
-              ct: 'in the Proxmox VE shell or on an Incus host',
-              pve: 'in the Proxmox VE shell',
-              guest: 'inside the LXC or VM that should get it',
-              pbs: 'in the Proxmox Backup Server shell',
-              pmg: 'in the Proxmox Mail Gateway shell',
-              pdm: 'in the Proxmox Datacenter Manager shell',
-              unknown: 'wherever the script is meant to run',
-            };
-
-            const blocks = [];
-            for (const e of [...entries].sort()) {
-              const lines = [`\`${e}\`, run ${WHERE[await runsOn(e)]}:`, '```bash'];
-              if (e.startsWith('ct/')) lines.push(`COMMUNITY_SCRIPTS_URL=${base} \\`);
-              lines.push(`bash -c "$(curl -fsSL ${base}/${e})"`, '```');
-              blocks.push(lines.join('\n'));
-            }
-            const hasCt = [...entries].some(e => e.startsWith('ct/'));
-
-            const body = [
-              '<!-- pr-test-command -->',
-              `### Try ${entries.size === 1 ? 'this script' : 'these scripts'}`,
-              '',
-              blocks.join('\n\n'),
-              '',
-              ...(hasCt ? [
-                '`COMMUNITY_SCRIPTS_URL` is not optional for `ct/`. Fetching the `ct/` script from a',
-                'branch does not tell the engine where that branch is — with `bash -c "$(curl …)"`',
-                'there is no file on disk for the scripts root to be derived from, so it would fall',
-                'back to upstream `main` and look for the install script there.',
-                '',
-              ] : []),
-              '<details><summary>Against a core branch as well</summary>',
-              '',
-              'Add `COMMUNITY_SCRIPTS_CORE_URL=https://raw.githubusercontent.com/OWNER/core/BRANCH`',
-              'to test an engine change at the same time. The two resolve independently.',
-              '</details>',
-              ...(hasCt ? [
-                '',
-                '<details><summary>Useful flags while testing</summary>',
-                '',
-                '`dev_mode=net` logs every fetch with status and duration, so you can confirm the',
-                'branch is really being used. `dev_mode=keep` stops a failed build from deleting',
-                'the container along with the evidence.',
-                '</details>',
-              ] : []),
-            ].join('\n');
-
-            const comments = await github.paginate(github.rest.issues.listComments, {
-              owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number,
-            });
-            const mine = comments.find(c => c.body.includes('<!-- pr-test-command -->'));
-            if (mine) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner, repo: context.repo.repo, comment_id: mine.id, body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number, body,
-              });
-            }
+  pr-test-command:
+    permissions:
+      pull-requests: write
+      contents: read
+    uses: community-scripts/ci/.github/workflows/pr-test-command.yml@main
