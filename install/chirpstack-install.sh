@@ -45,6 +45,9 @@ msg_ok "Installed ChirpStack"
 
 msg_info "Configuring ChirpStack"
 sed -i "s|^\(\s*dsn = \).*|\1\"postgres://chirpstack:${PG_DB_PASS}@localhost/chirpstack?sslmode=disable\"|" /etc/chirpstack/chirpstack.toml
+if ! grep -Eq "^[[:space:]]*\"${var_region,,}\"[[:space:]]*,?[[:space:]]*$" /etc/chirpstack/chirpstack.toml; then
+  sed -i "/^[[:space:]]*enabled_regions = \\[$/a\\    \"${var_region,,}\"," /etc/chirpstack/chirpstack.toml
+fi
 sed -i -E "s#^(\s*(event|command)_topic_template\s*=\s*\")#\1${var_region,,}/#" /etc/chirpstack-gateway-bridge/chirpstack-gateway-bridge.toml
 mkdir -p /etc/systemd/system/chirpstack.service.d
 cat <<EOF >/etc/systemd/system/chirpstack.service.d/override.conf

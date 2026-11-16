@@ -47,7 +47,7 @@
       "type": "warning"
     },
     {
-      "text": "The install asks for the gateway region ID (e.g. eu868, us915_0); unattended installs must set var_region. It must be listed in enabled_regions in /etc/chirpstack/chirpstack.toml.",
+      "text": "The install asks for the gateway region ID (e.g. eu868, us915_0); unattended installs must set var_region. It must be listed in here: https://github.com/chirpstack/chirpstack/tree/master/chirpstack/configuration.",
       "type": "info"
     }
   ]
