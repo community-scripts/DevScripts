@@ -121,7 +121,7 @@ $STD npm ci --legacy-peer-deps
 rm -rf node_modules/@rybbit/shared
 mkdir -p node_modules/@rybbit/shared
 cp -r /opt/rybbit/shared/package.json /opt/rybbit/shared/dist node_modules/@rybbit/shared/
-NEXT_TELEMETRY_DISABLED=1 NEXT_PUBLIC_BACKEND_URL="${var_base_url%/}" NEXT_PUBLIC_DISABLE_SIGNUP=false $STD npm run build
+NEXT_TELEMETRY_DISABLED=1 NEXT_PUBLIC_BACKEND_URL="" NEXT_PUBLIC_DISABLE_SIGNUP=false $STD npm run build
 cp -r public .next/standalone/
 cp -r .next/static .next/standalone/.next/
 rm -rf node_modules .next/cache ~/.npm

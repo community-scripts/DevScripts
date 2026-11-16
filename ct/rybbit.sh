@@ -57,7 +57,7 @@ function update_script() {
     rm -rf node_modules/@rybbit/shared
     mkdir -p node_modules/@rybbit/shared
     cp -r /opt/rybbit/shared/package.json /opt/rybbit/shared/dist node_modules/@rybbit/shared/
-    NEXT_TELEMETRY_DISABLED=1 NEXT_PUBLIC_BACKEND_URL="$(sed -n 's/^BASE_URL=//p' /opt/rybbit_data/.env)" NEXT_PUBLIC_DISABLE_SIGNUP="$(sed -n 's/^DISABLE_SIGNUP=//p' /opt/rybbit_data/.env)" $STD npm run build
+    NEXT_TELEMETRY_DISABLED=1 NEXT_PUBLIC_BACKEND_URL="" NEXT_PUBLIC_DISABLE_SIGNUP="$(sed -n 's/^DISABLE_SIGNUP=//p' /opt/rybbit_data/.env)" $STD npm run build
     cp -r public .next/standalone/
     cp -r .next/static .next/standalone/.next/
     rm -rf node_modules .next/cache ~/.npm

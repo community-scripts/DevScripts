@@ -44,7 +44,7 @@
       "type": "info"
     },
     {
-      "text": "Visitors' browsers only load the tracking script from a trusted HTTPS address. Put Rybbit behind a reverse proxy with a real certificate and pass that URL as var_base_url at install; it is compiled into the web client.",
+      "text": "Visitors' browsers only load the tracking script from a trusted HTTPS address. Put Rybbit behind a reverse proxy with a real certificate, set that URL as BASE_URL in /opt/rybbit_data/.env and restart rybbit-server.",
       "type": "warning"
     },
     {
