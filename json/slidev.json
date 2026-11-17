@@ -1,0 +1,51 @@
+{
+  "name": "Slidev",
+  "slug": "slidev",
+  "categories": [
+    12
+  ],
+  "date_created": "2026-11-17",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3030,
+  "documentation": "https://sli.dev/guide/",
+  "website": "https://sli.dev/",
+  "repository": "https://github.com/slidevjs/slidev",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/slidev.webp",
+  "description": "Slidev is a slide deck maker and presenter for developers. Slides are written in Markdown with Vue components, code highlighting, LaTeX and diagrams, and served with live reload, presenter mode, remote control and a built-in MCP server that lets AI agents edit the deck.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/slidev.sh",
+      "config_path": "/opt/slidev/slides.md",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 6,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Slidev has no authentication: anyone who can reach port 3030 can present, edit the slides and use the MCP endpoint. Keep it on a trusted network.",
+      "type": "warning"
+    },
+    {
+      "text": "The deck lives in /opt/slidev/slides.md. AI agents can edit it over MCP at http://<IP>:3030/__mcp.",
+      "type": "info"
+    },
+    {
+      "text": "To reach it through a hostname or reverse proxy, add that host to server.allowedHosts in /opt/slidev/vite.config.ts.",
+      "type": "info"
+    }
+  ]
+}
