@@ -16,7 +16,8 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt install -y \
   nginx \
-  redis-server
+  redis-server \
+  make
 msg_ok "Installed Dependencies"
 
 PG_VERSION="17" setup_postgresql
