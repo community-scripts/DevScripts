@@ -35,7 +35,7 @@ if [[ "$var_ntp_stratum" == "1" ]]; then
   fi
   var_gps_device="${var_gps_device:-/dev/ttyACM0}"
   if [[ ! -e "$var_gps_device" ]]; then
-    msg_warn "${var_gps_device} is not present yet; Chrony serves as stratum 2 from the pool until the GPS receiver is attached"
+    msg_warn "${var_gps_device} is not present yet; Chrony serves as stratum 2 from the pool, and gpsd starts once the receiver is attached and the container restarted"
   fi
 
   msg_info "Installing gpsd"
@@ -54,6 +54,12 @@ DEVICES="${var_gps_device}"
 GPSD_OPTIONS="-n"
 USBAUTO="false"
 EOF
+  mkdir -p /etc/systemd/system/gpsd.service.d
+  cat <<EOF >/etc/systemd/system/gpsd.service.d/device.conf
+[Unit]
+ConditionPathExists=${var_gps_device}
+EOF
+  systemctl daemon-reload
   systemctl enable -q gpsd
   systemctl restart gpsd
   msg_ok "Configured Chrony as stratum 1"

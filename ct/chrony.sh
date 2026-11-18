@@ -12,7 +12,7 @@ APP="Chrony"
 var_tags="${var_tags:-ntp;time;gps}"
 var_cpu="${var_cpu:-1}"
 var_ram="${var_ram:-512}"
-var_disk="${var_disk:-2}"
+var_disk="${var_disk:-4}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 if [[ -z "${var_ntp_stratum:-}" ]] && command -v pveversion >/dev/null 2>&1; then
@@ -46,8 +46,13 @@ function update_script() {
     exit
   fi
 
-  msg_info "Updating Chrony"
   apt_update_safe
+  if ! apt list --upgradable 2>/dev/null | grep -qE '^(chrony|gpsd|gpsd-clients)/'; then
+    msg_ok "Chrony and gpsd are already up to date"
+    exit
+  fi
+
+  msg_info "Updating Chrony"
   upgrade_packages_with_retry chrony
   systemctl restart chrony
   msg_ok "Updated Chrony"
