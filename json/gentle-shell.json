@@ -22,7 +22,7 @@
       "script": "ct/gentle-shell.sh",
       "resources": {
         "cpu": 2,
-        "ram": 2048,
+        "ram": 4096,
         "hdd": 10,
         "os": "Debian",
         "version": "13"
