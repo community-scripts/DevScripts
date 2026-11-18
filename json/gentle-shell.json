@@ -35,7 +35,7 @@
   },
   "notes": [
     {
-      "text": "gentle-shell is a terminal application: connect via SSH (root) and run 'gentle-shell'; its setup completes on first launch. Projects live in /root/projects.",
+      "text": "gentle-shell is a terminal application: connect via SSH (root) and run 'gentle-shell'; its first-launch setup asks for your provider API keys and keeps them inside the container. Projects live in /root/projects.",
       "type": "info"
     },
     {
