@@ -24,7 +24,6 @@ var_projects_path="${var_projects_path:-}"
 var_projects_storage="${var_projects_storage:-}"
 var_projects_size="${var_projects_size:-}"
 var_gh_token="${var_gh_token:-}"
-_proj_new_dir=""
 
 header_info "$APP"
 variables
@@ -91,7 +90,6 @@ if [[ "${var_projects_mode}" == "select" ]]; then
             exit 1
           fi
           var_projects_path="${var_projects_path%/}/${_proj_sub}"
-          _proj_new_dir=true
         fi
       else
         var_projects_mode="external"
@@ -124,7 +122,7 @@ if [[ "${var_projects_mode}" == "bind" ]]; then
     msg_error "Directory paths containing commas are not supported by Proxmox mountpoints!"
     exit 1
   fi
-  if [[ -n "${_proj_new_dir:-}" ]]; then
+  if [[ ! -d "${var_projects_path}" && -d "$(dirname "${var_projects_path}")" ]]; then
     mkdir -p "${var_projects_path}"
   fi
   if [[ ! -d "${var_projects_path}" ]]; then
