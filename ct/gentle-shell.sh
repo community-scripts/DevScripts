@@ -52,7 +52,7 @@ if [[ "${var_projects_mode}" == "select" ]]; then
     mapfile -t _proj_mounts < <(
       findmnt -rno TARGET,FSTYPE 2>/dev/null |
         awk '$2 == "ext4" || $2 == "xfs" || $2 == "btrfs" {print $1}' |
-        grep -Ev '^/($|boot|dev|etc|proc|root|run|sys|tmp|usr|var)'
+        grep -Ev '^/($|(boot|dev|etc|proc|root|run|sys|tmp|usr|var)(/|$))'
     )
     mapfile -t _proj_storages < <(pvesm status -content rootdir 2>/dev/null | awk 'NR > 1 {print $1}')
     _proj_options=()
@@ -125,7 +125,7 @@ if [[ "${var_projects_mode}" == "bind" ]]; then
     msg_error "Directory paths containing commas are not supported by Proxmox mountpoints!"
     exit 1
   fi
-  if [[ ! -d "${var_projects_path}" && -d "$(dirname "${var_projects_path}")" ]]; then
+  if [[ ! -d "${var_projects_path}" ]]; then
     mkdir -p "${var_projects_path}"
   fi
   if [[ ! -d "${var_projects_path}" ]]; then
