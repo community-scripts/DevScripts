@@ -1,0 +1,86 @@
+{
+  "name": "gentle-shell",
+  "slug": "gentle-shell",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-18",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64", "arm64"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://github.com/Gentleman-Programming/gentle-shell",
+  "website": "https://gentlemanprogramming.com/",
+  "repository": "https://github.com/Gentleman-Programming/gentle-shell",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/gentle-shell.webp",
+  "description": "gentle-shell is a coding-agent workspace and TUI harness built for Pi: agent orchestration, ODD workflow tracking, native review, diff views and persistent memory, driven from the terminal. This script creates an LXC development server with gentle-shell, git and the GitHub CLI preinstalled, ready to be used over SSH.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/gentle-shell.sh",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "gentle-shell is a terminal application: connect via SSH (root) and run 'gentle-shell'; its setup completes on first launch. Projects live in /root/projects.",
+      "type": "info"
+    },
+    {
+      "text": "To use it as a Herdr dev server, add this container to ~/.ssh/config on your desktop machine (Host <hostname>, User root) and select it with Add Machine in Herdr.",
+      "type": "info"
+    },
+    {
+      "text": "Without a GitHub token, run 'gh auth login' inside the container to authenticate the GitHub CLI.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_hostname",
+      "label": "Machine Name",
+      "type": "text",
+      "default": "gentle-shell",
+      "help": "Container hostname; Herdr shows it as the remote machine name"
+    },
+    {
+      "name": "var_projects_mode",
+      "label": "Projects Storage",
+      "type": "text",
+      "default": "internal",
+      "help": "internal = /root/projects on the LXC disk; external = a new mountpoint on a Proxmox storage"
+    },
+    {
+      "name": "var_projects_storage",
+      "label": "Proxmox Storage (external mode)",
+      "type": "text",
+      "help": "Proxmox storage for the projects volume, e.g. local-lvm (external mode only)"
+    },
+    {
+      "name": "var_projects_size",
+      "label": "Projects Volume Size (GB)",
+      "type": "number",
+      "default": 10,
+      "help": "Size in GB of the external projects volume (external mode only)"
+    },
+    {
+      "name": "var_gh_token",
+      "label": "GitHub Token",
+      "type": "password",
+      "secret": true,
+      "help": "Optional GitHub PAT; when empty, authenticate later with 'gh auth login' inside the container"
+    }
+  ]
+}
