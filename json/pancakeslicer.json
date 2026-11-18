@@ -1,0 +1,46 @@
+{
+  "name": "PancakeSlicer",
+  "slug": "pancakeslicer",
+  "categories": [
+    0
+  ],
+  "date_created": "2026-11-18",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 6868,
+  "documentation": "https://github.com/ZimengXiong/PancakeSlicer/blob/main/README.md",
+  "website": "https://pancake.cooking/",
+  "repository": "https://github.com/ZimengXiong/PancakeSlicer",
+  "logo": "https://raw.githubusercontent.com/ZimengXiong/PancakeSlicer/main/web/public/logo.svg",
+  "description": "PancakeSlicer is a self-hostable, web-based slicer for non-planar 3D printing, built on the OrcaSlicer engine. One central instance gives a whole household or makerspace a single shared set of printers, filaments and profiles reachable from any browser, with dynamic profiles that adapt to nozzle size and layer height instead of a profile per combination.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/pancakeslicer.sh",
+      "resources": {
+        "cpu": 4,
+        "ram": 8192,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Non-planar slicing is experimental and can damage a printer. Review the G-code preview before every print and supervise non-planar jobs.",
+      "type": "warning"
+    },
+    {
+      "text": "The service has no authentication by default and printer connections default to LAN. Anyone who can reach http://<IP>:6868 can add printers and start prints. Before exposing this somewhere where that might be a problem, either: uncomment and give a value to ORCA_WEB_BEARER_TOKEN in /opt/pancakeslicer_data/pancakeslicer.env for the built-in auth then restart the service, or put it behind an authed reverse proxy.",
+      "type": "warning"
+    }
+  ]
+}
