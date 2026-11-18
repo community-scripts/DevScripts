@@ -19,9 +19,9 @@ var_unprivileged="${var_unprivileged:-1}"
 var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/NEW}"
 
 var_hostname="${var_hostname:-}"
-var_projects_mode="${var_projects_mode:-internal}"
+var_projects_mode="${var_projects_mode:-}"
 var_projects_storage="${var_projects_storage:-}"
-var_projects_size="${var_projects_size:-10}"
+var_projects_size="${var_projects_size:-}"
 var_gh_token="${var_gh_token:-}"
 
 header_info "$APP"
@@ -47,8 +47,8 @@ if [[ "${var_projects_mode}" == "external" ]]; then
     read -rp "  Proxmox storage for the projects mountpoint (default: local-lvm): " -t 60 var_projects_storage || var_projects_storage=""
   fi
   var_projects_storage="${var_projects_storage:-local-lvm}"
-  if ! pvesm status 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "${var_projects_storage}"; then
-    msg_error "Storage '${var_projects_storage}' does not exist on this Proxmox host!"
+  if ! pvesm status -content rootdir 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "${var_projects_storage}"; then
+    msg_error "Storage '${var_projects_storage}' does not exist or cannot hold container mountpoints!"
     exit 1
   fi
   if [[ -z "${var_projects_size}" ]]; then
@@ -66,13 +66,13 @@ function update_script() {
 
   if ! command -v gentle-shell &>/dev/null; then
     msg_error "No ${APP} Installation Found!"
-    exit
+    exit 1
   fi
 
   RELEASE=$(npm view gentle-pi version 2>/dev/null)
   if [[ -z "${RELEASE}" ]]; then
     msg_error "Unable to reach npm for the latest gentle-pi version."
-    exit
+    exit 1
   fi
   msg_info "Updating ${APP} (gentle-pi@${RELEASE})"
   $STD npm install -g "gentle-pi@${RELEASE}"
@@ -86,9 +86,13 @@ build_container
 if [[ "${var_projects_mode}" == "external" ]]; then
   msg_info "Attaching Projects Volume (${var_projects_storage}:${var_projects_size}GB)"
   pct set "${CTID}" -mp0 "${var_projects_storage}:${var_projects_size},mp=/mnt/projects"
-  if ! pct exec "${CTID}" -- test -d /mnt/projects 2>/dev/null; then
+  if ! pct exec "${CTID}" -- mountpoint -q /mnt/projects 2>/dev/null; then
     pct reboot "${CTID}"
     pct wait "${CTID}" running
+  fi
+  if ! pct exec "${CTID}" -- mountpoint -q /mnt/projects 2>/dev/null; then
+    msg_error "Projects mountpoint on '${var_projects_storage}' did not activate; check the container config."
+    exit 1
   fi
   pct exec "${CTID}" -- ln -sfn /mnt/projects /root/projects
   msg_ok "Attached Projects Volume"
