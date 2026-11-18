@@ -128,6 +128,8 @@ function advanced_settings() {
 
 vm_start_script "Use Default Settings?\n\nDefaults:\n• 4 CPU Cores\n• 4 GB RAM\n• 20 GB Disk" 13 58
 CLOUDINIT_REQUIRED=1
+# Android does not start for root, so unattended runs get the image's usual user.
+[[ "${VM_UNATTENDED:-0}" == "1" ]] && export CLOUDINIT_USER="${CLOUDINIT_USER:-$var_os}"
 if [[ "$OS_CHOICE" == "debian13" ]]; then
   vm_prompt_cloud_init "debian"
 else
@@ -216,8 +218,12 @@ exec weston-terminal
 UI
 WAYDROID_STATUS_TMP="$TEMP_DIR/waydroid-status.sh"
 cat >"$WAYDROID_STATUS_TMP" <<'STATUS'
-[ -f /var/lib/waydroid/lxc/waydroid/config ] ||
+if [ ! -f /var/lib/waydroid/lxc/waydroid/config ]; then
   echo "Waydroid is still being set up: tail -f /var/log/waydroid-install.log"
+elif [ "$(id -u)" = 0 ]; then
+  # PipeWire's user units refuse root, and Waydroid's container mounts its audio socket.
+  echo "Android does not start for root; log in as a normal user to run weston (adduser creates one)."
+fi
 STATUS
 
 vm_customize "Waydroid setup files" "$WORK_FILE" \
@@ -237,18 +243,28 @@ vm_customize "Waydroid setup files" "$WORK_FILE" \
 msg_info "Expanding the root filesystem to ${DISK_SIZE}"
 vm_expand_image "$WORK_FILE" "$DISK_SIZE" || true
 
-msg_info "Installing Waydroid in the image"
-if vm_customize "Waydroid" "$WORK_FILE" \
-  --install "curl,ca-certificates,qemu-guest-agent,weston" \
-  --run-command "/usr/local/sbin/waydroid-binder" \
-  --run-command "bash -o pipefail -c 'curl -fsSL https://repo.waydro.id | bash -s ${OS_CODENAME}'" \
-  --run-command "apt-get install -y waydroid" \
-  --run-command "systemctl enable waydroid-container"; then
-  WAYDROID_PREINSTALLED="yes"
-  msg_ok "Installed Waydroid in the image"
-else
-  msg_warn "Installing Waydroid in the image failed; the VM installs it on first boot."
+# Recommends would add lxc templates, debootstrap, qemu-utils and VA drivers
+# (a third of the download); the GL driver and the audio session manager stay.
+WESTON_PKGS="curl ca-certificates qemu-guest-agent weston libgl1-mesa-dri"
+WAYDROID_PKGS="waydroid wireplumber"
+APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends"
+
+msg_info "Installing Weston in the image"
+if vm_customize "Weston" "$WORK_FILE" \
+  --run-command "apt-get update" \
+  --run-command "${APT_INSTALL} ${WESTON_PKGS}"; then
+  msg_ok "Installed Weston in the image"
+  msg_info "Installing Waydroid in the image"
+  if vm_customize "Waydroid" "$WORK_FILE" \
+    --run-command "/usr/local/sbin/waydroid-binder" \
+    --run-command "bash -o pipefail -c 'curl -fsSL https://repo.waydro.id | bash -s ${OS_CODENAME}'" \
+    --run-command "${APT_INSTALL} ${WAYDROID_PKGS}" \
+    --run-command "systemctl enable waydroid-container"; then
+    WAYDROID_PREINSTALLED="yes"
+    msg_ok "Installed Waydroid in the image"
+  fi
 fi
+[[ "$WAYDROID_PREINSTALLED" == "yes" ]] || msg_warn "Installing in the image failed; the VM installs it on first boot."
 
 vm_prepare_cloud_image "$WORK_FILE" "$HN" || true
 
@@ -266,13 +282,14 @@ dpkg --configure -a
 apt-get install -f -y
 if ! command -v waydroid >/dev/null 2>&1; then
   apt-get update
-  apt-get install -y curl ca-certificates qemu-guest-agent weston
+  ${APT_INSTALL} ${WESTON_PKGS}
   curl -fsSL https://repo.waydro.id | bash -s ${OS_CODENAME}
-  apt-get install -y waydroid
+  ${APT_INSTALL} ${WAYDROID_PKGS}
 fi
 /usr/local/sbin/waydroid-binder
 modprobe binder_linux
-waydroid init
+# Unbuffered, the download progress reaches the log as it happens; the host shows it.
+PYTHONUNBUFFERED=1 waydroid init
 systemctl restart waydroid-container
 echo "[\$(date)] Waydroid is ready"
 FIRSTBOOT
@@ -313,28 +330,53 @@ fi
 vm_start_vm "Waydroid VM"
 vm_wait_for_ip 120 || true
 
+# Waits as long as the guest's logs keep growing: the Android download runs at
+# whatever speed the SourceForge mirror gives, seven minutes or forty.
 WAYDROID_STATE="pending"
 if [[ "$START_VM" == "yes" ]]; then
-  if [[ "$WAYDROID_PREINSTALLED" == "yes" ]]; then
-    msg_info "Downloading Android in the VM (about 850 MB)"
-  else
-    msg_info "Installing Waydroid and downloading Android in the VM (about 850 MB)"
-  fi
-  for ((i = 0; i < 240; i++)); do
-    if vm_guest_exec "$VMID" 10 -- test -f "$WAYDROID_FIRSTBOOT_MARKER" >/dev/null; then
-      WAYDROID_STATE="ready"
+  msg_info "Setting up Waydroid in the VM"
+  WAYDROID_PROBE="if [ -f '${WAYDROID_FIRSTBOOT_MARKER}' ]; then echo ready
+elif systemctl is-failed --quiet waydroid-firstboot.service; then echo failed
+else
+  [ \"\$(systemctl is-active waydroid-firstboot.service)\" = activating ] && echo setup || echo cloud-init
+  stat -c %s /var/log/cloud-init-output.log /var/log/waydroid-install.log 2>/dev/null | tr '\n' ' '; echo
+  tail -c 300 /var/log/waydroid-install.log 2>/dev/null | tr '\r' '\n' | grep -o '[0-9.]* MB/[0-9.]* MB' | tail -n 1
+fi"
+  WAYDROID_LAST_SIZES="" WAYDROID_SHOWN="" WAYDROID_IDLE=0
+  while ((WAYDROID_IDLE < 600)); do
+    WAYDROID_STATUS="$(vm_guest_exec "$VMID" 15 -- sh -c "$WAYDROID_PROBE" 2>/dev/null || true)"
+    case "${WAYDROID_STATUS%%$'\n'*}" in
+    ready | failed)
+      WAYDROID_STATE="${WAYDROID_STATUS%%$'\n'*}"
       break
-    fi
-    if vm_guest_exec "$VMID" 10 -- systemctl is-failed --quiet waydroid-firstboot.service >/dev/null; then
-      WAYDROID_STATE="failed"
-      break
-    fi
+      ;;
+    setup | cloud-init)
+      WAYDROID_SIZES="$(sed -n 2p <<<"$WAYDROID_STATUS")"
+      WAYDROID_BYTES="$(sed -n 3p <<<"$WAYDROID_STATUS")"
+      if [[ -n "$WAYDROID_BYTES" ]]; then
+        WAYDROID_TEXT="Downloading Android in the VM (${WAYDROID_BYTES%%/*} of ${WAYDROID_BYTES##*/})"
+      elif [[ "$WAYDROID_STATUS" == cloud-init* ]]; then
+        WAYDROID_TEXT="Waiting for Cloud-Init's package upgrade in the VM"
+      else
+        WAYDROID_TEXT="Setting up Waydroid in the VM"
+      fi
+      if [[ "$WAYDROID_TEXT" != "$WAYDROID_SHOWN" ]]; then
+        start_spinner "$WAYDROID_TEXT"
+        WAYDROID_SHOWN="$WAYDROID_TEXT"
+      fi
+      if [[ "$WAYDROID_SIZES" != "$WAYDROID_LAST_SIZES" ]]; then
+        WAYDROID_LAST_SIZES="$WAYDROID_SIZES"
+        WAYDROID_IDLE=0
+      fi
+      ;;
+    esac
     sleep 5
+    WAYDROID_IDLE=$((WAYDROID_IDLE + 5))
   done
   case "$WAYDROID_STATE" in
   ready) msg_ok "Waydroid is ready" ;;
   failed) msg_warn "Waydroid setup failed in the VM; it retries on the next boot. Log: /var/log/waydroid-install.log" ;;
-  *) msg_warn "Waydroid is still being set up in the VM. Log: /var/log/waydroid-install.log" ;;
+  *) msg_warn "No progress in the VM for 10 minutes; the setup goes on there. Log: /var/log/waydroid-install.log" ;;
   esac
 fi
 
@@ -355,8 +397,14 @@ case "$WAYDROID_STATE" in
 failed) WAYDROID_STEPS+=("See why in /var/log/waydroid-install.log; the setup runs again on the next boot of the VM.") ;;
 pending) WAYDROID_STEPS+=("Wait for the setup to finish: tail -f /var/log/waydroid-install.log") ;;
 esac
+if [[ "${CLOUDINIT_USER:-root}" == "root" ]]; then
+  WAYDROID_STEPS+=("Android does not start for root. Log in on the VM, create a user (adduser NAME) and use that one below.")
+  WAYDROID_LOGIN="the new user"
+else
+  WAYDROID_LOGIN="${CLOUDINIT_USER}"
+fi
 WAYDROID_STEPS+=(
-  "Open the VM's Console (noVNC) in Proxmox, log in and type weston. Android opens full screen; closing it returns to the console."
+  "Open the VM's Console (noVNC) in Proxmox, log in as ${WAYDROID_LOGIN} and type weston. Android opens full screen; closing it returns to the console."
   "Android only shows on noVNC; the serial console (xterm.js) has no display."
 )
 vm_next_steps "${WAYDROID_STEPS[@]}"
