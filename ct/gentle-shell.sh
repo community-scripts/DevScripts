@@ -85,10 +85,13 @@ if [[ "${var_projects_mode}" == "select" ]]; then
         _proj_sub="${_proj_sub#/}"
         _proj_sub="${_proj_sub%/}"
         if [[ -n "${_proj_sub}" ]]; then
-          if [[ "${_proj_sub}" == *..* || "${_proj_sub}" == *,* ]]; then
-            msg_error "Invalid subdirectory name '${_proj_sub}'!"
-            exit 1
-          fi
+          IFS='/' read -ra _proj_parts <<<"${_proj_sub}"
+          for _proj_part in "${_proj_parts[@]}"; do
+            if [[ -z "${_proj_part}" || "${_proj_part}" == "." || "${_proj_part}" == ".." ]]; then
+              msg_error "Invalid subdirectory name '${_proj_sub}'!"
+              exit 1
+            fi
+          done
           var_projects_path="${var_projects_path%/}/${_proj_sub}"
         fi
       else
@@ -113,7 +116,7 @@ fi
 
 if [[ "${var_projects_mode}" == "bind" ]]; then
   case "${var_projects_path}" in
-    / | /boot* | /dev* | /etc* | /proc* | /root* | /run* | /sys* | /tmp* | /usr* | /var*)
+    / | /boot | /boot/* | /dev | /dev/* | /etc | /etc/* | /proc | /proc/* | /root | /root/* | /run | /run/* | /sys | /sys/* | /tmp | /tmp/* | /usr | /usr/* | /var | /var/*)
       msg_error "'${var_projects_path}' is a host system path and cannot hold projects!"
       exit 1
       ;;
