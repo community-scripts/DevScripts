@@ -1,0 +1,179 @@
+name: Remove script on /remove
+
+# A maintainer comments `/remove` on a script issue: every file belonging to
+# that script is deleted from main and the issue is closed as not planned.
+# The script is resolved from the issue form the same way move-to-main-repo.yaml
+# and delete_new_script.yaml do it ("Name of the Script" + "Script Type").
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: remove-script-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    if: >-
+      github.repository == 'community-scripts/DevScripts' &&
+      !github.event.issue.pull_request &&
+      github.event.issue.state == 'open' &&
+      startsWith(github.event.comment.body, '/remove')
+    steps:
+      - name: Check commenter permission
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.event.comment.user.login }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          first_line=$(printf '%s\n' "$COMMENT_BODY" | head -n1 | tr -d '\r' | sed 's/[[:space:]]*$//')
+          if [[ "$first_line" != "/remove" ]]; then
+            echo "Comment is not exactly /remove, ignoring."
+            exit 1
+          fi
+          perm=$(gh api "repos/$REPO/collaborators/$ACTOR/permission" --jq '.permission' 2>/dev/null || echo none)
+          case "$perm" in
+            admin|maintain|write) echo "$ACTOR has $perm permission." ;;
+            *) echo "::error::$ACTOR ($perm) may not use /remove."; exit 1 ;;
+          esac
+
+      - name: Acknowledge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: gh api -X POST "repos/$REPO/issues/comments/$COMMENT_ID/reactions" -f content=eyes >/dev/null
+
+      # main is protected by a ruleset that GITHUB_TOKEN cannot bypass; the
+      # mergebot app can, so the checkout (and with it the push) uses its token.
+      - name: Generate a token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.GHAPP_MERGEBOT_ID }}
+          private-key: ${{ secrets.GHAPP_MERGEBOT_PRIVATE_KEY }}
+          owner: community-scripts
+          repositories: DevScripts
+
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Resolve script files
+        id: resolve
+        env:
+          # Through the environment, never interpolated into the script body:
+          # issue text is attacker-controlled.
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          field() {
+            printf '%s\n' "$ISSUE_BODY" | tr -d '\r' \
+              | sed -n "/^###[[:space:]]*$1/,/^###/p" \
+              | sed '1d;/^###/d;/^[[:space:]]*$/d;/^_No response_$/d' | head -n1
+          }
+
+          name_raw=$(field "Name of the Script")
+          [[ -z "$name_raw" ]] && name_raw="$ISSUE_TITLE"
+          slug=$(echo "$name_raw" | tr '[:upper:]' '[:lower:]' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/[[:space:]]\+/-/g')
+          if [[ ! "$slug" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
+            echo "::error::'Name of the Script' does not give a valid slug: '$name_raw'"
+            exit 1
+          fi
+
+          type_raw=$(field "Script Type")
+          case "$type_raw" in
+            "CT (LXC Container)"*) type=ct ;;
+            "VM (Virtual Machine)"*) type=vm ;;
+            "Addon (tools/addon)"*) type=addon ;;
+            "PVE Tool (tools/pve)"*) type=pve ;;
+            "Other"*) type=other ;;
+            *) [[ "$slug" == *-vm ]] && type=vm || type=ct ;;
+          esac
+
+          files=()
+          case "$type" in
+            ct)
+              files+=("ct/${slug}.sh" "install/${slug}-install.sh" "ct/headers/${slug}"
+                      "ct/deferred/${slug}.sh" "install/deferred/${slug}-install.sh")
+              # Shape A Alpine scripts may share the json of the plain app name;
+              # only drop it when no Debian script of that name is left behind.
+              if [[ "$slug" == alpine-* && ! -f "ct/${slug#alpine-}.sh" ]]; then
+                files+=("json/${slug#alpine-}.json")
+              fi
+              ;;
+            vm) files+=("vm/${slug}.sh") ;;
+            addon) files+=("tools/addon/${slug}.sh") ;;
+            pve) files+=("tools/pve/${slug}.sh") ;;
+            other)
+              path=$(field "Script path" | sed 's/^[[:space:]`]*//;s/[[:space:]`]*$//')
+              if [[ -z "$path" || "$path" == /* || "$path" == *..* || ! "$path" =~ ^(ct|install|vm|tools|turnkey)/[A-Za-z0-9._/-]+\.sh$ ]]; then
+                echo "::error::Script type is Other but 'Script path' is missing or invalid: '$path'"
+                exit 1
+              fi
+              files+=("$path")
+              ;;
+          esac
+          files+=("json/${slug}.json")
+
+          existing=()
+          for f in "${files[@]}"; do
+            [[ -e "$f" ]] && existing+=("$f")
+          done
+
+          echo "Slug: $slug  Type: $type"
+          printf 'Found: %s\n' "${existing[@]}"
+          {
+            echo "slug=$slug"
+            echo "type=$type"
+            echo "files=${existing[*]}"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Delete files and push
+        id: push
+        if: steps.resolve.outputs.files != ''
+        env:
+          SLUG: ${{ steps.resolve.outputs.slug }}
+          FILES: ${{ steps.resolve.outputs.files }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.event.comment.user.login }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          read -ra files <<<"$FILES"
+          git rm -r --quiet -- "${files[@]}"
+          git commit -m "Remove ${SLUG} (#${ISSUE_NUMBER})" -m "Requested by @${ACTOR} via /remove."
+          for i in 1 2 3 4; do
+            git push origin HEAD:main && break
+            [[ $i == 4 ]] && exit 1
+            sleep $((i * 5))
+            git pull --rebase origin main
+          done
+          echo "sha=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
+
+      - name: Comment and close issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          SLUG: ${{ steps.resolve.outputs.slug }}
+          FILES: ${{ steps.resolve.outputs.files }}
+          SHA: ${{ steps.push.outputs.sha }}
+        run: |
+          if [[ -z "$FILES" ]]; then
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPO" \
+              --body "No files found for \`${SLUG}\` on main, so nothing was removed and the issue stays open. Check the script name in the issue body."
+            exit 0
+          fi
+          list=$(printf -- '- `%s`\n' $FILES)
+          gh issue comment "$ISSUE_NUMBER" --repo "$REPO" \
+            --body "$(printf 'Removed `%s` in %s:\n\n%s' "$SLUG" "$SHA" "$list")"
+          gh issue close "$ISSUE_NUMBER" --repo "$REPO" --reason "not planned"
