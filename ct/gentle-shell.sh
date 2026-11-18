@@ -24,6 +24,7 @@ var_projects_path="${var_projects_path:-}"
 var_projects_storage="${var_projects_storage:-}"
 var_projects_size="${var_projects_size:-}"
 var_gh_token="${var_gh_token:-}"
+_proj_new_dir=""
 
 header_info "$APP"
 variables
@@ -52,7 +53,7 @@ if [[ "${var_projects_mode}" == "select" ]]; then
     mapfile -t _proj_mounts < <(
       findmnt -rno TARGET,FSTYPE 2>/dev/null |
         awk '$2 == "ext4" || $2 == "xfs" || $2 == "btrfs" {print $1}' |
-        grep -Ev '^/(boot|dev|etc|proc|root|run|sys|tmp|usr|var)(/|$)'
+        grep -Ev '^/($|boot|dev|etc|proc|root|run|sys|tmp|usr|var)'
     )
     mapfile -t _proj_storages < <(pvesm status -content rootdir 2>/dev/null | awk 'NR > 1 {print $1}')
     _proj_options=()
@@ -78,14 +79,22 @@ if [[ "${var_projects_mode}" == "select" ]]; then
         exit 1
       fi
       _proj_entry="${_proj_options[$((_proj_choice - 1))]}"
-      var_projects_mode="${_proj_entry%%:*}"
-      if [[ "${var_projects_mode}" == "bind" ]]; then
+      if [[ "${_proj_entry}" == bind:* ]]; then
+        var_projects_mode="bind"
         var_projects_path="${_proj_entry#bind:}"
         read -rp "  Subdirectory inside ${var_projects_path} (empty to use it directly): " -t 60 _proj_sub || _proj_sub=""
+        _proj_sub="${_proj_sub#/}"
+        _proj_sub="${_proj_sub%/}"
         if [[ -n "${_proj_sub}" ]]; then
-          var_projects_path="${var_projects_path%/}/${_proj_sub#/}"
+          if [[ "${_proj_sub}" == *..* || "${_proj_sub}" == *,* ]]; then
+            msg_error "Invalid subdirectory name '${_proj_sub}'!"
+            exit 1
+          fi
+          var_projects_path="${var_projects_path%/}/${_proj_sub}"
+          _proj_new_dir=true
         fi
       else
+        var_projects_mode="external"
         var_projects_storage="${_proj_entry#storage:}"
       fi
     fi
@@ -105,16 +114,29 @@ if [[ "${var_projects_mode}" == "external" ]]; then
 fi
 
 if [[ "${var_projects_mode}" == "bind" ]]; then
-  mkdir -p "${var_projects_path}"
+  case "${var_projects_path}" in
+    / | /boot* | /dev* | /etc* | /proc* | /root* | /run* | /sys* | /tmp* | /usr* | /var*)
+      msg_error "'${var_projects_path}' is a host system path and cannot hold projects!"
+      exit 1
+      ;;
+  esac
+  if [[ "${var_projects_path}" == *,* ]]; then
+    msg_error "Directory paths containing commas are not supported by Proxmox mountpoints!"
+    exit 1
+  fi
+  if [[ -n "${_proj_new_dir:-}" ]]; then
+    mkdir -p "${var_projects_path}"
+  fi
   if [[ ! -d "${var_projects_path}" ]]; then
     msg_error "Directory '${var_projects_path}' does not exist on this Proxmox host!"
     exit 1
   fi
+  if awk -v p="${var_projects_path}" '$1 == "path" && $2 == p {found = 1} END {exit !found}' /etc/pve/storage.cfg 2>/dev/null; then
+    msg_error "'${var_projects_path}' is a Proxmox storage root; choose a subdirectory inside it instead!"
+    exit 1
+  fi
   if ! mountpoint -q "${var_projects_path}"; then
     echo -e "${INFO}${YW}Note: ${var_projects_path} is not a mountpoint, so it lives on the host root filesystem.${CL}"
-  fi
-  if awk -v p="${var_projects_path}" '$1 == "path" && $2 == p {found = 1} END {exit !found}' /etc/pve/storage.cfg 2>/dev/null; then
-    echo -e "${INFO}${YW}Note: ${var_projects_path} is a Proxmox storage root. PVE keeps its own directories there, so a subdirectory is safer.${CL}"
   fi
 fi
 
@@ -191,7 +213,7 @@ if [[ "${var_projects_mode}" == "bind" ]]; then
     exit 1
   fi
   if ! pct exec "${CTID}" -- sh -c 'touch /mnt/projects/.cs-write-test && rm -f /mnt/projects/.cs-write-test' 2>/dev/null; then
-    echo -e "${INFO}${YW}Warning: the projects directory is not writable inside the container. Run 'chown -R 100000:100000 ${var_projects_path}' on the Proxmox host.${CL}"
+    echo -e "${INFO}${YW}Warning: the projects directory is not writable inside the container. Run 'chown -R 100000:100000 \"${var_projects_path}\"' on the Proxmox host.${CL}"
   fi
   pct exec "${CTID}" -- ln -sfn /mnt/projects /root/projects
   msg_ok "Attached Projects Directory"
