@@ -35,7 +35,7 @@
   },
   "notes": [
     {
-      "text": "gentle-shell is a terminal application: connect via SSH (root) and run 'gentle-shell'; its first-launch setup asks for your provider API keys and keeps them inside the container. Projects live in /root/projects.",
+      "text": "gentle-shell is a terminal application: connect via SSH (root) and run 'gentle-shell'; its first-launch setup asks for your provider API keys and keeps them inside the container. Projects live in /root/projects, and a host directory mounted there needs uid 100000 ownership inside an unprivileged container.",
       "type": "info"
     },
     {
@@ -59,8 +59,13 @@
       "name": "var_projects_mode",
       "label": "Projects Storage",
       "type": "text",
-      "default": "internal",
-      "help": "internal = /root/projects on the LXC disk; external = a new mountpoint on a Proxmox storage"
+      "help": "internal = /root/projects on the LXC disk; select = pick a host directory (bind mount) or a Proxmox storage (new volume) from a menu"
+    },
+    {
+      "name": "var_projects_path",
+      "label": "Host Directory (bind mount)",
+      "type": "text",
+      "help": "Existing host path to mount as /root/projects, e.g. /mnt/disco/projects; used when Projects Storage is bind"
     },
     {
       "name": "var_projects_storage",
