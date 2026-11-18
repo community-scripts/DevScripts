@@ -266,6 +266,7 @@ msg_info "Creating a ${OS_DISPLAY} VM"
 qm create "$VMID" -agent 1${MACHINE} -tablet 0 -bios ovmf${CPU_TYPE} -cores "$CORE_COUNT" -memory "$RAM_SIZE" \
   -name "$HN" -tags community-script -net0 "virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU" -onboot 1 -ostype l26 -scsihw virtio-scsi-pci
 vm_mark_created
+msg_ok "Created a K3s VM ${CL}${BL}(${HN})"
 
 vm_alloc_efi_disk "$DISK0"
 vm_import_disk "$VMID" "$WORK_FILE" "$STORAGE"
@@ -282,7 +283,6 @@ qm set "$VMID" \
   --serial0 socket >/dev/null
 vm_resize_disk "scsi0" "$DISK_SIZE"
 set_description
-msg_ok "Created a K3s VM ${CL}${BL}(${HN})"
 
 vm_provision "$VMID"
 if [[ "$USE_CLOUD_INIT" == "yes" && -n "${CLOUDINIT_SSH_KEYS:-}" ]]; then
