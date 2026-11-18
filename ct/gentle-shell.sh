@@ -57,6 +57,14 @@ if [[ "${var_projects_mode}" == "external" ]]; then
   var_projects_size="${var_projects_size:-10}"
 fi
 
+if [[ -z "${var_gh_token}" ]]; then
+  echo -e "${INFO}${YW}GitHub account (optional): to authenticate now, create a Personal Access Token at${CL}"
+  echo -e "${YW}github.com -> Settings -> Developer settings -> Personal access tokens (scope 'repo').${CL}"
+  echo -e "${YW}Skip this to authenticate later inside the container with 'gh auth login'.${CL}"
+  read -rsp "  GitHub PAT (Enter to skip): " -t 120 var_gh_token || var_gh_token=""
+  echo ""
+fi
+
 export var_hostname var_projects_mode var_projects_storage var_projects_size var_gh_token
 
 function update_script() {

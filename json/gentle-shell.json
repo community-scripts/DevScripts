@@ -80,7 +80,7 @@
       "label": "GitHub Token",
       "type": "password",
       "secret": true,
-      "help": "Optional GitHub PAT; when empty, authenticate later with 'gh auth login' inside the container"
+      "help": "Optional GitHub Personal Access Token: create it at github.com -> Settings -> Developer settings -> Personal access tokens (scope 'repo'). When empty, authenticate later with 'gh auth login' inside the container"
     }
   ]
 }
