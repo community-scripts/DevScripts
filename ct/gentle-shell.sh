@@ -96,7 +96,10 @@ if [[ "${var_projects_mode}" == "external" ]]; then
   pct set "${CTID}" -mp0 "${var_projects_storage}:${var_projects_size},mp=/mnt/projects"
   if ! pct exec "${CTID}" -- mountpoint -q /mnt/projects 2>/dev/null; then
     pct reboot "${CTID}"
-    pct wait "${CTID}" running
+    for _ in {1..30}; do
+      pct exec "${CTID}" -- mountpoint -q /mnt/projects 2>/dev/null && break
+      sleep 2
+    done
   fi
   if ! pct exec "${CTID}" -- mountpoint -q /mnt/projects 2>/dev/null; then
     msg_error "Projects mountpoint on '${var_projects_storage}' did not activate; check the container config."
