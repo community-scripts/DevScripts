@@ -12,15 +12,19 @@
   "documentation": "https://chrony-project.org/documentation.html",
   "website": "https://chrony-project.org/",
   "repository": "https://gitlab.com/chrony/chrony",
-  "architectures": ["amd64"],
-  "platforms": ["pve"],
+  "architectures": [
+    "amd64"
+  ],
+  "platforms": [
+    "pve"
+  ],
   "logo": null,
-  "description": "Chrony is an NTP implementation that, with gpsd and a GPS receiver as its reference clock, turns the container into a stratum 1 time server for your network. It uses the GPS NMEA time and, when the receiver delivers one, its PPS signal for microsecond accuracy, with the public NTP pool as fallback.",
+  "description": "Chrony is an NTP implementation that runs here as a time server for your network, at stratum 1, 2 or 3. Stratum 1 uses a GPS receiver through gpsd as its reference clock (NMEA and, where available, PPS); stratum 2 syncs from public stratum 1 servers and stratum 3 from the NTP pool or your own stratum 2 server.",
   "install_methods": [
     {
       "type": "default",
       "script": "ct/chrony.sh",
-      "config_path": "/etc/chrony/conf.d/gps.conf",
+      "config_path": "/etc/chrony/conf.d/server.conf",
       "resources": {
         "cpu": 1,
         "ram": 512,
@@ -35,19 +39,40 @@
     "password": null
   },
   "app_vars": [
-    { "name": "var_gps_device", "label": "GPS Receiver Device", "type": "text", "default": "/dev/ttyACM0" }
+    {
+      "name": "var_ntp_stratum",
+      "label": "NTP Stratum",
+      "type": "select",
+      "options": [
+        "1",
+        "2",
+        "3"
+      ],
+      "default": "1"
+    },
+    {
+      "name": "var_gps_device",
+      "label": "GPS Receiver Device (stratum 1)",
+      "type": "text",
+      "default": "/dev/ttyACM0"
+    },
+    {
+      "name": "var_ntp_servers",
+      "label": "Upstream NTP Servers (stratum 2/3, space separated)",
+      "type": "text"
+    }
   ],
   "notes": [
     {
-      "text": "Plug the GPS receiver into the Proxmox host before creating the container; /dev/ttyACM0-1 and /dev/ttyUSB0-1 are passed through automatically.",
+      "text": "Stratum 1 needs a USB GPS receiver on the Proxmox host before the container is created; it runs privileged so /dev/ttyACM0-1 and /dev/ttyUSB0-1 are passed through. Stratum 2 and 3 run unprivileged.",
       "type": "info"
     },
     {
-      "text": "Stratum 1 needs a GPS fix. Run 'chronyc sources' and wait for NMEA or PPS to be marked with '*'; tune the NMEA offset in /etc/chrony/conf.d/gps.conf if it is rejected.",
+      "text": "Stratum 1 needs a GPS fix: wait until 'chronyc sources' marks NMEA or PPS with '*', and tune the NMEA offset in /etc/chrony/conf.d/server.conf if it is rejected.",
       "type": "warning"
     },
     {
-      "text": "PPS works only with receivers that put it on the serial DCD line (e.g. FTDI); most USB ACM receivers give NMEA-only (~1 ms) accuracy.",
+      "text": "Stratum 2 syncs from TimeNL, PTB and NIST, stratum 3 from pool.ntp.org; set var_ntp_servers to use your own upstream servers.",
       "type": "info"
     }
   ]

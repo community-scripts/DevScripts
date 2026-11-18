@@ -15,9 +15,21 @@ var_ram="${var_ram:-512}"
 var_disk="${var_disk:-2}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
-var_unprivileged="${var_unprivileged:-0}"
+if [[ -z "${var_ntp_stratum:-}" ]] && command -v pveversion >/dev/null 2>&1; then
+  var_ntp_stratum=$(msg_menu "Choose the NTP stratum" \
+    "1" "Stratum 1 - GPS receiver (privileged, USB passthrough)" \
+    "2" "Stratum 2 - sync from public stratum 1 servers" \
+    "3" "Stratum 3 - sync from the NTP pool or your own stratum 2")
+fi
+export var_ntp_stratum="${var_ntp_stratum:-1}"
+if [[ "$var_ntp_stratum" == "1" ]]; then
+  var_unprivileged="${var_unprivileged:-0}"
+else
+  var_unprivileged="${var_unprivileged:-1}"
+fi
 #var_arm64="${var_arm64:-no}" # unset = ask the user; set yes/no only when verified
 export var_gps_device="${var_gps_device:-}"
+export var_ntp_servers="${var_ntp_servers:-}"
 
 header_info "$APP"
 variables
@@ -29,16 +41,23 @@ function update_script() {
   check_container_storage
   check_container_resources
 
-  if [[ ! -f /etc/chrony/conf.d/gps.conf ]]; then
+  if [[ ! -f /etc/chrony/conf.d/server.conf ]]; then
     msg_error "No ${APP} Installation Found!"
     exit
   fi
 
-  msg_info "Updating Chrony and gpsd"
+  msg_info "Updating Chrony"
   apt_update_safe
-  upgrade_packages_with_retry chrony gpsd gpsd-clients
-  systemctl restart chrony gpsd
-  msg_ok "Updated Chrony and gpsd"
+  upgrade_packages_with_retry chrony
+  systemctl restart chrony
+  msg_ok "Updated Chrony"
+
+  if [[ -f /etc/default/gpsd ]]; then
+    msg_info "Updating gpsd"
+    upgrade_packages_with_retry gpsd gpsd-clients
+    systemctl restart gpsd
+    msg_ok "Updated gpsd"
+  fi
   msg_ok "Updated successfully!"
   exit
 }
@@ -49,5 +68,5 @@ description
 
 msg_ok "Completed Successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
-echo -e "${INFO}${YW}Point your NTP clients at UDP port 123 and check the GPS lock with 'chronyc sources':${CL}"
+echo -e "${INFO}${YW}Point your NTP clients at UDP port 123 and check the sources with 'chronyc sources':${CL}"
 echo -e "${GATEWAY}${BGN}${IP}:123${CL}"
