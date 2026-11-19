@@ -39,7 +39,15 @@ if [[ -z "${var_projects_mode}" ]]; then
   read -rp "  Store projects [1] inside the LXC disk or [2] on existing storage (default: 1): " -t 60 var_projects_mode || var_projects_mode="1"
 fi
 case "${var_projects_mode}" in
-  2 | external | bind | select) var_projects_mode="select" ;;
+  2 | select) var_projects_mode="select" ;;
+  external) var_projects_mode="external" ;;
+  bind)
+    if [[ -z "${var_projects_path}" ]]; then
+      msg_error "var_projects_path is required for bind mode!"
+      exit 1
+    fi
+    var_projects_mode="bind"
+    ;;
   *) var_projects_mode="internal" ;;
 esac
 
@@ -189,7 +197,10 @@ if [[ "${var_projects_mode}" == "external" ]]; then
     msg_error "Projects mountpoint on '${var_projects_storage}' did not activate; check the container config."
     exit 1
   fi
-  pct exec "${CTID}" -- ln -sfn /mnt/projects /root/projects
+  if ! pct exec "${CTID}" -- sh -c 'rm -rf /root/projects && ln -sfn /mnt/projects /root/projects'; then
+    msg_error "Failed to link /root/projects to the projects volume!"
+    exit 1
+  fi
   msg_ok "Attached Projects Volume"
 fi
 
@@ -216,7 +227,10 @@ if [[ "${var_projects_mode}" == "bind" ]]; then
   if ! pct exec "${CTID}" -- sh -c 'touch /mnt/projects/.cs-write-test && rm -f /mnt/projects/.cs-write-test' 2>/dev/null; then
     echo -e "${INFO}${YW}Warning: the projects directory is not writable inside the container. Run 'chown -R 100000:100000 \"${var_projects_path}\"' on the Proxmox host.${CL}"
   fi
-  pct exec "${CTID}" -- ln -sfn /mnt/projects /root/projects
+  if ! pct exec "${CTID}" -- sh -c 'rm -rf /root/projects && ln -sfn /mnt/projects /root/projects'; then
+    msg_error "Failed to link /root/projects to the projects directory!"
+    exit 1
+  fi
   msg_ok "Attached Projects Directory"
 fi
 

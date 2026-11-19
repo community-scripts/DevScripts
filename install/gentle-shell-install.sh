@@ -31,7 +31,7 @@ if [[ -n "${var_gh_token:-}" ]]; then
   msg_ok "Authenticated GitHub CLI"
 fi
 
-if [[ "${var_projects_mode:-internal}" != "external" ]]; then
+if [[ "${var_projects_mode:-internal}" == "internal" ]]; then
   mkdir -p /root/projects
 fi
 

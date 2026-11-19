@@ -59,7 +59,7 @@
       "name": "var_projects_mode",
       "label": "Projects Storage",
       "type": "text",
-      "help": "internal = /root/projects on the LXC disk; select = pick a host directory (bind mount) or a Proxmox storage (new volume) from a menu"
+      "help": "internal = /root/projects on the LXC disk; external = new volume on a Proxmox storage (default local-lvm); bind = host directory from var_projects_path; select = menu of both"
     },
     {
       "name": "var_projects_path",
