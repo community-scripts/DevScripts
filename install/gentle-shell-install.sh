@@ -25,6 +25,19 @@ msg_info "Installing gentle-shell (gentle-pi)"
 $STD npm install -g gentle-pi
 msg_ok "Installed gentle-shell"
 
+cat <<'EOF' >/usr/local/bin/engram
+#!/usr/bin/env sh
+# Resolves the newest Engram core published by Gentle Shell into ~/.gentle-shell/runtime.
+core=$(ls -1d "${HOME:-/root}"/.gentle-shell/runtime/engram-*/engram 2>/dev/null | sort -V | tail -1)
+if [ -z "$core" ]; then
+  echo "engram: no Gentle Shell published core found." >&2
+  echo "engram: start 'gentle-shell' once to publish the Engram core, then retry." >&2
+  exit 1
+fi
+exec "$core" "$@"
+EOF
+chmod 755 /usr/local/bin/engram
+
 if [[ -n "${var_gh_token:-}" ]]; then
   msg_info "Authenticating GitHub CLI"
   printf '%s' "${var_gh_token}" | gh auth login --with-token
