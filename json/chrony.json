@@ -7,7 +7,7 @@
   "date_created": "2026-11-18",
   "type": "ct",
   "updateable": true,
-  "privileged": true,
+  "privileged": false,
   "interface_port": null,
   "documentation": "https://chrony-project.org/documentation.html",
   "website": "https://chrony-project.org/",
