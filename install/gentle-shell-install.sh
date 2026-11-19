@@ -31,6 +31,15 @@ if [[ -n "${var_gh_token:-}" ]]; then
   msg_ok "Authenticated GitHub CLI"
 fi
 
+if [[ -n "${var_authorized_key:-}" ]]; then
+  msg_info "Installing SSH Access Key"
+  mkdir -p /root/.ssh
+  chmod 700 /root/.ssh
+  printf '%s\n' "${var_authorized_key}" >> /root/.ssh/authorized_keys
+  chmod 600 /root/.ssh/authorized_keys
+  msg_ok "Installed SSH Access Key"
+fi
+
 if [[ "${var_projects_mode:-internal}" == "internal" ]]; then
   mkdir -p /root/projects
 fi

@@ -35,11 +35,11 @@
   },
   "notes": [
     {
-      "text": "gentle-shell is a terminal application: connect via SSH (root) and run 'gentle-shell'; its first-launch setup asks for your provider API keys and keeps them inside the container. Projects live in /root/projects, and a host directory mounted there needs uid 100000 ownership inside an unprivileged container.",
+      "text": "gentle-shell is a terminal application: connect via SSH as root (key-based, no password login) and run 'gentle-shell'; first-launch setup asks for your provider API keys and keeps them inside the container.",
       "type": "info"
     },
     {
-      "text": "To use it as a Herdr dev server, add this container to ~/.ssh/config on your desktop machine (Host <hostname>, User root) and select it with Add Machine in Herdr.",
+      "text": "To use it as a Herdr remote machine, add it to ~/.ssh/config (Host <hostname>, User root) and use Add Machine; Herdr connects with an SSH key, so pass var_authorized_key or the SSH Authorized Key option.",
       "type": "info"
     },
     {
@@ -54,6 +54,12 @@
       "type": "text",
       "default": "gentle-shell",
       "help": "Container hostname; Herdr shows it as the remote machine name"
+    },
+    {
+      "name": "var_authorized_key",
+      "label": "SSH Public Key",
+      "type": "text",
+      "help": "Contents of your ~/.ssh/id_ed25519.pub (one line). The container accepts key-based SSH only; Herdr connects with this key. Skip to add it later inside /root/.ssh/authorized_keys"
     },
     {
       "name": "var_projects_mode",

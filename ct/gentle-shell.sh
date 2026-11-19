@@ -24,11 +24,20 @@ var_projects_path="${var_projects_path:-}"
 var_projects_storage="${var_projects_storage:-}"
 var_projects_size="${var_projects_size:-}"
 var_gh_token="${var_gh_token:-}"
+var_authorized_key="${var_authorized_key:-}"
 
 header_info "$APP"
 variables
 color
 catch_errors
+
+_cs_in_container="$(detect_lxc_platform 2>/dev/null)"
+if [[ "${_cs_in_container}" != "container" && "${_cs_in_container}" != "incus-container" ]]; then
+
+if [[ "${var_projects_mode}" == "bind" && -z "${var_projects_path}" ]]; then
+  msg_error "var_projects_path is required for bind mode!"
+  exit 1
+fi
 
 if [[ -z "${var_hostname}" ]]; then
   read -rp "  Machine name for Herdr (default: gentle-shell): " -t 60 var_hostname || var_hostname=""
@@ -42,10 +51,6 @@ case "${var_projects_mode}" in
   2 | select) var_projects_mode="select" ;;
   external) var_projects_mode="external" ;;
   bind)
-    if [[ -z "${var_projects_path}" ]]; then
-      msg_error "var_projects_path is required for bind mode!"
-      exit 1
-    fi
     var_projects_mode="bind"
     ;;
   *) var_projects_mode="internal" ;;
@@ -123,18 +128,20 @@ if [[ "${var_projects_mode}" == "external" ]]; then
 fi
 
 if [[ "${var_projects_mode}" == "bind" ]]; then
+  var_projects_path="$(realpath -m "${var_projects_path}")"
+  if [[ "${var_projects_path}" == *,* ]]; then
+    msg_error "Directory paths containing commas are not supported by Proxmox mountpoints!"
+    exit 1
+  fi
   case "${var_projects_path}" in
     / | /boot | /boot/* | /dev | /dev/* | /etc | /etc/* | /proc | /proc/* | /root | /root/* | /run | /run/* | /sys | /sys/* | /tmp | /tmp/* | /usr | /usr/* | /var | /var/*)
       msg_error "'${var_projects_path}' is a host system path and cannot hold projects!"
       exit 1
       ;;
   esac
-  if [[ "${var_projects_path}" == *,* ]]; then
-    msg_error "Directory paths containing commas are not supported by Proxmox mountpoints!"
-    exit 1
-  fi
   if [[ ! -d "${var_projects_path}" ]]; then
     mkdir -p "${var_projects_path}"
+    _proj_created="yes"
   fi
   if [[ ! -d "${var_projects_path}" ]]; then
     msg_error "Directory '${var_projects_path}' does not exist on this Proxmox host!"
@@ -149,6 +156,17 @@ if [[ "${var_projects_mode}" == "bind" ]]; then
   fi
 fi
 
+if [[ -z "${var_authorized_key}" ]]; then
+  echo -e "${INFO}${YW}SSH access (recommended): paste your public key, e.g. the contents of${CL}"
+  echo -e "${YW}~/.ssh/id_ed25519.pub on your desktop. The container accepts key-based SSH only${CL}"
+  echo -e "${YW}(no root password login), and Herdr uses this key to connect to it.${CL}"
+  read -rp "  SSH public key (Enter to skip): " -t 120 var_authorized_key || var_authorized_key=""
+fi
+if [[ -n "${var_authorized_key}" && ! "${var_authorized_key}" =~ ^(ssh-|ecdsa-|sk-) ]]; then
+  msg_error "var_authorized_key must be a public key (contents of ~/.ssh/id_ed25519.pub), not a private key!"
+  exit 1
+fi
+
 if [[ -z "${var_gh_token}" ]]; then
   echo -e "${INFO}${YW}GitHub account (optional): to authenticate now, create a Personal Access Token at${CL}"
   echo -e "${YW}github.com -> Settings -> Developer settings -> Personal access tokens (scope 'repo').${CL}"
@@ -157,7 +175,9 @@ if [[ -z "${var_gh_token}" ]]; then
   echo ""
 fi
 
-export var_hostname var_projects_mode var_projects_path var_projects_storage var_projects_size var_gh_token
+export var_hostname var_projects_mode var_projects_path var_projects_storage var_projects_size var_authorized_key var_gh_token
+
+fi
 
 function update_script() {
   header_info
@@ -197,7 +217,7 @@ if [[ "${var_projects_mode}" == "external" ]]; then
     msg_error "Projects mountpoint on '${var_projects_storage}' did not activate; check the container config."
     exit 1
   fi
-  if ! pct exec "${CTID}" -- sh -c 'rm -rf /root/projects && ln -sfn /mnt/projects /root/projects'; then
+  if ! pct exec "${CTID}" -- sh -c 'if [ -L /root/projects ]; then rm -f /root/projects; elif [ -d /root/projects ]; then rmdir /root/projects 2>/dev/null || exit 1; fi && ln -sfn /mnt/projects /root/projects'; then
     msg_error "Failed to link /root/projects to the projects volume!"
     exit 1
   fi
@@ -225,9 +245,18 @@ if [[ "${var_projects_mode}" == "bind" ]]; then
     exit 1
   fi
   if ! pct exec "${CTID}" -- sh -c 'touch /mnt/projects/.cs-write-test && rm -f /mnt/projects/.cs-write-test' 2>/dev/null; then
-    echo -e "${INFO}${YW}Warning: the projects directory is not writable inside the container. Run 'chown -R 100000:100000 \"${var_projects_path}\"' on the Proxmox host.${CL}"
+    if [[ "${_proj_created:-}" == "yes" ]]; then
+      msg_info "Fixing ownership of ${var_projects_path}"
+      chown -R 100000:100000 "${var_projects_path}"
+      msg_ok "Fixed ownership"
+      if ! pct exec "${CTID}" -- sh -c 'touch /mnt/projects/.cs-write-test && rm -f /mnt/projects/.cs-write-test' 2>/dev/null; then
+        echo -e "${INFO}${YW}Warning: the projects directory is still not writable inside the container.${CL}"
+      fi
+    else
+      echo -e "${INFO}${YW}Warning: the projects directory is not writable inside the container. Run 'chown -R 100000:100000 \"${var_projects_path}\"' on the Proxmox host.${CL}"
+    fi
   fi
-  if ! pct exec "${CTID}" -- sh -c 'rm -rf /root/projects && ln -sfn /mnt/projects /root/projects'; then
+  if ! pct exec "${CTID}" -- sh -c 'if [ -L /root/projects ]; then rm -f /root/projects; elif [ -d /root/projects ]; then rmdir /root/projects 2>/dev/null || exit 1; fi && ln -sfn /mnt/projects /root/projects'; then
     msg_error "Failed to link /root/projects to the projects directory!"
     exit 1
   fi
@@ -238,4 +267,4 @@ description
 
 msg_ok "Completed Successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
-echo -e "${INFO}${YW}Connect via SSH (root) and run 'gentle-shell'; projects live in /root/projects.${CL}"
+echo -e "${INFO}${YW}Connect via SSH as root (key-based) and run 'gentle-shell'; projects live in /root/projects.${CL}"
