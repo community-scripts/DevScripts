@@ -39,7 +39,7 @@
       "type": "info"
     },
     {
-      "text": "To use it as a Herdr remote machine, add it to ~/.ssh/config (Host <hostname>, User root) and use Add Machine; Herdr connects with an SSH key, so pass var_authorized_key or the SSH Authorized Key option.",
+      "text": "To use it as a Herdr remote machine, add it to ~/.ssh/config (Host <hostname>, User root) and use Add Machine; Herdr connects with an SSH key, so pass var_authorized_key (SSH Public Key).",
       "type": "info"
     },
     {

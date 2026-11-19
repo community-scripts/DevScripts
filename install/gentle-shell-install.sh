@@ -35,6 +35,9 @@ if [[ -n "${var_authorized_key:-}" ]]; then
   msg_info "Installing SSH Access Key"
   mkdir -p /root/.ssh
   chmod 700 /root/.ssh
+  if [[ -s /root/.ssh/authorized_keys && -n "$(tail -c 1 /root/.ssh/authorized_keys)" ]]; then
+    printf '\n' >> /root/.ssh/authorized_keys
+  fi
   printf '%s\n' "${var_authorized_key}" >> /root/.ssh/authorized_keys
   chmod 600 /root/.ssh/authorized_keys
   msg_ok "Installed SSH Access Key"

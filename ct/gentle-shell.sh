@@ -247,10 +247,13 @@ if [[ "${var_projects_mode}" == "bind" ]]; then
   if ! pct exec "${CTID}" -- sh -c 'touch /mnt/projects/.cs-write-test && rm -f /mnt/projects/.cs-write-test' 2>/dev/null; then
     if [[ "${_proj_created:-}" == "yes" ]]; then
       msg_info "Fixing ownership of ${var_projects_path}"
-      chown -R 100000:100000 "${var_projects_path}"
+      if ! chown -R 100000:100000 "${var_projects_path}"; then
+        msg_error "Failed to fix ownership of '${var_projects_path}'!"
+        exit 1
+      fi
       msg_ok "Fixed ownership"
       if ! pct exec "${CTID}" -- sh -c 'touch /mnt/projects/.cs-write-test && rm -f /mnt/projects/.cs-write-test' 2>/dev/null; then
-        echo -e "${INFO}${YW}Warning: the projects directory is still not writable inside the container.${CL}"
+        echo -e "${INFO}${YW}Warning: the projects directory is still not writable inside the container. Run 'chown -R 100000:100000 \"${var_projects_path}\"' on the Proxmox host.${CL}"
       fi
     else
       echo -e "${INFO}${YW}Warning: the projects directory is not writable inside the container. Run 'chown -R 100000:100000 \"${var_projects_path}\"' on the Proxmox host.${CL}"
@@ -267,4 +270,8 @@ description
 
 msg_ok "Completed Successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
-echo -e "${INFO}${YW}Connect via SSH as root (key-based) and run 'gentle-shell'; projects live in /root/projects.${CL}"
+if [[ -n "${var_authorized_key:-}" ]]; then
+  echo -e "${INFO}${YW}Connect via SSH as root (key-based) and run 'gentle-shell'; projects live in /root/projects.${CL}"
+else
+  echo -e "${INFO}${YW}Connect via the Proxmox console or SSH (add a public key to /root/.ssh/authorized_keys) and run 'gentle-shell'; projects live in /root/projects.${CL}"
+fi
