@@ -13,10 +13,12 @@
   "website": "https://chrony-project.org/",
   "repository": "https://gitlab.com/chrony/chrony",
   "architectures": [
-    "amd64"
+    "amd64",
+    "arm64"
   ],
   "platforms": [
-    "pve"
+    "pve",
+    "incus"
   ],
   "logo": null,
   "description": "Chrony is an NTP implementation that runs here as a time server for your network, at stratum 1, 2 or 3. Stratum 1 uses a GPS receiver through gpsd as its reference clock (NMEA and, where available, PPS); stratum 2 syncs from public stratum 1 servers and stratum 3 from the NTP pool or your own stratum 2 server.",
