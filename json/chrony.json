@@ -46,11 +46,11 @@
       "label": "NTP Stratum",
       "type": "select",
       "options": [
-        "1",
         "2",
-        "3"
+        "3",
+        "1"
       ],
-      "default": "1"
+      "default": "2"
     },
     {
       "name": "var_gps_device",

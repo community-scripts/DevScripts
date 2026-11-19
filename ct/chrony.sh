@@ -17,11 +17,11 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 if [[ -z "${var_ntp_stratum:-}" ]] && command -v pveversion >/dev/null 2>&1; then
   var_ntp_stratum=$(msg_menu "Choose the NTP stratum" \
-    "1" "Stratum 1 - GPS receiver (privileged, USB passthrough)" \
     "2" "Stratum 2 - sync from public stratum 1 servers" \
-    "3" "Stratum 3 - sync from the NTP pool or your own stratum 2")
+    "3" "Stratum 3 - sync from the NTP pool or your own stratum 2" \
+    "1" "Stratum 1 - GPS receiver (privileged, USB passthrough)")
 fi
-export var_ntp_stratum="${var_ntp_stratum:-1}"
+export var_ntp_stratum="${var_ntp_stratum:-2}"
 if [[ "$var_ntp_stratum" == "1" ]]; then
   var_unprivileged="${var_unprivileged:-0}"
 else

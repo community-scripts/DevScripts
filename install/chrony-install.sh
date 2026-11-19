@@ -13,7 +13,7 @@ setting_up_container
 network_check
 update_os
 
-var_ntp_stratum="${var_ntp_stratum:-1}"
+var_ntp_stratum="${var_ntp_stratum:-2}"
 
 msg_info "Installing Chrony"
 $STD apt install -y chrony
