@@ -27,7 +27,7 @@ if [[ "$var_ntp_stratum" == "1" ]]; then
 else
   var_unprivileged="${var_unprivileged:-1}"
 fi
-#var_arm64="${var_arm64:-no}" # unset = ask the user; set yes/no only when verified
+var_arm64="${var_arm64:-yes}"
 export var_gps_device="${var_gps_device:-}"
 export var_ntp_servers="${var_ntp_servers:-}"
 
