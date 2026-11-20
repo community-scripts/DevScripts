@@ -46,13 +46,17 @@ fi
 
 if [[ -n "${var_authorized_key:-}" ]]; then
   msg_info "Installing SSH Access Key"
-  mkdir -p /root/.ssh
-  chmod 700 /root/.ssh
+  if ! mkdir -p /root/.ssh || ! chmod 700 /root/.ssh; then
+    msg_error "Failed to prepare /root/.ssh"
+    exit 1
+  fi
   if [[ -s /root/.ssh/authorized_keys && -n "$(tail -c 1 /root/.ssh/authorized_keys)" ]]; then
     printf '\n' >> /root/.ssh/authorized_keys
   fi
-  printf '%s\n' "${var_authorized_key}" >> /root/.ssh/authorized_keys
-  chmod 600 /root/.ssh/authorized_keys
+  if ! printf '%s\n' "${var_authorized_key}" >> /root/.ssh/authorized_keys || ! chmod 600 /root/.ssh/authorized_keys; then
+    msg_error "Failed to write /root/.ssh/authorized_keys"
+    exit 1
+  fi
   msg_ok "Installed SSH Access Key"
 fi
 
