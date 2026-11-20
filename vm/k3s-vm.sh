@@ -189,10 +189,9 @@ vm_fetch_image "$URL" "$CACHE_FILE" --cache --min-bytes $((100 * 1024 * 1024)) |
 WORK_FILE="$TEMP_DIR/k3s.qcow2"
 cp -f "$CACHE_FILE" "$WORK_FILE"
 
-if [[ "${USE_CLOUD_INIT:-no}" != "yes" ]]; then
-  msg_info "Expanding the root filesystem to ${DISK_SIZE}"
-  vm_expand_image "$WORK_FILE" "$DISK_SIZE" || true
-fi
+# The Ubuntu 26.04 cloud image has under 400 MB free, too little for the packages, K3s and Helm.
+msg_info "Expanding the root filesystem to ${DISK_SIZE}"
+vm_expand_image "$WORK_FILE" "$DISK_SIZE" || true
 
 TOOL_ARCH="$(vm_arch_resolve amd64 arm64)"
 msg_info "Adding K3s and Helm to image"
