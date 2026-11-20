@@ -13,7 +13,9 @@ setting_up_container
 network_check
 update_os
 
-RIVET_VERSION="${var_appversion:-$(get_latest_github_release "rivet-dev/rivet")}"
+# GitHub flags the v2 maintenance releases as latest; this config and API are v3
+check_for_gh_release "rivet" "rivet-dev/rivet" "${var_appversion:-}" "" "v3."
+RIVET_VERSION="$CHECK_UPDATE_RELEASE"
 msg_info "Installing Rivet Engine ${RIVET_VERSION#v}"
 mkdir -p /opt/rivet
 curl_with_retry "https://releases.rivet.dev/rivet/${RIVET_VERSION#v}/engine/rivet-engine-$(arch_resolve "x86_64" "aarch64")-unknown-linux-musl" /opt/rivet/rivet-engine

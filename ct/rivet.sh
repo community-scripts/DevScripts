@@ -35,7 +35,7 @@ function update_script() {
     exit
   fi
 
-  if check_for_gh_release "rivet" "rivet-dev/rivet"; then
+  if check_for_gh_release "rivet" "rivet-dev/rivet" "" "" "v3."; then
     msg_info "Downloading Rivet Engine ${CHECK_UPDATE_RELEASE#v}"
     curl_with_retry "https://releases.rivet.dev/rivet/${CHECK_UPDATE_RELEASE#v}/engine/rivet-engine-$(arch_resolve "x86_64" "aarch64")-unknown-linux-musl" /opt/rivet/rivet-engine.new
     chmod +x /opt/rivet/rivet-engine.new
