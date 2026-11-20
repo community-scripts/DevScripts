@@ -16,7 +16,7 @@ var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_arm64="${var_arm64:-yes}"
 var_unprivileged="${var_unprivileged:-1}"
-var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/NEW}"
+var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2687}"
 
 var_hostname="${var_hostname:-}"
 var_projects_mode="${var_projects_mode:-}"
