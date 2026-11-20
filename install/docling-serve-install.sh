@@ -13,6 +13,11 @@ setting_up_container
 network_check
 update_os
 
+if [[ "$(arch_resolve)" == "amd64" ]] && ! { grep -qw -m1 'sse4_2' /proc/cpuinfo && grep -qw -m1 'popcnt' /proc/cpuinfo; }; then
+  msg_error "Docling's NumPy builds require an x86-64-v2 CPU with SSE4.2 and POPCNT (Intel Nehalem, AMD Bulldozer or newer), which this CPU does not have."
+  exit 236
+fi
+
 msg_info "Installing Dependencies"
 $STD apt install -y \
   libgl1 \
