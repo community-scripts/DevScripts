@@ -62,6 +62,9 @@ function update_script() {
 
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "jumpserver" "jumpserver/jumpserver" "tarball" "latest" "" "" "v5."
     JMS_TAG="v$(<~/.jumpserver)"
+    github_api_call "https://api.github.com/repos/jumpserver/jumpserver/contents/apps/accounts/clients?ref=${JMS_TAG}" /tmp/jms-clients.json
+    fetch_and_deploy_from_url "https://github.com/jumpserver/pam-clients/archive/$(jq -r .sha /tmp/jms-clients.json).tar.gz" /opt/jumpserver/apps/accounts/clients
+    rm -f /tmp/jms-clients.json
     CLEAN_INSTALL=1 fetch_and_deploy_gh_tag "koko" "jumpserver/koko" "$JMS_TAG"
 
     restore_backup

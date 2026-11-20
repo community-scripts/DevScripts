@@ -88,6 +88,10 @@ msg_ok "Built guacd"
 fetch_and_deploy_gh_release "jumpserver" "jumpserver/jumpserver" "tarball" "latest" "" "" "v5."
 # KoKo, Lina and Luna must match the core release exactly
 JMS_TAG="v$(<~/.jumpserver)"
+# The PAM clients are a git submodule, which the release tarball leaves empty
+github_api_call "https://api.github.com/repos/jumpserver/jumpserver/contents/apps/accounts/clients?ref=${JMS_TAG}" /tmp/jms-clients.json
+fetch_and_deploy_from_url "https://github.com/jumpserver/pam-clients/archive/$(jq -r .sha /tmp/jms-clients.json).tar.gz" /opt/jumpserver/apps/accounts/clients
+rm -f /tmp/jms-clients.json
 
 msg_info "Configuring JumpServer Core"
 JMS_BOOTSTRAP_TOKEN=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | cut -c1-32)
