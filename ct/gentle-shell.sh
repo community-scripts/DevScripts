@@ -26,6 +26,11 @@ variables
 color
 catch_errors
 
+if [[ -n "${var_projects_mode:-}${var_projects_path:-}${var_projects_storage:-}${var_projects_size:-}" ]]; then
+  msg_error "Projects storage options were removed; projects always live in /root/projects. Add an mp0 bind mount from the Proxmox UI if you need a host directory."
+  exit 1
+fi
+
 function update_script() {
   header_info
   check_container_storage
@@ -53,5 +58,9 @@ description
 
 msg_ok "Completed Successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
-echo -e "${INFO}${YW}Access it over SSH (Herdr: Add Machine):${CL}"
-echo -e "${GATEWAY}${BGN}ssh root@${IP}${CL}"
+if [[ -n "${var_authorized_key}" ]]; then
+  echo -e "${INFO}${YW}Access it over SSH (Herdr: Add Machine):${CL}"
+  echo -e "${GATEWAY}${BGN}ssh root@${IP}${CL}"
+else
+  echo -e "${INFO}${YW}Run 'gentle-shell' from the Proxmox console; to use it over SSH or Herdr, add a public key inside the container first.${CL}"
+fi

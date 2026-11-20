@@ -35,7 +35,7 @@
   },
   "notes": [
     {
-      "text": "Connect via SSH as root (key-based only, no password login). Pass var_authorized_key or paste the public key when asked; Herdr uses this key for Add Machine.",
+      "text": "Run 'gentle-shell' from the Proxmox console or via SSH as root (key-based only); first launch asks for your provider API keys. Herdr uses the SSH key for Add Machine.",
       "type": "info"
     },
     {
