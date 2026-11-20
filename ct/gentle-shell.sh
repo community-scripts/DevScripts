@@ -163,8 +163,8 @@ if [[ -z "${var_authorized_key}" ]]; then
   read -rp "  SSH public key (Enter to skip): " -t 120 var_authorized_key || var_authorized_key=""
 fi
 if [[ -n "${var_authorized_key}" && ! "${var_authorized_key}" =~ ^(ssh-|ecdsa-|sk-) ]]; then
-  msg_error "var_authorized_key must be a public key (contents of ~/.ssh/id_ed25519.pub), not a private key!"
-  exit 1
+  msg_warn "var_authorized_key is not a public key (contents of ~/.ssh/id_ed25519.pub); skipping SSH key install."
+  var_authorized_key=""
 fi
 
 if [[ -z "${var_gh_token}" ]]; then

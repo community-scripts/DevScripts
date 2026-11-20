@@ -40,8 +40,11 @@ chmod 755 /usr/local/bin/engram
 
 if [[ -n "${var_gh_token:-}" ]]; then
   msg_info "Authenticating GitHub CLI"
-  printf '%s' "${var_gh_token}" | gh auth login --with-token
-  msg_ok "Authenticated GitHub CLI"
+  if printf '%s' "${var_gh_token}" | gh auth login --with-token >/dev/null 2>&1; then
+    msg_ok "Authenticated GitHub CLI"
+  else
+    msg_warn "GitHub authentication failed; run 'gh auth login' inside the container later."
+  fi
 fi
 
 if [[ -n "${var_authorized_key:-}" ]]; then
