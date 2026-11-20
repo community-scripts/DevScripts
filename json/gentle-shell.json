@@ -35,11 +35,11 @@
   },
   "notes": [
     {
-      "text": "gentle-shell is a terminal application: connect via SSH as root (key-based, no password login) and run 'gentle-shell'; first-launch setup asks for your provider API keys and keeps them inside the container.",
+      "text": "Connect via SSH as root (key-based only, no password login). Pass var_authorized_key or paste the public key when asked; Herdr uses this key for Add Machine.",
       "type": "info"
     },
     {
-      "text": "To use it as a Herdr remote machine, add it to ~/.ssh/config (Host <hostname>, User root) and use Add Machine; Herdr connects with an SSH key, so pass var_authorized_key (SSH Public Key).",
+      "text": "Projects live in /root/projects. To work on a host directory instead, add an mp0 bind mount to /root/projects from the Proxmox UI.",
       "type": "info"
     },
     {
@@ -60,31 +60,6 @@
       "label": "SSH Public Key",
       "type": "text",
       "help": "Contents of your ~/.ssh/id_ed25519.pub (one line). The container accepts key-based SSH only; Herdr connects with this key. Skip to add it later inside /root/.ssh/authorized_keys"
-    },
-    {
-      "name": "var_projects_mode",
-      "label": "Projects Storage",
-      "type": "text",
-      "help": "internal = /root/projects on the LXC disk; external = new volume on a Proxmox storage (default local-lvm); bind = host directory from var_projects_path; select = menu of both"
-    },
-    {
-      "name": "var_projects_path",
-      "label": "Host Directory (bind mount)",
-      "type": "text",
-      "help": "Existing host path to mount as /root/projects, e.g. /mnt/disco/projects; used when Projects Storage is bind"
-    },
-    {
-      "name": "var_projects_storage",
-      "label": "Proxmox Storage (external mode)",
-      "type": "text",
-      "help": "Proxmox storage for the projects volume, e.g. local-lvm (external mode only)"
-    },
-    {
-      "name": "var_projects_size",
-      "label": "Projects Volume Size (GB)",
-      "type": "number",
-      "default": 10,
-      "help": "Size in GB of the external projects volume (external mode only)"
     },
     {
       "name": "var_gh_token",

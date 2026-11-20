@@ -47,6 +47,13 @@ if [[ -n "${var_gh_token:-}" ]]; then
   fi
 fi
 
+if [[ -z "${var_authorized_key:-}" ]]; then
+  read -rp "${TAB3}SSH public key for root login (Enter to skip): " -t 120 var_authorized_key || var_authorized_key=""
+fi
+if [[ -n "${var_authorized_key:-}" && ! "${var_authorized_key}" =~ ^(ssh-|ecdsa-|sk-) ]]; then
+  msg_warn "Not a public key (expected the contents of ~/.ssh/id_ed25519.pub); skipping SSH key install."
+  var_authorized_key=""
+fi
 if [[ -n "${var_authorized_key:-}" ]]; then
   msg_info "Installing SSH Access Key"
   if ! mkdir -p /root/.ssh || ! chmod 700 /root/.ssh; then
@@ -63,9 +70,7 @@ if [[ -n "${var_authorized_key:-}" ]]; then
   msg_ok "Installed SSH Access Key"
 fi
 
-if [[ "${var_projects_mode:-internal}" == "internal" ]]; then
-  mkdir -p /root/projects
-fi
+mkdir -p /root/projects
 
 motd_ssh
 customize
