@@ -58,9 +58,5 @@ description
 
 msg_ok "Completed Successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
-if [[ -n "${var_authorized_key}" ]]; then
-  echo -e "${INFO}${YW}Access it over SSH (Herdr: Add Machine):${CL}"
-  echo -e "${GATEWAY}${BGN}ssh root@${IP}${CL}"
-else
-  echo -e "${INFO}${YW}Run 'gentle-shell' from the Proxmox console; to use it over SSH or Herdr, add a public key inside the container first.${CL}"
-fi
+echo -e "${INFO}${YW}Run 'gentle-shell' from the Proxmox console, or over SSH with the key you installed (Herdr: Add Machine):${CL}"
+echo -e "${GATEWAY}${BGN}ssh root@${IP}${CL}"
