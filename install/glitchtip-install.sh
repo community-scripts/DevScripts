@@ -18,9 +18,7 @@ PG_DB_NAME="glitchtip" PG_DB_USER="glitchtip" PG_DB_CREDS_FILE="/dev/null" setup
 PYTHON_VERSION="3.14" setup_uv
 
 msg_info "Tuning PostgreSQL"
-cat <<EOF >/etc/postgresql/18/main/conf.d/glitchtip.conf
-max_locks_per_transaction = 512
-EOF
+$STD runuser -u postgres -- psql -c "ALTER SYSTEM SET max_locks_per_transaction = 512"
 systemctl restart postgresql
 msg_ok "Tuned PostgreSQL"
 
