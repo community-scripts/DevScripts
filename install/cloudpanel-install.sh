@@ -19,6 +19,10 @@ if [[ ! "$var_db_engine" =~ ^(MARIADB_12\.3|MARIADB_11\.8|MYSQL_8\.4)$ ]]; then
   var_db_engine="MARIADB_12.3"
 fi
 var_admin_user="${var_admin_user:-admin}"
+if [[ ! "$var_admin_user" =~ ^[A-Za-z0-9._-]{3,}$ ]]; then
+  msg_warn "Invalid admin user '${var_admin_user}' (3+ letters, digits, dots, dashes or underscores), using admin"
+  var_admin_user="admin"
+fi
 var_admin_email="${var_admin_email:-admin@example.com}"
 if [[ ! "$var_admin_email" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]]; then
   msg_warn "Invalid admin email '${var_admin_email}', using admin@example.com"
@@ -42,7 +46,9 @@ fi
 $STD env HOME=/root SWAP=false DB_ENGINE="$var_db_engine" bash /tmp/cloudpanel-install.sh
 rm -f /tmp/cloudpanel-install.sh
 systemctl disable -q --now chrony
-systemctl reset-failed chrony
+if systemctl is-failed -q chrony; then
+  systemctl reset-failed chrony
+fi
 msg_ok "Installed CloudPanel"
 
 msg_info "Creating CloudPanel Admin"
