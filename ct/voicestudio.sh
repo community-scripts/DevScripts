@@ -64,6 +64,7 @@ function update_script() {
       $STD bun run setup:api
       $STD bun run --cwd electron build:web
       rm -rf /opt/voicestudio/node_modules /opt/voicestudio/electron/node_modules
+      chown -R voicestudio:voicestudio /opt/voicestudio
     ); then
       msg_error "VoiceStudio update failed; attempting to restart the service."
       systemctl start voicestudio || true
