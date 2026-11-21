@@ -9,8 +9,7 @@
   "updateable": true,
   "privileged": false,
   "architectures": [
-    "amd64",
-    "arm64"
+    "amd64"
   ],
   "interface_port": 3900,
   "documentation": "https://github.com/debpalash/VoiceStudio/blob/v0.5.8/docs/install/docker.md",
