@@ -16,7 +16,7 @@ var_disk="${var_disk:-50}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
-var_arm64="${var_arm64:-yes}"
+#var_arm64="${var_arm64:-no}" # unset = ask the user; set yes/no only when verified
 export var_voicestudio_hf_token="${var_voicestudio_hf_token:-}"
 
 header_info "$APP"
@@ -87,7 +87,7 @@ start
 build_container
 description
 
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed Successfully!\\n"
 echo -e "${CREATING}${GN}VoiceStudio setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW}Access it using the following URL:${CL}"
 echo -e "${GATEWAY}${BGN}http://${IP}:3900${CL}"
