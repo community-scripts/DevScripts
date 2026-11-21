@@ -1,0 +1,81 @@
+{
+  "name": "Chrony",
+  "slug": "chrony",
+  "categories": [
+    4
+  ],
+  "date_created": "2026-11-18",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://chrony-project.org/documentation.html",
+  "website": "https://chrony-project.org/",
+  "repository": "https://gitlab.com/chrony/chrony",
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "platforms": [
+    "pve",
+    "incus"
+  ],
+  "logo": null,
+  "description": "Chrony is an NTP implementation that runs here as a time server for your network, at stratum 1, 2 or 3. Stratum 1 uses a GPS receiver through gpsd as its reference clock (NMEA and, where available, PPS); stratum 2 syncs from public stratum 1 servers and stratum 3 from the NTP pool or your own stratum 2 server.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/chrony.sh",
+      "config_path": "/etc/chrony/conf.d/server.conf",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_ntp_stratum",
+      "label": "NTP Stratum",
+      "type": "select",
+      "options": [
+        "2",
+        "3",
+        "1"
+      ],
+      "default": "2"
+    },
+    {
+      "name": "var_gps_device",
+      "label": "GPS Receiver Device (stratum 1)",
+      "type": "text",
+      "default": "/dev/ttyACM0"
+    },
+    {
+      "name": "var_ntp_servers",
+      "label": "Upstream NTP Servers (stratum 2/3, space separated)",
+      "type": "text"
+    }
+  ],
+  "notes": [
+    {
+      "text": "Stratum 1 needs a USB GPS receiver on the Proxmox host before the container is created; it runs privileged so /dev/ttyACM0-1 and /dev/ttyUSB0-1 are passed through. Stratum 2 and 3 run unprivileged.",
+      "type": "info"
+    },
+    {
+      "text": "Stratum 1 needs a GPS fix: wait until 'chronyc sources' marks NMEA or PPS with '*', and tune the NMEA offset in /etc/chrony/conf.d/server.conf if it is rejected.",
+      "type": "warning"
+    },
+    {
+      "text": "Stratum 2 syncs from TimeNL, PTB and NIST, stratum 3 from pool.ntp.org; set var_ntp_servers to use your own upstream servers.",
+      "type": "info"
+    }
+  ]
+}
