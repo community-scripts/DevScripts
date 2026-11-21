@@ -12,9 +12,6 @@
   "documentation": "https://github.com/debpalash/VoiceStudio/blob/v0.5.8/docs/install/docker.md",
   "website": "https://github.com/debpalash/VoiceStudio",
   "repository": "https://github.com/debpalash/VoiceStudio",
-  "architectures": [
-    "amd64"
-  ],
   "platforms": [
     "pve"
   ],
