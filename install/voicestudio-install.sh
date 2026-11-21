@@ -17,7 +17,7 @@ msg_info "Installing VoiceStudio dependencies"
 $STD apt install -y build-essential ffmpeg libsndfile1 libopus-dev pkg-config cmake python3-dev
 msg_ok "Installed VoiceStudio dependencies"
 
-mkdir -p /opt/voicestudio_data/uv/python
+mkdir -p /opt/voicestudio_data/uv/python /opt/voicestudio_data/huggingface
 export UV_PYTHON_INSTALL_DIR=/opt/voicestudio_data/uv/python
 fetch_and_deploy_gh_release "voicestudio" "debpalash/VoiceStudio" "tarball"
 PYTHON_VERSION="3.11" setup_uv
@@ -32,24 +32,20 @@ rm -rf /opt/voicestudio/node_modules /opt/voicestudio/electron/node_modules
 msg_ok "Built VoiceStudio"
 
 msg_info "Configuring VoiceStudio"
-mkdir -p /opt/voicestudio_data/huggingface
-getent passwd voicestudio >/dev/null || useradd --system --user-group --home-dir /opt/voicestudio_data --no-create-home --shell /usr/sbin/nologin voicestudio
-chown -R voicestudio:voicestudio /opt/voicestudio /opt/voicestudio_data
-chmod 700 /opt/voicestudio_data
 API_KEY="$(random_password 64)"
 cat <<EOF >/opt/voicestudio_data/.env
 OMNIVOICE_DATA_DIR=/opt/voicestudio_data
 HF_HOME=/opt/voicestudio_data/huggingface
 OMNIVOICE_SERVER_MODE=1
-OMNIVOICE_API_KEY=\${API_KEY}
+OMNIVOICE_BIND_HOST=0.0.0.0
+OMNIVOICE_API_KEY=${API_KEY}
 EOF
-if [[ -n "\${var_voicestudio_hf_token:-}" ]]; then
+if [[ -n "${var_voicestudio_hf_token:-}" ]]; then
   cat <<EOF >>/opt/voicestudio_data/.env
-HF_TOKEN=\${var_voicestudio_hf_token}
+HF_TOKEN=${var_voicestudio_hf_token}
 EOF
 fi
-chown root:voicestudio /opt/voicestudio_data/.env
-chmod 640 /opt/voicestudio_data/.env
+chmod 600 /opt/voicestudio_data/.env
 msg_ok "Configured VoiceStudio"
 
 msg_info "Creating VoiceStudio service"
@@ -61,8 +57,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=voicestudio
-Group=voicestudio
+User=root
 WorkingDirectory=/opt/voicestudio
 EnvironmentFile=/opt/voicestudio_data/.env
 Environment=HOME=/opt/voicestudio_data
