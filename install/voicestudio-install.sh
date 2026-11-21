@@ -17,6 +17,8 @@ msg_info "Installing VoiceStudio dependencies"
 $STD apt install -y build-essential ffmpeg libsndfile1 libopus-dev pkg-config cmake python3-dev
 msg_ok "Installed VoiceStudio dependencies"
 
+mkdir -p /opt/voicestudio_data/uv/python
+export UV_PYTHON_INSTALL_DIR=/opt/voicestudio_data/uv/python
 fetch_and_deploy_gh_release "voicestudio" "debpalash/VoiceStudio" "tarball"
 PYTHON_VERSION="3.11" setup_uv
 NODE_VERSION="22" NODE_MODULE="$(jq -r '.packageManager' /opt/voicestudio/package.json)" setup_nodejs
@@ -46,8 +48,8 @@ if [[ -n "\${var_voicestudio_hf_token:-}" ]]; then
 HF_TOKEN=\${var_voicestudio_hf_token}
 EOF
 fi
-chown root:root /opt/voicestudio_data/.env
-chmod 600 /opt/voicestudio_data/.env
+chown root:voicestudio /opt/voicestudio_data/.env
+chmod 640 /opt/voicestudio_data/.env
 msg_ok "Configured VoiceStudio"
 
 msg_info "Creating VoiceStudio service"
@@ -63,6 +65,7 @@ User=voicestudio
 Group=voicestudio
 WorkingDirectory=/opt/voicestudio
 EnvironmentFile=/opt/voicestudio_data/.env
+Environment=HOME=/opt/voicestudio_data
 Environment=PYTHONPATH=/opt/voicestudio/backend
 Environment=PYTHONUNBUFFERED=1
 ExecStart=/opt/voicestudio/.venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 3900
@@ -71,6 +74,11 @@ RestartSec=5
 TimeoutStartSec=600
 LimitNOFILE=65535
 UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/voicestudio /opt/voicestudio_data
 
 [Install]
 WantedBy=multi-user.target
