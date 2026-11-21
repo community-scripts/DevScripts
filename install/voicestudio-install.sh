@@ -36,7 +36,7 @@ mkdir -p /opt/voicestudio_data/huggingface
 getent passwd voicestudio >/dev/null || useradd --system --user-group --home-dir /opt/voicestudio_data --no-create-home --shell /usr/sbin/nologin voicestudio
 chown -R voicestudio:voicestudio /opt/voicestudio /opt/voicestudio_data
 chmod 700 /opt/voicestudio_data
-API_KEY="$(openssl rand -hex 32)"
+API_KEY="$(random_password 64)"
 cat <<EOF >/opt/voicestudio_data/.env
 OMNIVOICE_DATA_DIR=/opt/voicestudio_data
 HF_HOME=/opt/voicestudio_data/huggingface
