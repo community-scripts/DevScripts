@@ -40,7 +40,7 @@
   },
   "notes": [
     {
-      "text": "Open http://<container-IP>:3900. The API key is stored in /opt/voicestudio_data/.env as OMNIVOICE_API_KEY and in /root/voicestudio-api-key.txt (root-only).",
+      "text": "Open http://<container-IP>:3900. The API key is stored in /opt/voicestudio_data/.env as OMNIVOICE_API_KEY.",
       "type": "info"
     },
     {
