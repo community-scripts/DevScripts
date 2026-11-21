@@ -1,0 +1,48 @@
+{
+  "name": "REA",
+  "slug": "rea",
+  "categories": [20],
+  "date_created": "2026-11-22",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "architectures": ["amd64"],
+  "interface_port": 8765,
+  "documentation": "https://github.com/morluto/rea#readme",
+  "website": "https://github.com/morluto/rea",
+  "repository": "https://github.com/morluto/rea",
+  "logo": "https://raw.githubusercontent.com/morluto/rea/main/assets/rea-plugin.png",
+  "description": "REA is a reverse-engineering CLI and Model Context Protocol (MCP) server for static analysis of binaries, applications, and firmware. It integrates Ghidra and JADX to expose analysis workflows and evidence to AI agents and developer tools.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/rea.sh",
+      "resources": {
+        "cpu": 8,
+        "ram": 12288,
+        "hdd": 80,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "The HTTP MCP endpoint has no built-in authentication. Allow TCP 8765 only from a trusted MCP gateway and expose OAuth 2.0 through a trusted HTTPS MCPHub deployment.",
+      "type": "warning"
+    },
+    {
+      "text": "Reserve the container's DHCP address so the MCP URL and Host allowlist remain stable.",
+      "type": "info"
+    },
+    {
+      "text": "Run unfamiliar executable samples only in a disposable VM; this service container is intended for analysis tooling, not arbitrary code execution.",
+      "type": "warning"
+    }
+  ]
+}
