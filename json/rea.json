@@ -1,13 +1,19 @@
 {
   "name": "REA",
   "slug": "rea",
-  "categories": [20],
+  "categories": [
+    20
+  ],
   "date_created": "2026-11-22",
   "type": "ct",
-  "platforms": ["pve"],
+  "platforms": [
+    "pve"
+  ],
   "updateable": true,
   "privileged": false,
-  "architectures": ["amd64"],
+  "architectures": [
+    "amd64"
+  ],
   "interface_port": 8765,
   "documentation": "https://github.com/morluto/rea#readme",
   "website": "https://github.com/morluto/rea",
@@ -33,7 +39,7 @@
   },
   "notes": [
     {
-      "text": "The HTTP MCP endpoint has no built-in authentication. Allow TCP 8765 only from a trusted MCP gateway and expose OAuth 2.0 through a trusted HTTPS MCPHub deployment.",
+      "text": "REA's HTTP MCP endpoint has no built-in client authentication. Restrict TCP 8765 to a trusted MCP gateway and terminate OAuth 2.0 at that gateway.",
       "type": "warning"
     },
     {

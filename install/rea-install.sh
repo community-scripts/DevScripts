@@ -21,7 +21,6 @@ $STD apt install -y \
   binwalk \
   file \
   gdb \
-  jq \
   ltrace \
   procps \
   strace \
@@ -58,8 +57,6 @@ if [[ -z "$REA_BIN" || ! -f "$REA_PACKAGE_DIR/package.json" ]]; then
   msg_error "REA npm package installation could not be verified"
   exit 1
 fi
-REA_VERSION="$(node -p "require(process.argv[1]).version" "$REA_PACKAGE_DIR/package.json")"
-printf '%s' "$REA_VERSION" > "$HOME/.rea-agents"
 msg_ok "Installed REA"
 
 getent group rea >/dev/null || groupadd --system rea

@@ -16,6 +16,7 @@ var_disk="${var_disk:-80}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_arm64="${var_arm64:-no}"
+export var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2696}"
 var_unprivileged="${var_unprivileged:-1}"
 var_nesting="${var_nesting:-1}"
 var_keyctl="${var_keyctl:-1}"
@@ -35,29 +36,17 @@ function update_script() {
     exit 1
   fi
 
-  RESTART_REA=0
   if check_for_gh_release "ghidra" "NationalSecurityAgency/ghidra"; then
-    msg_info "Updating Ghidra"
-    fetch_and_deploy_gh_release "ghidra" "NationalSecurityAgency/ghidra" "prebuild" "latest" "/opt/ghidra" "ghidra_*_PUBLIC_*.zip"
-    msg_ok "Updated Ghidra"
-    RESTART_REA=1
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "ghidra" "NationalSecurityAgency/ghidra" "prebuild" "latest" "/opt/ghidra" "ghidra_*_PUBLIC_*.zip"
   fi
 
-  if check_for_gh_release "rea-agents" "morluto/rea"; then
-    msg_info "Updating REA"
-    $STD npm install --global --allow-scripts=frida rea-agents@latest
-    REA_PACKAGE_DIR="$(npm root -g)/rea-agents"
-    node -p "require(process.argv[1]).version" "$REA_PACKAGE_DIR/package.json" > "$HOME/.rea-agents"
-    msg_ok "Updated REA"
-    RESTART_REA=1
-  fi
+  msg_info "Updating REA"
+  $STD npm install --global --allow-scripts=frida rea-agents@latest
+  msg_ok "Updated REA"
 
-  if [[ "$RESTART_REA" == "1" ]]; then
-    systemctl restart rea-mcp
-    systemctl is-active --quiet rea-mcp
-    msg_ok "Restarted REA MCP"
-  fi
-  msg_ok "Update completed!"
+  systemctl restart rea-mcp
+  systemctl is-active --quiet rea-mcp
+  msg_ok "Restarted REA MCP"
   exit
 }
 
