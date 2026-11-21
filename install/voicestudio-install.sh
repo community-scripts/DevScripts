@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing VoiceStudio dependencies"
-$STD apt install -y build-essential ffmpeg libsndfile1 libopus-dev pkg-config cmake python3-dev curl jq
+$STD apt install -y build-essential ffmpeg libsndfile1 libopus-dev pkg-config cmake python3-dev
 msg_ok "Installed VoiceStudio dependencies"
 
 fetch_and_deploy_gh_release "voicestudio" "debpalash/VoiceStudio" "tarball"
@@ -33,8 +33,6 @@ msg_info "Configuring VoiceStudio"
 mkdir -p /opt/voicestudio_data/huggingface
 chmod 700 /opt/voicestudio_data
 API_KEY="$(openssl rand -hex 32)"
-printf '%s\n' "$API_KEY" >/root/voicestudio-api-key.txt
-chmod 600 /root/voicestudio-api-key.txt
 cat <<EOF >/opt/voicestudio_data/.env
 OMNIVOICE_DATA_DIR=/opt/voicestudio_data
 HF_HOME=/opt/voicestudio_data/huggingface
@@ -42,7 +40,9 @@ OMNIVOICE_SERVER_MODE=1
 OMNIVOICE_API_KEY=\${API_KEY}
 EOF
 if [[ -n "\${var_voicestudio_hf_token:-}" ]]; then
-  printf 'HF_TOKEN=%s\n' "$var_voicestudio_hf_token" >>/opt/voicestudio_data/.env
+  cat <<EOF >>/opt/voicestudio_data/.env
+HF_TOKEN=\${var_voicestudio_hf_token}
+EOF
 fi
 chmod 600 /opt/voicestudio_data/.env
 msg_ok "Configured VoiceStudio"
@@ -71,12 +71,10 @@ UMask=0077
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
 systemctl enable -q --now voicestudio
 $STD curl --retry 60 --retry-delay 2 --retry-connrefused -fsS http://127.0.0.1:3900/health
 msg_ok "Created VoiceStudio service"
 
-msg_info "Configuring automatic updates"
 cat <<EOF >/etc/systemd/system/voicestudio-update.service
 [Unit]
 Description=VoiceStudio stable release update
@@ -101,8 +99,6 @@ Unit=voicestudio-update.service
 [Install]
 WantedBy=timers.target
 EOF
-systemctl daemon-reload
-msg_ok "Configured automatic updates"
 
 motd_ssh
 customize
