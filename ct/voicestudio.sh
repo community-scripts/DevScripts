@@ -56,6 +56,8 @@ function update_script() {
 
     if ! (
       set -e
+      mkdir -p /opt/voicestudio_data/uv/python
+      export UV_PYTHON_INSTALL_DIR=/opt/voicestudio_data/uv/python
       CLEAN_INSTALL=1 fetch_and_deploy_gh_release "voicestudio" "debpalash/VoiceStudio" "tarball"
       PYTHON_VERSION="3.11" setup_uv
       NODE_VERSION="22" NODE_MODULE="$(jq -r '.packageManager' /opt/voicestudio/package.json)" setup_nodejs
@@ -64,7 +66,7 @@ function update_script() {
       $STD bun run setup:api
       $STD bun run --cwd electron build:web
       rm -rf /opt/voicestudio/node_modules /opt/voicestudio/electron/node_modules
-      chown -R voicestudio:voicestudio /opt/voicestudio
+      chown -R voicestudio:voicestudio /opt/voicestudio /opt/voicestudio_data/uv
     ); then
       msg_error "VoiceStudio update failed; attempting to restart the service."
       systemctl start voicestudio || true
