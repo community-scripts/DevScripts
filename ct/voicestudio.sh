@@ -14,8 +14,8 @@ var_ram="\${var_ram:-12288}"
 var_disk="\${var_disk:-50}"
 var_os="\${var_os:-debian}"
 var_version="\${var_version:-13}"
-var_arm64="\${var_arm64:-no}"
 var_unprivileged="\${var_unprivileged:-1}"
+var_testurl="\${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2693}"
 
 export var_voicestudio_hf_token="\${var_voicestudio_hf_token:-}"
 
