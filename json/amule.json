@@ -1,0 +1,60 @@
+{
+  "name": "aMule",
+  "slug": "amule",
+  "categories": [
+    11
+  ],
+  "date_created": "2026-11-20",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64", "arm64"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 4713,
+  "documentation": "https://amule-org.github.io/",
+  "website": "https://amule-org.github.io/",
+  "repository": "https://github.com/amule-org/amule",
+  "logo": "https://cdn.jsdelivr.net/gh/amule-org/amule@master/org.amule.aMule.png",
+  "description": "aMule is a peer-to-peer file sharing client for the eD2k and Kad networks. It runs headless as a daemon and is controlled from a web UI, the amulecmd command line, or a remote aMule GUI.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/amule.sh",
+      "config_path": "/root/.aMule/amule.conf",
+      "resources": {
+        "cpu": 2,
+        "ram": 512,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_amule_password",
+      "label": "Web UI Password",
+      "type": "password",
+      "secret": true,
+      "help": "Generated when left empty"
+    }
+  ],
+  "notes": [
+    {
+      "text": "The web UI password is AMULE_WEB_PASSWORD in /opt/amule_data/.env inside the container.",
+      "type": "info"
+    },
+    {
+      "text": "For a HighID, forward 4662/tcp, 4665/udp and 4672/udp from your router to the container. Without it you get a LowID and slower downloads.",
+      "type": "warning"
+    },
+    {
+      "text": "Downloads go to /opt/amule_data/Incoming and unfinished files to /opt/amule_data/Temp. To keep them on another storage, add Proxmox mount points at those two paths.",
+      "type": "info"
+    }
+  ]
+}
