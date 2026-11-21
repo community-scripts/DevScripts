@@ -1,0 +1,68 @@
+{
+  "name": "VoiceStudio",
+  "slug": "voicestudio",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-21",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3900,
+  "documentation": "https://github.com/debpalash/VoiceStudio/blob/v0.5.8/docs/install/docker.md",
+  "website": "https://github.com/debpalash/VoiceStudio",
+  "repository": "https://github.com/debpalash/VoiceStudio",
+  "architectures": [
+    "amd64"
+  ],
+  "platforms": [
+    "pve"
+  ],
+  "logo": "https://cdn.jsdelivr.net/gh/debpalash/VoiceStudio@v0.5.8/docs/assets/voicestudio-pro.svg",
+  "description": "Self-hosted voice synthesis and cloning studio. This helper installs the headless FastAPI server in an unprivileged Debian LXC; models are downloaded separately.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/voicestudio.sh",
+      "config_path": "/opt/voicestudio_data/.env",
+      "resources": {
+        "cpu": 6,
+        "ram": 12288,
+        "hdd": 50,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open http://<container-IP>:3900. The API key is stored in /opt/voicestudio_data/.env as OMNIVOICE_API_KEY and in /root/voicestudio-api-key.txt (root-only).",
+      "type": "info"
+    },
+    {
+      "text": "Models are not downloaded automatically. Download them in VoiceStudio only after reviewing each model and dependency license.",
+      "type": "warning"
+    },
+    {
+      "text": "Stable-release updates are checked daily at 03:30. Disable with systemctl disable --now voicestudio-update.timer.",
+      "type": "info"
+    },
+    {
+      "text": "CPU inference is slower. GPU passthrough and CUDA configuration are not automatic.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_voicestudio_hf_token",
+      "label": "Hugging Face Token (optional)",
+      "type": "password",
+      "secret": true,
+      "help": "Optional. Used for gated/private repositories and higher download limits; public models can be downloaded without it."
+    }
+  ]
+}
