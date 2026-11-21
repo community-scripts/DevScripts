@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing VoiceStudio dependencies"
-$STD apt install -y build-essential ffmpeg libsndfile1 libopus-dev pkg-config cmake python3-dev
+$STD apt install -y build-essential ffmpeg gpg libsndfile1 libopus-dev pkg-config cmake python3-dev
 msg_ok "Installed VoiceStudio dependencies"
 
 mkdir -p /opt/voicestudio_data/uv/python /opt/voicestudio_data/huggingface
