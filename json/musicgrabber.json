@@ -1,0 +1,49 @@
+{
+  "name": "MusicGrabber",
+  "slug": "musicgrabber",
+  "categories": [
+    11
+  ],
+  "date_created": "2026-11-21",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8080,
+  "documentation": "https://gitlab.com/g33kphr33k/musicgrabber/-/blob/main/guide/README.md",
+  "website": "https://gitlab.com/g33kphr33k/musicgrabber",
+  "repository": "https://gitlab.com/g33kphr33k/musicgrabber",
+  "architectures": [
+    "amd64"
+  ],
+  "logo": "https://gitlab.com/g33kphr33k/musicgrabber/-/raw/main/static/MusicGrabberIcon.webp",
+  "description": "MusicGrabber is a self-hosted music downloader for grabbing one song or a whole album at a time. It searches YouTube, SoundCloud, Monochrome and Soulseek, files tagged tracks into your library, and keeps it current with watched playlists from nine platforms, watched MusicBrainz artists and automatic quality upgrades.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/musicgrabber.sh",
+      "config_path": "/opt/musicgrabber_data/.env",
+      "resources": {
+        "cpu": 2,
+        "ram": 2048,
+        "hdd": 8,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "There is no login until a second account exists: anyone who can reach port 8080 has full access. Add accounts under Settings, System, User Management to turn on sign-in.",
+      "type": "warning"
+    },
+    {
+      "text": "Downloads go to /opt/musicgrabber_data/music. To use your own library, mount it into the container, set MUSIC_DIR in /opt/musicgrabber_data/.env and restart musicgrabber.",
+      "type": "info"
+    }
+  ]
+}
