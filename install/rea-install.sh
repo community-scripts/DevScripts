@@ -42,12 +42,10 @@ fi
 
 JADX_VERSION="$(get_latest_github_release "1013503897/jadx-headless-mcp" false)"
 JADX_TAG="${JADX_VERSION#v}"
-JADX_BASE="https://github.com/1013503897/jadx-headless-mcp/releases/download/${JADX_VERSION}"
-curl_with_retry "${JADX_BASE}/jadx-headless-mcp-${JADX_TAG}-all.jar" "/tmp/jadx-headless-mcp.jar"
-curl_with_retry "${JADX_BASE}/jadx-headless-mcp.sha256" "/tmp/jadx-headless-mcp.sha256"
-install -d -m 0755 /opt
-install -m 0644 /tmp/jadx-headless-mcp.jar "/opt/jadx-headless-mcp-${JADX_TAG}-all.jar"
+USE_ORIGINAL_FILENAME=true fetch_and_deploy_gh_release "jadx-headless-mcp" "1013503897/jadx-headless-mcp" "singlefile" "latest" "/opt" "jadx-headless-mcp-*-all.jar"
+curl_with_retry "https://github.com/1013503897/jadx-headless-mcp/releases/download/${JADX_VERSION}/jadx-headless-mcp.sha256" "/tmp/jadx-headless-mcp.sha256"
 (cd /opt && sha256sum -c /tmp/jadx-headless-mcp.sha256)
+install -m 0644 "/opt/jadx-headless-mcp-${JADX_TAG}-all.jar" /opt/jadx-headless-mcp.jar
 msg_ok "Installed and verified JADX MCP adapter"
 
 $STD npm install --global --allow-scripts=frida rea-agents@latest
@@ -86,7 +84,7 @@ Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=JAVA_HOME=$JAVA_HOME
 Environment=GHIDRA_INSTALL_DIR=$GHIDRA_DIR
 Environment=REA_ANALYSIS_PROVIDER=ghidra
-Environment=REA_JADX_MCP_JAR=/opt/jadx-headless-mcp-${JADX_TAG}-all.jar
+Environment=REA_JADX_MCP_JAR=/opt/jadx-headless-mcp.jar
 Environment=REA_GHIDRA_CHECKPOINT_DIR=/data/checkpoints
 Environment=MCP_ALLOWED_HOSTS=$MCP_ALLOWED_HOSTS
 ExecStart=$REA_BIN mcp --http --host 0.0.0.0 --allowed-hosts \${MCP_ALLOWED_HOSTS} --port 8765
@@ -116,8 +114,8 @@ fi
 msg_ok "Created REA MCP service"
 
 msg_info "Checking REA analysis providers"
-runuser -u rea -- env HOME=/var/lib/rea JAVA_HOME="$JAVA_HOME" GHIDRA_INSTALL_DIR="$GHIDRA_DIR" REA_ANALYSIS_PROVIDER=ghidra REA_JADX_MCP_JAR="/opt/jadx-headless-mcp-${JADX_TAG}-all.jar" REA_GHIDRA_CHECKPOINT_DIR=/data/checkpoints "$REA_BIN" doctor --provider ghidra --json | jq -e '.healthy == true' >/dev/null
-runuser -u rea -- env HOME=/var/lib/rea JAVA_HOME="$JAVA_HOME" GHIDRA_INSTALL_DIR="$GHIDRA_DIR" REA_ANALYSIS_PROVIDER=ghidra REA_JADX_MCP_JAR="/opt/jadx-headless-mcp-${JADX_TAG}-all.jar" REA_GHIDRA_CHECKPOINT_DIR=/data/checkpoints "$REA_BIN" doctor --provider jadx --json | jq -e '.healthy == true' >/dev/null
+runuser -u rea -- env HOME=/var/lib/rea JAVA_HOME="$JAVA_HOME" GHIDRA_INSTALL_DIR="$GHIDRA_DIR" REA_ANALYSIS_PROVIDER=ghidra REA_JADX_MCP_JAR=/opt/jadx-headless-mcp.jar REA_GHIDRA_CHECKPOINT_DIR=/data/checkpoints "$REA_BIN" doctor --provider ghidra --json | jq -e '.healthy == true' >/dev/null
+runuser -u rea -- env HOME=/var/lib/rea JAVA_HOME="$JAVA_HOME" GHIDRA_INSTALL_DIR="$GHIDRA_DIR" REA_ANALYSIS_PROVIDER=ghidra REA_JADX_MCP_JAR=/opt/jadx-headless-mcp.jar REA_GHIDRA_CHECKPOINT_DIR=/data/checkpoints "$REA_BIN" doctor --provider jadx --json | jq -e '.healthy == true' >/dev/null
 msg_ok "Ghidra and JADX providers are healthy"
 
 motd_ssh

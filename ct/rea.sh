@@ -40,6 +40,15 @@ function update_script() {
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "ghidra" "NationalSecurityAgency/ghidra" "prebuild" "latest" "/opt/ghidra" "ghidra_*_PUBLIC_*.zip"
   fi
 
+  if check_for_gh_release "jadx-headless-mcp" "1013503897/jadx-headless-mcp"; then
+    JADX_VERSION="$(get_latest_github_release "1013503897/jadx-headless-mcp" false)"
+    JADX_TAG="${JADX_VERSION#v}"
+    USE_ORIGINAL_FILENAME=true fetch_and_deploy_gh_release "jadx-headless-mcp" "1013503897/jadx-headless-mcp" "singlefile" "latest" "/opt" "jadx-headless-mcp-*-all.jar"
+    curl_with_retry "https://github.com/1013503897/jadx-headless-mcp/releases/download/${JADX_VERSION}/jadx-headless-mcp.sha256" "/tmp/jadx-headless-mcp.sha256"
+    (cd /opt && sha256sum -c /tmp/jadx-headless-mcp.sha256)
+    install -m 0644 "/opt/jadx-headless-mcp-${JADX_TAG}-all.jar" /opt/jadx-headless-mcp.jar
+  fi
+
   msg_info "Updating REA"
   $STD npm install --global --allow-scripts=frida rea-agents@latest
   msg_ok "Updated REA"
