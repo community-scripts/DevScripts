@@ -50,10 +50,6 @@ function update_script() {
   fi
 
   if check_for_gh_release "voicestudio" "debpalash/VoiceStudio"; then
-    msg_info "Backing up VoiceStudio"
-    create_backup /opt/voicestudio /root/.voicestudio
-    msg_ok "Backed up VoiceStudio"
-
     msg_info "Stopping VoiceStudio"
     systemctl stop voicestudio
     msg_ok "Stopped VoiceStudio"
@@ -67,24 +63,19 @@ function update_script() {
       $STD bun install --frozen-lockfile
       $STD bun run setup:api
       $STD bun run --cwd electron build:web
+      rm -rf /opt/voicestudio/node_modules /opt/voicestudio/electron/node_modules
     ); then
-      msg_error "VoiceStudio update failed; restoring the previous installation."
-      restore_backup
-      systemctl start voicestudio
+      msg_error "VoiceStudio update failed; attempting to restart the service."
+      systemctl start voicestudio || true
       exit 1
     fi
 
     msg_info "Starting VoiceStudio"
     systemctl start voicestudio
     if ! $STD curl --retry 60 --retry-delay 2 --retry-connrefused -fsS http://127.0.0.1:3900/health; then
-      msg_error "VoiceStudio failed its health check; restoring the previous installation."
-      systemctl stop voicestudio || true
-      restore_backup
-      systemctl start voicestudio
+      msg_error "VoiceStudio failed its health check after the update."
       exit 1
     fi
-
-    rm -rf /opt/voicestudio.backup
     msg_ok "Updated VoiceStudio successfully!"
   fi
   exit
