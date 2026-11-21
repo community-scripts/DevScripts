@@ -31,6 +31,8 @@ msg_ok "Built VoiceStudio"
 
 msg_info "Configuring VoiceStudio"
 mkdir -p /opt/voicestudio_data/huggingface
+getent passwd voicestudio >/dev/null || useradd --system --user-group --home-dir /opt/voicestudio_data --no-create-home --shell /usr/sbin/nologin voicestudio
+chown -R voicestudio:voicestudio /opt/voicestudio /opt/voicestudio_data
 chmod 700 /opt/voicestudio_data
 API_KEY="$(openssl rand -hex 32)"
 cat <<EOF >/opt/voicestudio_data/.env
@@ -44,6 +46,7 @@ if [[ -n "\${var_voicestudio_hf_token:-}" ]]; then
 HF_TOKEN=\${var_voicestudio_hf_token}
 EOF
 fi
+chown root:root /opt/voicestudio_data/.env
 chmod 600 /opt/voicestudio_data/.env
 msg_ok "Configured VoiceStudio"
 
@@ -56,7 +59,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=root
+User=voicestudio
+Group=voicestudio
 WorkingDirectory=/opt/voicestudio
 EnvironmentFile=/opt/voicestudio_data/.env
 Environment=PYTHONPATH=/opt/voicestudio/backend
