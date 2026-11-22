@@ -345,22 +345,28 @@ def slice_stl(
     local = download_stl(relative_path)
     try:
         process_name = {"draft": "process-draft.json", "standard": "process.json", "fine": "process-016.json"}[quality]
+        process_settings = json.loads(Path(process).read_text())
+        if strength == "light":
+            process_settings.update({"wall_loops": "2", "sparse_infill_density": "10%"})
+        elif strength == "standard":
+            process_settings.update({"wall_loops": "3", "sparse_infill_density": "20%", "sparse_infill_pattern": "gyroid"})
+        else:
+            process_settings.update({"wall_loops": "4", "sparse_infill_density": "35%", "sparse_infill_pattern": "gyroid"})
+        if supports == "on":
+            process_settings["enable_support"] = "1"
+        elif supports == "off":
+            process_settings["enable_support"] = "0"
+        process_settings["support_on_build_plate_only"] = "1" if support_on_build_plate_only else "0"
+        override_process = local.parent / "process-overrides.json"
+        override_process.write_text(json.dumps(process_settings, ensure_ascii=False, indent=2) + "\\n")
         arguments = [
             "--curr-bed-type", "Textured PEI Plate",
-            "--load-settings", str(PROFILE_DIR / "machine.json") + ";" + str(PROFILE_DIR / process_name),
+            "--load-settings", str(PROFILE_DIR / "machine.json") + ";" + str(override_process),
             "--load-filaments", str(PROFILE_DIR / "filament.json"),
         ]
         if orientation == "auto":
             arguments += ["--orient", "1"]
         arguments += ["--arrange", "1"]
-        if strength == "light":
-            arguments += ["--wall_loops=2", "--sparse_infill_density=10%"]
-        elif strength == "standard":
-            arguments += ["--wall_loops=3", "--sparse_infill_density=20%", "--sparse_infill_pattern=gyroid"]
-        else:
-            arguments += ["--wall_loops=4", "--sparse_infill_density=35%", "--sparse_infill_pattern=gyroid"]
-        arguments += [f"--support_enable={0 if supports == 'off' else 1}"]
-        arguments += [f"--support_on_build_plate_only={1 if support_on_build_plate_only else 0}"]
         output = local.parent / (local.stem + ".gcode.3mf")
         log_tail = run_orca(
             arguments + ["--slice", "0", "--strict", "--export-3mf", str(output), str(local)],
