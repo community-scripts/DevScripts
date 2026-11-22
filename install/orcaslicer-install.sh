@@ -20,11 +20,9 @@ $STD apt install -y ca-certificates file libasound2t64 libdbus-1-3 libfontconfig
   libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxtst6 xauth xz-utils xvfb
 msg_ok "Installed OrcaSlicer dependencies"
 
-msg_info "Downloading OrcaSlicer"
 fetch_and_deploy_gh_release "orcaslicer" "OrcaSlicer/OrcaSlicer" "singlefile" "latest" "/opt/orcaslicer" "OrcaSlicer_Linux_AppImage_Ubuntu2404_V*.AppImage"
 mkdir -p /opt/orcaslicer_data /var/lib/orcaslicer/jobs /var/lib/orcaslicer/.config
 chmod 700 /opt/orcaslicer_data /var/lib/orcaslicer
-msg_ok "Downloaded OrcaSlicer"
 
 msg_info "Extracting OrcaSlicer"
 cd /opt/orcaslicer
