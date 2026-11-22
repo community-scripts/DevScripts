@@ -13,7 +13,8 @@
   "website": "https://www.orcaslicer.com/",
   "repository": "https://github.com/OrcaSlicer/OrcaSlicer",
   "architectures": [
-    "amd64"
+    "amd64",
+    "arm64"
   ],
   "platforms": [
     "pve"
