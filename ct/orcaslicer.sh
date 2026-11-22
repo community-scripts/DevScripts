@@ -42,6 +42,7 @@ function update_script() {
   fi
 
   if check_for_gh_release "orcaslicer" "OrcaSlicer/OrcaSlicer"; then
+    create_backup /opt/orcaslicer_data/.env
     msg_info "Stopping OrcaSlicer MCP"
     systemctl stop orcaslicer-mcp
     msg_ok "Stopped OrcaSlicer MCP"
@@ -54,6 +55,7 @@ function update_script() {
     ./orcaslicer --appimage-extract >/dev/null
     mv squashfs-root rootfs
     /opt/orcaslicer/.venv/bin/python /opt/orcaslicer/build_profiles.py "$(cat ~/.orcaslicer)"
+    restore_backup
     msg_ok "Extracted OrcaSlicer"
 
     msg_info "Starting OrcaSlicer MCP"
