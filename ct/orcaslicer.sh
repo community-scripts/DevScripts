@@ -48,6 +48,7 @@ function update_script() {
     msg_ok "Stopped OrcaSlicer MCP"
 
     fetch_and_deploy_gh_release "orcaslicer" "OrcaSlicer/OrcaSlicer" "singlefile" "latest" "/opt/orcaslicer" "OrcaSlicer_Linux_AppImage_Ubuntu2404_V*.AppImage"
+    install -m 0644 ~/.orcaslicer /opt/orcaslicer/version
 
     msg_info "Extracting OrcaSlicer"
     rm -rf /opt/orcaslicer/rootfs /opt/orcaslicer/profiles
