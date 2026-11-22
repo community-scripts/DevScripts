@@ -49,7 +49,7 @@ function update_script() {
     fetch_and_deploy_gh_release "orcaslicer" "OrcaSlicer/OrcaSlicer" "singlefile" "latest" "/opt/orcaslicer" "OrcaSlicer_Linux_AppImage_Ubuntu2404_V*.AppImage"
 
     msg_info "Extracting OrcaSlicer"
-    rm -rf /opt/orcaslicer/rootfs
+    rm -rf /opt/orcaslicer/rootfs /opt/orcaslicer/profiles
     cd /opt/orcaslicer
     ./orcaslicer --appimage-extract >/dev/null
     mv squashfs-root rootfs
