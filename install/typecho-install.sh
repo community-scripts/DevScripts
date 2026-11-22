@@ -23,6 +23,9 @@ PHP_FPM="YES" setup_php
 fetch_and_deploy_gh_release "typecho" "typecho/typecho" "prebuild" "latest" "/opt/typecho" "typecho.zip"
 fetch_and_deploy_from_url "https://github.com/typecho/languages/releases/download/ci/langs.zip" "/opt/typecho/usr/langs"
 
+var_admin_user="${var_admin_user:-admin}"
+var_admin_pass="${var_admin_pass:-$(random_password 16)}"
+
 msg_info "Installing Typecho"
 mkdir -p /opt/typecho_data
 mv /opt/typecho/usr /opt/typecho_data/usr
@@ -43,6 +46,13 @@ rm -f install.php
 # upstream defaults to UTC+8 and index.php URLs; the vhost below handles rewritten ones
 sqlite3 /opt/typecho_data/typecho.db "UPDATE typecho_options SET value = '1' WHERE name = 'rewrite'; UPDATE typecho_options SET value = '0' WHERE name = 'timezone';"
 chown -R www-data:www-data /opt/typecho_data
+cat <<EOF >~/typecho.creds
+Typecho Admin
+URL: http://${LOCAL_IP}/admin/
+Username: ${var_admin_user}
+Password: ${var_admin_pass}
+EOF
+chmod 600 ~/typecho.creds
 msg_ok "Installed Typecho"
 
 msg_info "Configuring Nginx"
