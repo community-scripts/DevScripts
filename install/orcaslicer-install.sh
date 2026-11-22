@@ -52,7 +52,7 @@ ROOT.mkdir(parents=True, exist_ok=True)
 def fetch(folder, name):
     path = ROOT / folder / (name + ".json")
     if path.exists():
-        path.unlink()
+        return path
     path.parent.mkdir(parents=True, exist_ok=True)
     url = BASE + "/" + folder + "/" + urllib.parse.quote(name + ".json", safe="")
     request = urllib.request.Request(url, headers={"User-Agent": "OrcaSlicer-MCP"})
@@ -80,7 +80,7 @@ def resolve(folder, name, seen=None):
     if parent:
         result = resolve(folder, parent, seen)
     merge(result, {key: value for key, value in child.items()
-                   if key not in ("inherits", "from", "include", "setting_id", "renamed_from")})
+                   if key not in ("inherits", "from", "include", "renamed_from")})
     for included in child.get("include", []):
         template = json.loads(fetch(folder, included).read_text())
         merge(result, {key: value for key, value in template.items()
