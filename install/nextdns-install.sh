@@ -26,12 +26,12 @@ msg_ok "Installed NextDNS"
 
 if [[ -z "${var_nextdns_profile:-}" ]]; then
   echo -e "${INFO}${YW}Get your profile ID from: https://my.nextdns.io${CL}"
-  read -r -p "${TAB3}NextDNS Profile ID: " var_nextdns_profile
+  read -r -p "${TAB3}NextDNS Profile ID: " var_nextdns_profile || true
 fi
 var_nextdns_profile="${var_nextdns_profile//[[:space:]]/}"
 if [[ -z "${var_nextdns_profile}" ]]; then
   msg_error "NextDNS Profile ID is required (set var_nextdns_profile or enter it when prompted)"
-  exit 1
+  exit 64
 fi
 
 msg_info "Configuring NextDNS"

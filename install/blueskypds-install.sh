@@ -12,12 +12,12 @@ setting_up_container
 network_check
 update_os
 if [[ -z "${var_pds_hostname:-}" ]]; then
-  read -r -p "${TAB3}Public PDS domain (for example pds.example.com): " var_pds_hostname
+  read -r -p "${TAB3}Public PDS domain (for example pds.example.com): " var_pds_hostname || true
 fi
 var_pds_hostname="$(printf '%s' "$var_pds_hostname" | tr '[:upper:]' '[:lower:]')"
 if [[ ! "$var_pds_hostname" =~ ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$ ]]; then
-  msg_error "Invalid Bluesky PDS domain. Use a public DNS name such as pds.example.com."
-  exit 1
+  msg_error "Invalid Bluesky PDS domain '${var_pds_hostname}'. Set var_pds_hostname or enter a public DNS name such as pds.example.com."
+  exit 64
 fi
 msg_info "Installing Bluesky PDS build dependencies"
 $STD apt install -y build-essential ca-certificates curl git gpg apt-transport-https libsqlite3-dev libvips-dev openssl pkg-config python3 sqlite3 xxd

@@ -29,44 +29,44 @@ $STD uv sync --locked --no-editable
 msg_ok "Installed UniFi Protect Backup"
 
 if [[ -z "${var_ufp_address:-}" ]]; then
-  read -r -p "${TAB3}UniFi Protect address: " var_ufp_address
+  read -r -p "${TAB3}UniFi Protect address: " var_ufp_address || true
 fi
 if [[ -z "${var_ufp_address:-}" ]]; then
-  msg_error "UniFi Protect address is required"
-  exit 1
+  msg_error "UniFi Protect address is required (set var_ufp_address or enter it when prompted)"
+  exit 64
 fi
 if [[ -z "${var_ufp_username:-}" ]]; then
-  read -r -p "${TAB3}UniFi Protect local username: " var_ufp_username
+  read -r -p "${TAB3}UniFi Protect local username: " var_ufp_username || true
 fi
 if [[ -z "${var_ufp_username:-}" ]]; then
-  msg_error "UniFi Protect local username is required"
-  exit 1
+  msg_error "UniFi Protect local username is required (set var_ufp_username or enter it when prompted)"
+  exit 64
 fi
 if [[ -z "${var_ufp_password:-}" ]]; then
-  read -r -s -p "${TAB3}UniFi Protect local password: " var_ufp_password
+  read -r -s -p "${TAB3}UniFi Protect local password: " var_ufp_password || true
   echo
 fi
 if [[ -z "${var_ufp_password:-}" ]]; then
-  msg_error "UniFi Protect local password is required"
-  exit 1
+  msg_error "UniFi Protect local password is required (set var_ufp_password or enter it when prompted)"
+  exit 64
 fi
 
 if [[ -z "${var_rclone_retention:-}" ]]; then
-  read -r -p "${TAB3}Backup retention (for example 7d, 30d, or 100y) [30d]: " var_rclone_retention
+  read -r -p "${TAB3}Backup retention (for example 7d, 30d, or 100y) [30d]: " var_rclone_retention || true
 fi
 var_rclone_retention="${var_rclone_retention:-30d}"
 if [[ ! "$var_rclone_retention" =~ ^[0-9]+([.][0-9]+)?(ms|s|m|h|d|w|M|y)$ ]]; then
   msg_error "Invalid backup retention: ${var_rclone_retention}"
-  exit 1
+  exit 64
 fi
 
 if [[ -z "${var_missing_range:-}" ]]; then
-  read -r -p "${TAB3}Initial missing-event lookback [1h]: " var_missing_range
+  read -r -p "${TAB3}Initial missing-event lookback [1h]: " var_missing_range || true
 fi
 var_missing_range="${var_missing_range:-1h}"
 if [[ ! "$var_missing_range" =~ ^[0-9]+([.][0-9]+)?(ms|s|m|h|d|w|M|y)$ ]]; then
   msg_error "Invalid missing-event lookback: ${var_missing_range}"
-  exit 1
+  exit 64
 fi
 
 var_ufp_ssl_verify="${var_ufp_ssl_verify:-false}"
