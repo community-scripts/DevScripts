@@ -143,7 +143,7 @@ from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-APP_VERSION = Path("/root/.orcaslicer").read_text().strip() if Path("/root/.orcaslicer").exists() else "unknown"
+APP_VERSION = Path("/opt/orcaslicer/version").read_text().strip() if Path("/opt/orcaslicer/version").exists() else "unknown"
 PROFILE_DIR = Path("/opt/orcaslicer/profiles")
 WORK = Path("/var/lib/orcaslicer/jobs")
 ORCA = "/opt/orcaslicer/rootfs/AppRun"
