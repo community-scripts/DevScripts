@@ -155,7 +155,8 @@ mcp = FastMCP(
     instructions=(
         "Prepare Bambu Lab X1 Carbon STL files on demand. Inspect geometry, "
         "orient and slice with OrcaSlicer, then upload a verified .gcode.3mf to "
-        "Nextcloud. No folder watcher, printer control or print submission."
+        "Nextcloud. No folder watcher, printer control or print submission. " 
+        "supports=auto keeps the Bambu preset default; use on/off to force supports."
     ),
     host=os.environ.get("MCP_HOST", "0.0.0.0"),
     port=int(os.environ.get("MCP_PORT", "8765")),
@@ -332,7 +333,7 @@ def slice_stl(
     support_on_build_plate_only: bool = True,
     orientation: str = "auto",
 ) -> dict:
-    """Slice an STL for a Bambu Lab X1 Carbon and upload a verified .gcode.3mf to Nextcloud."""
+    """Slice an STL for X1 Carbon and upload a verified G-code 3MF. supports=auto keeps the Bambu preset default; on/off override it."""
     cfg = config()
     if quality not in {"draft", "standard", "fine"}:
         raise ValueError("quality must be draft, standard or fine.")
