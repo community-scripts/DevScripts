@@ -54,7 +54,7 @@ ROOT.mkdir(parents=True, exist_ok=True)
 def fetch(folder, name):
     path = ROOT / folder / (name + ".json")
     if path.exists():
-        return path
+        path.unlink()
     path.parent.mkdir(parents=True, exist_ok=True)
     url = BASE + "/" + folder + "/" + urllib.parse.quote(name + ".json", safe="")
     request = urllib.request.Request(url, headers={"User-Agent": "OrcaSlicer-MCP"})
