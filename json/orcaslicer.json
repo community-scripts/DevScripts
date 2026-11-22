@@ -1,0 +1,88 @@
+{
+  "name": "OrcaSlicer MCP",
+  "slug": "orcaslicer",
+  "categories": [
+    0
+  ],
+  "date_created": "2026-11-22",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 8765,
+  "documentation": "https://github.com/OrcaSlicer/OrcaSlicer",
+  "website": "https://www.orcaslicer.com/",
+  "repository": "https://github.com/OrcaSlicer/OrcaSlicer",
+  "architectures": [
+    "amd64"
+  ],
+  "platforms": [
+    "pve"
+  ],
+  "logo": "https://raw.githubusercontent.com/OrcaSlicer/OrcaSlicer/main/resources/images/OrcaSlicer.png",
+  "description": "OrcaSlicer MCP provides an on-demand headless slicing service for Bambu Lab X1 Carbon printers. An MCP client can inspect STL geometry, choose orientation and slicing profiles, and export a verified G-code 3MF to Nextcloud.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/orcaslicer.sh",
+      "config_path": "/opt/orcaslicer_data/.env",
+      "resources": {
+        "cpu": 4,
+        "ram": 8192,
+        "hdd": 36,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_nextcloud_url",
+      "label": "Nextcloud WebDAV URL",
+      "type": "text",
+      "default": ""
+    },
+    {
+      "name": "var_nextcloud_user",
+      "label": "Nextcloud username",
+      "type": "text",
+      "default": ""
+    },
+    {
+      "name": "var_nextcloud_password",
+      "label": "Nextcloud app password",
+      "type": "password",
+      "secret": true,
+      "default": ""
+    },
+    {
+      "name": "var_nextcloud_input_dir",
+      "label": "Nextcloud STL input folder",
+      "type": "text",
+      "default": "STL"
+    },
+    {
+      "name": "var_nextcloud_output_dir",
+      "label": "Nextcloud 3MF output folder",
+      "type": "text",
+      "default": "3MF_PRET_A_IMPRIMER"
+    }
+  ],
+  "notes": [
+    {
+      "text": "Port 8765 has no built-in authentication. Restrict it to trusted MCP clients with the Proxmox firewall.",
+      "type": "warning"
+    },
+    {
+      "text": "Configure a Nextcloud WebDAV URL, username, app password, and shared input/output folders in /opt/orcaslicer_data/.env.",
+      "type": "info"
+    },
+    {
+      "text": "The default profile is Bambu PETG Basic with a 0.4 mm X1 Carbon nozzle and Textured PEI Plate; verify the actual filament and printer setup before printing.",
+      "type": "warning"
+    }
+  ]
+}
