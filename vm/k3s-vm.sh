@@ -194,13 +194,28 @@ msg_info "Expanding the root filesystem to ${DISK_SIZE}"
 vm_expand_image "$WORK_FILE" "$DISK_SIZE" || true
 
 TOOL_ARCH="$(vm_arch_resolve amd64 arm64)"
+K3S_BIN_NAME="$(vm_arch_resolve k3s k3s-arm64)"
+HELM_ARCHIVE="helm-v3.18.1-linux-${TOOL_ARCH}.tar.gz"
+# Downloaded on the host: the image step's network is slow and broke off mid-download.
+msg_info "Resolving the K3s stable release"
+K3S_TAG="$(curl -fsSL --retry 3 -o /dev/null -w '%{url_effective}' https://update.k3s.io/v1-release/channels/stable)" || exit 115
+K3S_TAG="${K3S_TAG##*/}"
+msg_ok "K3s ${K3S_TAG}"
+K3S_URL="https://github.com/k3s-io/k3s/releases/download/${K3S_TAG}"
+vm_fetch_image "${K3S_URL}/${K3S_BIN_NAME}" "$TEMP_DIR/${K3S_BIN_NAME}" --checksum-url "${K3S_URL}/sha256sum-${TOOL_ARCH}.txt" || exit 115
+vm_fetch_image "https://get.k3s.io" "$TEMP_DIR/k3s-install.sh" || exit 115
+vm_fetch_image "https://get.helm.sh/${HELM_ARCHIVE}" "$TEMP_DIR/${HELM_ARCHIVE}" --checksum-url "https://get.helm.sh/${HELM_ARCHIVE}.sha256sum" || exit 115
+
 msg_info "Adding K3s and Helm to image"
 vm_customize "K3s and Helm" "$WORK_FILE" \
   --hostname "$HN" \
   --install curl,tar,ca-certificates,gnupg,iptables \
-  --run-command 'bash -o pipefail -c "curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644"' \
+  --upload "$TEMP_DIR/${K3S_BIN_NAME}:/usr/local/bin/k3s" \
+  --upload "$TEMP_DIR/k3s-install.sh:/tmp/k3s-install.sh" \
+  --run-command 'chmod 0755 /usr/local/bin/k3s && INSTALL_K3S_SKIP_DOWNLOAD=true sh /tmp/k3s-install.sh --write-kubeconfig-mode 644 && rm -f /tmp/k3s-install.sh' \
   --run-command 'ln -sf /usr/local/bin/k3s /usr/local/bin/kubectl' \
-  --run-command "bash -euo pipefail -c 'curl -fsSL https://get.helm.sh/helm-v3.18.1-linux-${TOOL_ARCH}.tar.gz -o /tmp/helm.tar.gz; tar -xzf /tmp/helm.tar.gz -C /tmp; install -m 0755 /tmp/linux-${TOOL_ARCH}/helm /usr/local/bin/helm; rm -rf /tmp/helm.tar.gz /tmp/linux-${TOOL_ARCH}'" \
+  --upload "$TEMP_DIR/${HELM_ARCHIVE}:/tmp/helm.tar.gz" \
+  --run-command "tar -xzf /tmp/helm.tar.gz -C /tmp && install -m 0755 /tmp/linux-${TOOL_ARCH}/helm /usr/local/bin/helm && rm -rf /tmp/helm.tar.gz /tmp/linux-${TOOL_ARCH}" \
   --run-command 'grep -qxF "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" /root/.bashrc || echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> /root/.bashrc' || exit 1
 msg_ok "Added K3s and Helm to image"
 
