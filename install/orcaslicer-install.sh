@@ -21,6 +21,7 @@ $STD apt install -y ca-certificates file libasound2t64 libdbus-1-3 libfontconfig
 msg_ok "Installed OrcaSlicer dependencies"
 
 fetch_and_deploy_gh_release "orcaslicer" "OrcaSlicer/OrcaSlicer" "singlefile" "latest" "/opt/orcaslicer" "OrcaSlicer_Linux_AppImage_Ubuntu2404_V*.AppImage"
+install -m 0644 ~/.orcaslicer /opt/orcaslicer/version
 mkdir -p /opt/orcaslicer_data /var/lib/orcaslicer/jobs /var/lib/orcaslicer/.config
 chmod 700 /opt/orcaslicer_data /var/lib/orcaslicer
 
