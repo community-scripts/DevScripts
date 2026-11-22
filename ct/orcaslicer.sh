@@ -15,7 +15,7 @@ var_ram="${var_ram:-8192}"
 var_disk="${var_disk:-36}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
-var_arm64="${var_arm64:-no}"
+var_arm64="${var_arm64:-yes}"
 var_unprivileged="${var_unprivileged:-1}"
 var_nesting="${var_nesting:-0}"
 var_testurl="${var_testurl:-https://github.com/community-scripts/DevScripts/issues/2700}"
@@ -47,7 +47,7 @@ function update_script() {
     systemctl stop orcaslicer-mcp
     msg_ok "Stopped OrcaSlicer MCP"
 
-    fetch_and_deploy_gh_release "orcaslicer" "OrcaSlicer/OrcaSlicer" "singlefile" "latest" "/opt/orcaslicer" "OrcaSlicer_Linux_AppImage_Ubuntu2404_V*.AppImage"
+    fetch_and_deploy_gh_release "orcaslicer" "OrcaSlicer/OrcaSlicer" "singlefile" "latest" "/opt/orcaslicer" "OrcaSlicer_Linux_AppImage_Ubuntu2404_$(arch_resolve V aarch64_V)*.AppImage"
     install -m 0644 ~/.orcaslicer /opt/orcaslicer/version
 
     msg_info "Extracting OrcaSlicer"
