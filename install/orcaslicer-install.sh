@@ -345,7 +345,7 @@ def slice_stl(
     local = download_stl(relative_path)
     try:
         process_name = {"draft": "process-draft.json", "standard": "process.json", "fine": "process-016.json"}[quality]
-        process_settings = json.loads(Path(process).read_text())
+        process_settings = json.loads((PROFILE_DIR / process_name).read_text())
         if strength == "light":
             process_settings.update({"wall_loops": "2", "sparse_infill_density": "10%"})
         elif strength == "standard":
@@ -358,7 +358,7 @@ def slice_stl(
             process_settings["enable_support"] = "0"
         process_settings["support_on_build_plate_only"] = "1" if support_on_build_plate_only else "0"
         override_process = local.parent / "process-overrides.json"
-        override_process.write_text(json.dumps(process_settings, ensure_ascii=False, indent=2) + "\\n")
+        override_process.write_text(json.dumps(process_settings, ensure_ascii=False, indent=2) + "\n")
         arguments = [
             "--curr-bed-type", "Textured PEI Plate",
             "--load-settings", str(PROFILE_DIR / "machine.json") + ";" + str(override_process),
