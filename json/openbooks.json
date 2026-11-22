@@ -1,0 +1,60 @@
+{
+  "name": "OpenBooks",
+  "slug": "openbooks",
+  "categories": [11, 13],
+  "date_created": "2026-11-22",
+  "type": "ct",
+  "platforms": ["pve"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 5228,
+  "documentation": "https://github.com/evan-buss/openbooks#readme",
+  "website": "https://evan-buss.github.io/openbooks/",
+  "repository": "https://github.com/evan-buss/openbooks",
+  "architectures": ["amd64", "arm64"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/openbooks.webp",
+  "description": "OpenBooks is a web interface for searching and downloading eBooks from IRC Highway. It hides the IRC bots and commands behind a search page and saves the downloaded books to disk.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/openbooks.sh",
+      "config_path": "/opt/openbooks/.env",
+      "resources": {
+        "cpu": 1,
+        "ram": 512,
+        "hdd": 4,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "app_vars": [
+    {
+      "name": "var_openbooks_name",
+      "label": "IRC nickname",
+      "type": "text",
+      "help": "Nickname used on IRC Highway. Leave empty for a random openbooks_xxxxxx name. Can be changed later in /opt/openbooks/.env"
+    },
+    {
+      "name": "var_openbooks_persist",
+      "label": "Keep downloaded books on disk",
+      "type": "boolean",
+      "default": "yes",
+      "help": "yes: books are saved in /opt/openbooks/books. no: books are only sent to the browser and deleted afterwards. Change OPENBOOKS_ARGS in /opt/openbooks/.env later."
+    }
+  ],
+  "notes": [
+    {
+      "text": "The web UI has no login. Keep it on your LAN or put it behind a reverse proxy with authentication.",
+      "type": "warning"
+    },
+    {
+      "text": "With persistent storage on, downloaded books are kept in /opt/openbooks/books.",
+      "type": "info"
+    }
+  ]
+}
