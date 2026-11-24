@@ -6,7 +6,7 @@
   ],
   "date_created": "2026-11-20",
   "type": "ct",
-  "platforms": ["pve"],
+  "platforms": ["pve", "incus"],
   "architectures": ["amd64", "arm64"],
   "updateable": true,
   "privileged": false,
