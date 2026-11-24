@@ -80,7 +80,7 @@ EOF
 systemctl enable -q --now hindsight
 msg_ok "Created Service"
 
-if [[ -z "${var_llm_provider:-}" ]]; then
+if [[ "${var_llm_provider:-none}" == "none" ]]; then
   msg_warn "No LLM configured: Hindsight stores plain chunks only. Set HINDSIGHT_API_LLM_PROVIDER and its key in /opt/hindsight.env, then run systemctl restart hindsight"
 fi
 
