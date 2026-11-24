@@ -50,6 +50,12 @@ function update_script() {
     msg_info "Updating Python Environment"
     cd /opt/hindsight
     $STD uv sync --locked --package hindsight-api-slim --extra local-ml
+    HOME=/opt/hindsight_data $STD /opt/hindsight/.venv/bin/python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; from hindsight_api.config import DEFAULT_EMBEDDINGS_LOCAL_MODEL as E, DEFAULT_RERANKER_LOCAL_MODEL as R; SentenceTransformer(E); CrossEncoder(R)"
+    if ! grep -q '^HF_HUB_OFFLINE=' /opt/hindsight.env; then
+      cat <<EOF >>/opt/hindsight.env
+HF_HUB_OFFLINE=1
+EOF
+    fi
     msg_ok "Updated Python Environment"
 
     msg_info "Starting Hindsight"

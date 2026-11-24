@@ -39,7 +39,8 @@
       "name": "var_llm_provider",
       "label": "LLM Provider",
       "type": "text",
-      "help": "Empty for none: memories are stored as plain chunks, without fact extraction or reflect. Otherwise openai, anthropic, gemini, groq, ollama, lmstudio and others; see https://hindsight.vectorize.io/developer/models"
+      "default": "none",
+      "help": "none: memories are stored as plain chunks, without fact extraction or reflect. Otherwise openai, anthropic, gemini, groq, ollama, lmstudio and others; see https://hindsight.vectorize.io/developer/models"
     },
     {
       "name": "var_llm_api_key",

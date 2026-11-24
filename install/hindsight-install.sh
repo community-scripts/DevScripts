@@ -25,7 +25,7 @@ msg_ok "Set up Python Environment"
 
 msg_info "Downloading Embedding and Reranker Models"
 mkdir -p /opt/hindsight_data
-HOME=/opt/hindsight_data $STD /opt/hindsight/.venv/bin/python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; SentenceTransformer('BAAI/bge-small-en-v1.5'); CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')"
+HOME=/opt/hindsight_data $STD /opt/hindsight/.venv/bin/python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; from hindsight_api.config import DEFAULT_EMBEDDINGS_LOCAL_MODEL as E, DEFAULT_RERANKER_LOCAL_MODEL as R; SentenceTransformer(E); CrossEncoder(R)"
 msg_ok "Downloaded Embedding and Reranker Models"
 
 msg_info "Configuring Hindsight"
@@ -43,6 +43,8 @@ HINDSIGHT_API_LLM_BASE_URL=${var_llm_base_url:-}
 TRANSFORMERS_VERBOSITY=error
 HF_HUB_VERBOSITY=error
 TOKENIZERS_PARALLELISM=false
+# models are cached at install; online, startup stalls on a slow huggingface.co (vectorize-io/hindsight#6494)
+HF_HUB_OFFLINE=1
 EOF
 sed -i '/=$/d' /opt/hindsight.env
 chmod 600 /opt/hindsight.env
@@ -78,7 +80,7 @@ EOF
 systemctl enable -q --now hindsight
 msg_ok "Created Service"
 
-if [[ -z "${var_llm_provider:-}" ]]; then
+if [[ "${var_llm_provider:-none}" == "none" ]]; then
   msg_warn "No LLM configured: Hindsight stores plain chunks only. Set HINDSIGHT_API_LLM_PROVIDER and its key in /opt/hindsight.env, then run systemctl restart hindsight"
 fi
 
