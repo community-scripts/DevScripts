@@ -13,7 +13,6 @@ setting_up_container
 network_check
 update_os
 
-APP="Immich Remote ML"
 APP_DIR="/opt/immich-remote-ml"
 DATA_DIR="/opt/immich-remote-ml_data"
 ML_SOURCE_DIR="${APP_DIR}/machine-learning"
