@@ -17,7 +17,7 @@
   "install_methods": [
     {
       "type": "default",
-      "script": "ct/immich-remote-ml.sh",
+      "script": "ct/immichremoteml.sh",
       "config_path": "/etc/default/immich-remote-ml",
       "resources": {
         "cpu": 6,
