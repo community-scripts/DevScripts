@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -25,7 +25,7 @@ fetch_and_deploy_gh_release "immich-remote-ml" "immich-app/immich" "tarball" "la
 if [[ "${HWACCEL_VENDOR:-none}" == "amd" ]]; then
   ML_EXTRA="rocm"
   DEVICE="rocm"
-  $STD apt install -y rocm-hip-libraries rocm-ml-libraries
+  $STD apt install -y migraphx miopen-hip
   msg_ok "AMD ROCm machine-learning backend selected"
 else
   ML_EXTRA="cpu"
