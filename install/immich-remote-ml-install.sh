@@ -33,7 +33,7 @@ else
   msg_warn "No AMD GPU passthrough detected; using the CPU machine-learning backend"
 fi
 
-mkdir -p "$DATA_DIR" "$CACHE_DIR" "$HOME_DIR" "$VENV_DIR"
+mkdir -p "$DATA_DIR" "$CACHE_DIR/jit/comgr" "$CACHE_DIR/hf-cache" "$HOME_DIR" "$VENV_DIR"
 
 cat <<EOF >/etc/default/immich-remote-ml
 ML_EXTRA=$ML_EXTRA
@@ -56,11 +56,14 @@ Type=simple
 WorkingDirectory=$ML_SOURCE_DIR
 EnvironmentFile=-/etc/default/immich-remote-ml
 Environment=HOME=$HOME_DIR
+Environment=PATH=$VENV_DIR/bin:/opt/rocm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=IMMICH_HOST=0.0.0.0
 Environment=IMMICH_PORT=3003
 Environment=MACHINE_LEARNING_CACHE_FOLDER=$CACHE_DIR
-Environment=MACHINE_LEARNING_MODEL_ARENA=false
-ExecStart=$VENV_DIR/bin/gunicorn immich_ml.main:app -k immich_ml.config.CustomUvicornWorker -c immich_ml/gunicorn_conf.py -b 0.0.0.0:3003 -w 1 -t 300 --log-config-json log_conf.json --keep-alive 2 --graceful-timeout 10 --no-control-socket
+Environment=MACHINE_LEARNING_MODEL_REVISION=v2
+Environment=HF_HOME=$CACHE_DIR/hf-cache
+Environment=AMD_COMGR_CACHE_DIR=$CACHE_DIR/jit/comgr
+ExecStart=$VENV_DIR/bin/python -m immich_ml
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=300
