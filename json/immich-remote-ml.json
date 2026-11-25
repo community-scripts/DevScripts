@@ -13,7 +13,7 @@
   "architectures": ["amd64"],
   "platforms": ["pve"],
   "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/immich.webp",
-  "description": "Standalone native Immich machine-learning service for facial recognition and smart search. Uses AMD ROCm when an AMD GPU is passed through to the LXC, with a CPU fallback.",
+  "description": "Standalone native Immich machine-learning service for facial recognition and smart search. Supports NVIDIA CUDA and AMD ROCm GPU passthrough, with a CPU fallback.",
   "install_methods": [
     {
       "type": "default",
@@ -34,7 +34,8 @@
   },
   "notes": [
     "In Immich, set the Machine Learning URL to http://<LXC-IP>:3003. The API has no authentication; restrict TCP port 3003 to the Immich server and trusted LAN.",
-    "ROCm requires AMD GPU passthrough and a compatible Proxmox host driver. For unsupported gfx1030 devices, set HSA_OVERRIDE_GFX_VERSION=10.3.0 in /etc/default/immich-remote-ml.",
-    "ROCm libraries and model caches require substantial disk space; the default LXC disk is 50 GiB. CPU backend is selected when no AMD GPU is detected."
+    "NVIDIA CUDA requires /dev/nvidia* device passthrough and a compatible host driver (Immich requires NVIDIA compute capability 5.2+ and driver 545+). The installer uses the shared helper to install matching NVIDIA userspace libraries; do not install a kernel driver inside the LXC.",
+    "AMD ROCm requires AMD GPU passthrough and a compatible Proxmox host driver. For unsupported gfx1030 devices, set HSA_OVERRIDE_GFX_VERSION=10.3.0 in /etc/default/immich-remote-ml.",
+    "CUDA and ROCm libraries plus model caches require substantial disk space; the default LXC disk is 50 GiB. CPU backend is selected when no supported GPU is detected."
   ]
 }
