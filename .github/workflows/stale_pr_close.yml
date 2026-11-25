@@ -10,6 +10,18 @@ on:
     types:
       - labeled
 
+# All deadlines live here. unmet-pr-close.yml repeats REQUIREMENTS_CLOSE_AFTER_DAYS
+# in its comment text; keep the two in sync.
+env:
+  PR_STALE_AFTER_DAYS: 14
+  PR_CLOSE_AFTER_DAYS: 14
+  REQUIREMENTS_CLOSE_AFTER_DAYS: 14
+  ISSUE_CLOSE_AFTER_DAYS: 21
+  REMIND_BEFORE_DAYS: 3
+  # Labels that keep a PR or issue open no matter what; `stale` is taken off again.
+  # Matches STALE_EXEMPT in scripts/telemetry-issue-stats.js.
+  STALE_EXEMPT_LABELS: "keep-open,Migration To ProxmoxVE,Started Migration To ProxmoxVE"
+
 jobs:
   stale-prs:
     if: github.event_name != 'issues'
@@ -28,15 +40,44 @@ jobs:
             const repo = context.repo.repo;
             const REQ = "requirements missing";
             const MAINTAINERS = ["OWNER", "MEMBER", "COLLABORATOR"];
+            const STALE_AFTER = Number(process.env.PR_STALE_AFTER_DAYS);
+            const CLOSE_AFTER = Number(process.env.PR_CLOSE_AFTER_DAYS);
+            const REQ_CLOSE_AFTER = Number(process.env.REQUIREMENTS_CLOSE_AFTER_DAYS);
+            const REMIND_BEFORE = Number(process.env.REMIND_BEFORE_DAYS);
+            const REMINDER = "<!-- stale-reminder -->";
+            const EXEMPT = process.env.STALE_EXEMPT_LABELS.split(",");
+            const exempt = labels => labels.some(l => EXEMPT.includes(l));
             const days = d => (now - d) / (1000 * 60 * 60 * 24);
+            const latest = dates => dates.length > 0 ? new Date(Math.max(...dates)) : null;
             const staleNotice = author =>
-              `@${author} This PR has been marked as stale. It will be closed if no new commits are added in 7 days.`;
+              `@${author} This PR has been marked as stale. It will be closed in ${CLOSE_AFTER} days unless new commits are pushed or you reply here.`;
+
+            // True once the deadline has passed; before that, posts one reminder
+            // REMIND_BEFORE days ahead of it.
+            const deadlinePassed = async (number, clockStart, limit, comments, reminder) => {
+              const age = days(clockStart);
+              if (age > limit) return true;
+              const reminded = comments.some(c =>
+                c.user?.type === "Bot" && c.body?.includes(REMINDER) && new Date(c.created_at) > clockStart);
+              if (age > limit - REMIND_BEFORE && !reminded) {
+                const left = Math.max(1, Math.ceil(limit - age));
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: number, body: `${REMINDER}\n${reminder(left)}`
+                });
+              }
+              return false;
+            };
 
             // Only fires for a maintainer's label: labels set with GITHUB_TOKEN raise no event.
             if (context.eventName === "pull_request_target" && context.payload.action === "labeled") {
               const pr = context.payload.pull_request;
               const labels = (pr.labels || []).map(l => l.name);
-              if (context.payload.label?.name === "stale" && !labels.includes(REQ)) {
+              if (context.payload.label?.name !== "stale") return;
+              if (exempt(labels)) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: pr.number, name: "stale" });
+                return;
+              }
+              if (!labels.includes(REQ)) {
                 await github.rest.issues.createComment({
                   owner, repo, issue_number: pr.number, body: staleNotice(pr.user.login)
                 });
@@ -51,7 +92,8 @@ jobs:
               const author = pr.user.login;
               const hasStale = labels.includes("stale");
 
-              if (labels.includes("keep-open")) {
+              // Covers the requirements track too: an exempt PR is never closed.
+              if (exempt(labels)) {
                 if (hasStale) {
                   await github.rest.issues.removeLabel({ owner, repo, issue_number: pr.number, name: "stale" });
                 }
@@ -64,13 +106,51 @@ jobs:
               const commits = await github.paginate(github.rest.pulls.listCommits, {
                 owner, repo, pull_number: pr.number, per_page: 100
               });
-              const lastCommitDate = commits.length > 0
-                ? new Date(commits[commits.length - 1].commit.author.date)
-                : new Date(pr.created_at);
+              // Committer date, not author date: a rebase or amend keeps the author
+              // date, so a freshly rebased PR used to look as old as its first commit.
+              const lastCommitDate =
+                latest(commits.map(c => new Date(c.commit.committer?.date || c.commit.author.date))) ||
+                new Date(pr.created_at);
               const humanComments = comments.filter(c => c.user?.type !== "Bot");
+              const maintainerReply = c =>
+                MAINTAINERS.includes(c.author_association) && c.user?.login !== author;
 
               // -------------------------------------------------------
-              // Auto-label PRs with no activity in the last 14 days,
+              // Requirements missing: its own deadline, set by unmet-pr-close.yml.
+              // Only fixing the description (which removes the label there) ends it.
+              // -------------------------------------------------------
+              if (labels.includes(REQ)) {
+                // Older runs of unmet-pr-close.yml set `stale` alongside the label.
+                if (hasStale) {
+                  await github.rest.issues.removeLabel({ owner, repo, issue_number: pr.number, name: "stale" });
+                }
+                const events = await github.paginate(github.rest.issues.listEvents, {
+                  owner, repo, issue_number: pr.number, per_page: 100
+                });
+                const reqDate = latest(events
+                  .filter(e => e.event === "labeled" && e.label?.name === REQ)
+                  .map(e => new Date(e.created_at)));
+                if (!reqDate) continue;
+
+                // A maintainer comment after the label restarts the clock.
+                const clockStart = latest([reqDate, ...humanComments
+                  .filter(maintainerReply)
+                  .map(c => new Date(c.created_at))
+                  .filter(d => d > reqDate)]);
+                const close = await deadlinePassed(pr.number, clockStart, REQ_CLOSE_AFTER, comments, left =>
+                  `@${author} Reminder: this PR will be closed in ${left} day(s) unless the items from the requirements check above are fixed in the PR description.`);
+                if (!close) continue;
+
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: pr.number,
+                  body: `@${author} Closing: the items from the requirements check above were still missing ${REQ_CLOSE_AFTER} days later. Once they are in place, please open a new pull request.`
+                });
+                await github.rest.pulls.update({ owner, repo, pull_number: pr.number, state: "closed" });
+                continue;
+              }
+
+              // -------------------------------------------------------
+              // Auto-label PRs with no activity in the last PR_STALE_AFTER_DAYS,
               // but ONLY if someone other than the author has engaged.
               // -------------------------------------------------------
               if (!hasStale) {
@@ -89,7 +169,7 @@ jobs:
                   ? lastCommentDate
                   : lastCommitDate;
 
-                if (days(lastActivityDate) > 14) {
+                if (days(lastActivityDate) > STALE_AFTER) {
                   await github.rest.issues.addLabels({ owner, repo, issue_number: pr.number, labels: ["stale"] });
                   await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body: staleNotice(author) });
                 }
@@ -102,15 +182,17 @@ jobs:
               const events = await github.paginate(github.rest.issues.listEvents, {
                 owner, repo, issue_number: pr.number, per_page: 100
               });
-              const staleDates = events
+              const staleLabelDate = latest(events
                 .filter(e => e.event === "labeled" && e.label?.name === "stale")
-                .map(e => new Date(e.created_at));
-              if (staleDates.length === 0) continue;
-              const staleLabelDate = new Date(Math.max(...staleDates));
-              const isRequirements = labels.includes(REQ);
+                .map(e => new Date(e.created_at)));
+              if (!staleLabelDate) continue;
 
-              // A push ends an inactivity mark; a requirements mark only ends via unmet-pr-close.yml.
-              if (!isRequirements && lastCommitDate > staleLabelDate) {
+              // A push ends the mark. Force-push events catch a push of older
+              // commits too, whose dates alone would not show it.
+              const lastPushDate = latest([lastCommitDate, ...events
+                .filter(e => e.event === "head_ref_force_pushed")
+                .map(e => new Date(e.created_at))]);
+              if (lastPushDate > staleLabelDate) {
                 await github.rest.issues.removeLabel({ owner, repo, issue_number: pr.number, name: "stale" });
                 await github.rest.issues.createComment({
                   owner, repo, issue_number: pr.number,
@@ -119,26 +201,27 @@ jobs:
                 continue;
               }
 
-              // A maintainer comment after the mark restarts the 7 days.
-              const maintainerDates = humanComments
-                .filter(c => MAINTAINERS.includes(c.author_association) && c.user?.login !== author)
+              // A reply from the author or a maintainer after the mark restarts the clock.
+              const clockStart = latest([staleLabelDate, ...humanComments
+                .filter(c => c.user?.login === author || maintainerReply(c))
                 .map(c => new Date(c.created_at))
-                .filter(d => d > staleLabelDate);
-              const clockStart = maintainerDates.length > 0 ? new Date(Math.max(...maintainerDates)) : staleLabelDate;
-              if (days(clockStart) <= 7) continue;
+                .filter(d => d > staleLabelDate)]);
+              const close = await deadlinePassed(pr.number, clockStart, CLOSE_AFTER, comments, left =>
+                `@${author} Reminder: this stale PR will be closed in ${left} day(s) unless new commits are pushed or you reply here.`);
+              if (!close) continue;
 
               await github.rest.issues.createComment({
                 owner, repo, issue_number: pr.number,
-                body: isRequirements
-                  ? `@${author} Closing: the items from the requirements check above were still missing 7 days later. Once they are in place, please open a new pull request.`
-                  : `@${author} Closing stale PR due to inactivity (no commits for 7 days after stale label).`
+                body: `@${author} Closing stale PR due to inactivity (no commits or replies for ${CLOSE_AFTER} days after the stale label).`
               });
               await github.rest.pulls.update({ owner, repo, pull_number: pr.number, state: "closed" });
             }
 
-  # A maintainer marks an issue `stale` by hand; nothing labels issues on its own.
-  # Seven days later the issue is closed and, for a script issue, the script's
-  # files are removed from the default branch by the job below.
+  # A maintainer marks an issue `stale` by hand, or scripts/telemetry-issue-stats.js
+  # does when an app keeps failing. ISSUE_CLOSE_AFTER_DAYS later the issue is
+  # closed and, for a script issue whose files the notice listed, those files are
+  # removed from the default branch by the job below. An open PR that touches
+  # the files holds the close back.
   stale-issues:
     if: >-
       github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
@@ -147,6 +230,7 @@ jobs:
     permissions:
       issues: write
       contents: read
+      pull-requests: read
     outputs:
       closed: ${{ steps.issues.outputs.closed }}
     steps:
@@ -158,7 +242,13 @@ jobs:
             const now = new Date();
             const { owner, repo } = context.repo;
             const MAINTAINERS = ["OWNER", "MEMBER", "COLLABORATOR"];
+            const CLOSE_AFTER = Number(process.env.ISSUE_CLOSE_AFTER_DAYS);
+            const REMIND_BEFORE = Number(process.env.REMIND_BEFORE_DAYS);
+            const REMINDER = "<!-- stale-reminder -->";
+            const EXEMPT = process.env.STALE_EXEMPT_LABELS.split(",");
+            const exempt = labels => labels.some(l => EXEMPT.includes(l));
             const days = d => (now - d) / (1000 * 60 * 60 * 24);
+            const latest = dates => dates.length > 0 ? new Date(Math.max(...dates)) : null;
             const SEG = "[A-Za-z0-9][A-Za-z0-9._-]*";
 
             // The files a New Script issue stands for, read from the issue form the
@@ -237,15 +327,35 @@ jobs:
                 await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: "stale" });
                 return;
               }
+              if (exempt((issue.labels || []).map(l => l.name))) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: "stale" });
+                return;
+              }
               const s = scriptFiles(issue);
               await github.rest.issues.createComment({
                 owner, repo, issue_number: issue.number,
                 body: s
-                  ? `@${issue.user.login} This issue has been marked as stale. If no new commit touches the script within 7 days, the issue will be closed and these files removed from the repository:\n\n${fileList(s)}\n\n${MARK}${JSON.stringify(s)} -->`
-                  : `@${issue.user.login} This issue has been marked as stale. It will be closed in 7 days.`
+                  ? `@${issue.user.login} This issue has been marked as stale. If no new commit touches the script within ${CLOSE_AFTER} days, the issue will be closed and these files removed from the repository:\n\n${fileList(s)}\n\nAn open pull request that changes these files holds this back.\n\n${MARK}${JSON.stringify(s)} -->`
+                  : `@${issue.user.login} This issue has been marked as stale. It will be closed in ${CLOSE_AFTER} days.`
               });
               return;
             }
+
+            // Open PRs and the files they change, fetched once and only if needed.
+            let openPrs = null;
+            const fixPr = async files => {
+              if (!openPrs) {
+                openPrs = [];
+                const prs = await github.paginate(github.rest.pulls.list, { owner, repo, state: "open", per_page: 100 });
+                for (const pr of prs) {
+                  const changed = await github.paginate(github.rest.pulls.listFiles, {
+                    owner, repo, pull_number: pr.number, per_page: 100
+                  });
+                  openPrs.push({ number: pr.number, files: new Set(changed.map(f => f.filename)) });
+                }
+              }
+              return openPrs.find(p => files.some(f => p.files.has(f)));
+            };
 
             const issues = (await github.paginate(github.rest.issues.listForRepo, {
               owner, repo, state: "open", labels: "stale", per_page: 100
@@ -256,7 +366,7 @@ jobs:
               const labels = issue.labels.map(l => l.name);
               const author = issue.user.login;
 
-              if (labels.includes("keep-open")) {
+              if (exempt(labels)) {
                 await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: "stale" });
                 continue;
               }
@@ -295,19 +405,40 @@ jobs:
                 }
               }
 
-              // A maintainer comment after the mark restarts the 7 days.
-              const maintainerDates = comments
+              // An open PR on the script's files: someone is fixing it, so wait.
+              if (s) {
+                const pr = await fixPr(s.files);
+                if (pr) {
+                  core.info(`#${issue.number}: open PR #${pr.number} touches the script, not closing.`);
+                  continue;
+                }
+              }
+
+              // A maintainer comment after the mark restarts the clock.
+              const clockStart = latest([staleLabelDate, ...comments
                 .filter(c => c.user?.type !== "Bot" && MAINTAINERS.includes(c.author_association) && c.user?.login !== author)
                 .map(c => new Date(c.created_at))
-                .filter(d => d > staleLabelDate);
-              const clockStart = maintainerDates.length > 0 ? new Date(Math.max(...maintainerDates)) : staleLabelDate;
-              if (days(clockStart) <= 7) continue;
+                .filter(d => d > staleLabelDate)]);
+              const age = days(clockStart);
+              if (age <= CLOSE_AFTER) {
+                const reminded = comments.some(c =>
+                  c.user?.type === "Bot" && c.body?.includes(REMINDER) && new Date(c.created_at) > clockStart);
+                if (age > CLOSE_AFTER - REMIND_BEFORE && !reminded) {
+                  const left = Math.max(1, Math.ceil(CLOSE_AFTER - age));
+                  await github.rest.issues.createComment({
+                    owner, repo, issue_number: issue.number,
+                    body: `${REMINDER}\n@${author} Reminder: this stale issue will be closed in ${left} day(s)` +
+                      (s ? " and the script's files removed, unless a commit or an open pull request touches them." : ".")
+                  });
+                }
+                continue;
+              }
 
               await github.rest.issues.createComment({
                 owner, repo, issue_number: issue.number,
                 body: s
-                  ? `@${author} Closing stale issue due to inactivity (no commits to the script for 7 days after stale label). The script's files are being removed from the repository.`
-                  : `@${author} Closing stale issue due to inactivity (7 days after stale label).`
+                  ? `@${author} Closing stale issue due to inactivity (no commits to the script for ${CLOSE_AFTER} days after the stale label). The script's files are being removed from the repository.`
+                  : `@${author} Closing stale issue due to inactivity (${CLOSE_AFTER} days after the stale label).`
               });
               await github.rest.issues.update({
                 owner, repo, issue_number: issue.number, state: "closed", state_reason: "not_planned"
@@ -381,7 +512,7 @@ jobs:
           git commit -m "Delete stale scripts: ${joined}"
           git push origin "$branch"
 
-          body="Automated cleanup: these script issues were closed as stale (no commits for 7 days after the stale label)."$'\n\n'"${lines}"
+          body="Automated cleanup: these script issues were closed as stale (no commits for ${ISSUE_CLOSE_AFTER_DAYS} days after the stale label)."$'\n\n'"${lines}"
           url=$(gh pr create --base main --head "$branch" --title "Delete stale scripts: ${joined}" --body "$body")
           pr_number="${url##*/}"
 

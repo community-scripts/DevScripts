@@ -6,6 +6,10 @@ permissions:
   pull-requests: write
   contents: read
   issues: write
+# Read by the comment text only; the close itself happens in stale_pr_close.yml,
+# whose env block holds the same value. Keep the two in sync.
+env:
+  REQUIREMENTS_CLOSE_AFTER_DAYS: 14
 jobs:
   validate-script-requirements:
     runs-on: ubuntu-latest
@@ -14,7 +18,9 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
-            // Never closes a PR itself; stale_pr_close.yml does that after 7 days.
+            // Never closes a PR itself; stale_pr_close.yml does that once the
+            // `requirements missing` label is REQUIREMENTS_CLOSE_AFTER_DAYS old.
+            const CLOSE_AFTER = Number(process.env.REQUIREMENTS_CLOSE_AFTER_DAYS);
             const MARKER = "<!-- requirements-check -->";
             const LABEL = "requirements missing";
             const TEAM = "@community-scripts/contributor";
@@ -149,10 +155,11 @@ jobs:
               if (mine && !mine.body.startsWith(MARKER + "\n✅")) {
                 await github.rest.issues.updateComment({
                   owner, repo, comment_id: mine.id,
-                  body: MARKER + "\n✅ **Requirements check passed.** Thanks for fixing the description — the `stale` mark has been removed."
+                  body: MARKER + "\n✅ **Requirements check passed.** Thanks for fixing the description — the `requirements missing` label has been removed."
                 });
               }
               if (prLabels.includes(LABEL)) {
+                // `stale` too: older runs of this check set it alongside the label.
                 for (const name of [LABEL, "stale"]) {
                   if (prLabels.includes(name)) {
                     await github.rest.issues.removeLabel({ owner, repo, issue_number: number, name });
@@ -168,7 +175,7 @@ jobs:
               "@" + author + ", this pull request is missing the following:\n\n" +
               problems.map(p => "- " + p).join("\n") + "\n\n" +
               "**Edit the PR description** to fix it — no new PR needed. This check runs again on every edit and clears itself once everything is in place.\n\n" +
-              "Until then the PR is marked `stale` and will be closed in **7 days**.\n\n" +
+              "Until then the PR is labeled `requirements missing` and will be closed after **" + CLOSE_AFTER + " days**; you get a reminder shortly before.\n\n" +
               "---\n\n" +
               TEAM + " please take a look: close it, comment, or set `keep-open` to keep it.";
 
@@ -180,9 +187,8 @@ jobs:
               await github.rest.issues.createComment({ owner, repo, issue_number: number, body: text });
             }
 
-            const toAdd = [LABEL, "stale"].filter(name => !prLabels.includes(name));
-            if (toAdd.length > 0) {
-              await github.rest.issues.addLabels({ owner, repo, issue_number: number, labels: toAdd });
+            if (!prLabels.includes(LABEL)) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number: number, labels: [LABEL] });
             }
 
             core.setFailed("Requirements check: " + problems.length + " item(s) missing.");
