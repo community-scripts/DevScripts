@@ -52,7 +52,7 @@ function update_script() {
     UV_PROJECT_ENVIRONMENT="$VENV_DIR" $STD uv sync --project "$ML_SOURCE_DIR" --locked --no-dev --no-install-project --extra "${ML_EXTRA:-cpu}" --python 3.13 --link-mode copy
 
     msg_info "Starting Immich Remote ML"
-    safe_service_restart "immich-remote-ml"
+    systemctl start immich-remote-ml
     msg_ok "Started Immich Remote ML"
     msg_ok "Updated Immich Remote ML successfully!"
   fi
