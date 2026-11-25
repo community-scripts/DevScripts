@@ -50,7 +50,11 @@ function update_script() {
 
     msg_info "Updating ${APP}"
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "immich-remote-ml" "immich-app/immich" "tarball" "latest" "$APP_DIR"
-    UV_PROJECT_ENVIRONMENT="$VENV_DIR" $STD uv sync --project "$ML_SOURCE_DIR" --locked --no-dev --no-install-project --extra "${ML_EXTRA:-cpu}" --python 3.13 --link-mode copy
+    UV_SYNC_ARGS=(--project "$ML_SOURCE_DIR" --locked --no-dev --no-install-project --extra "${ML_EXTRA:-cpu}" --python 3.13 --link-mode copy)
+    if [[ "${ML_EXTRA:-cpu}" == "cuda" ]]; then
+      UV_SYNC_ARGS+=(--group cuda-libs)
+    fi
+    UV_PROJECT_ENVIRONMENT="$VENV_DIR" $STD uv sync "${UV_SYNC_ARGS[@]}"
     msg_ok "Updated ${APP}"
 
     msg_info "Starting ${APP}"
