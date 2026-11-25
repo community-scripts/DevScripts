@@ -1,0 +1,40 @@
+{
+  "name": "Immich Remote ML",
+  "slug": "immich-remote-ml",
+  "categories": [20],
+  "date_created": "2026-11-25",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3003,
+  "documentation": "https://docs.immich.app/features/ml-hardware-acceleration/",
+  "website": "https://immich.app/",
+  "repository": "https://github.com/immich-app/immich",
+  "architectures": ["amd64"],
+  "platforms": ["pve"],
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/immich.webp",
+  "description": "Standalone native Immich machine-learning service for facial recognition and smart search. Uses AMD ROCm when an AMD GPU is passed through to the LXC, with a CPU fallback.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/immich-remote-ml.sh",
+      "config_path": "/etc/default/immich-remote-ml",
+      "resources": {
+        "cpu": 6,
+        "ram": 12288,
+        "hdd": 50,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    "In Immich, set the Machine Learning URL to http://<LXC-IP>:3003. The API has no authentication; restrict TCP port 3003 to the Immich server and trusted LAN.",
+    "ROCm requires AMD GPU passthrough and a compatible Proxmox host driver. For unsupported gfx1030 devices, set HSA_OVERRIDE_GFX_VERSION=10.3.0 in /etc/default/immich-remote-ml.",
+    "ROCm libraries and model caches require substantial disk space; the default LXC disk is 50 GiB. CPU backend is selected when no AMD GPU is detected."
+  ]
+}
