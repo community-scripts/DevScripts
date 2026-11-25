@@ -15,7 +15,7 @@ var_ram="${var_ram:-12288}"
 var_disk="${var_disk:-50}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
-var_arm64="${var_arm64:-no}" # ROCm and Immich's ROCm ONNX Runtime are amd64-only.
+var_arm64="${var_arm64:-no}" # Immich CUDA runtime wheels and ROCm ONNX Runtime are amd64-only.
 var_unprivileged="${var_unprivileged:-1}"
 var_gpu="${var_gpu:-yes}"
 
