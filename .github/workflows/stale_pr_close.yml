@@ -50,7 +50,7 @@ jobs:
             const days = d => (now - d) / (1000 * 60 * 60 * 24);
             const latest = dates => dates.length > 0 ? new Date(Math.max(...dates)) : null;
             const staleNotice = author =>
-              `@${author} This PR has been marked as stale. It will be closed in ${CLOSE_AFTER} days unless new commits are pushed or you reply here.`;
+              `@${author} This PR has been marked as stale. It will be closed in ${CLOSE_AFTER} days unless new commits are pushed or someone comments here.`;
 
             // True once the deadline has passed; before that, posts one reminder
             // REMIND_BEFORE days ahead of it.
@@ -73,7 +73,7 @@ jobs:
               const pr = context.payload.pull_request;
               const labels = (pr.labels || []).map(l => l.name);
               if (context.payload.label?.name !== "stale") return;
-              if (exempt(labels)) {
+              if (exempt(labels) || pr.draft) {
                 await github.rest.issues.removeLabel({ owner, repo, issue_number: pr.number, name: "stale" });
                 return;
               }
@@ -92,8 +92,8 @@ jobs:
               const author = pr.user.login;
               const hasStale = labels.includes("stale");
 
-              // Covers the requirements track too: an exempt PR is never closed.
-              if (exempt(labels)) {
+              // Covers the requirements track too: an exempt PR or a draft is never closed.
+              if (exempt(labels) || pr.draft) {
                 if (hasStale) {
                   await github.rest.issues.removeLabel({ owner, repo, issue_number: pr.number, name: "stale" });
                 }
@@ -201,18 +201,17 @@ jobs:
                 continue;
               }
 
-              // A reply from the author or a maintainer after the mark restarts the clock.
+              // Any human comment after the mark (author, maintainer or tester) restarts the clock.
               const clockStart = latest([staleLabelDate, ...humanComments
-                .filter(c => c.user?.login === author || maintainerReply(c))
                 .map(c => new Date(c.created_at))
                 .filter(d => d > staleLabelDate)]);
               const close = await deadlinePassed(pr.number, clockStart, CLOSE_AFTER, comments, left =>
-                `@${author} Reminder: this stale PR will be closed in ${left} day(s) unless new commits are pushed or you reply here.`);
+                `@${author} Reminder: this stale PR will be closed in ${left} day(s) unless new commits are pushed or someone comments here.`);
               if (!close) continue;
 
               await github.rest.issues.createComment({
                 owner, repo, issue_number: pr.number,
-                body: `@${author} Closing stale PR due to inactivity (no commits or replies for ${CLOSE_AFTER} days after the stale label).`
+                body: `@${author} Closing stale PR due to inactivity (no commits or comments for ${CLOSE_AFTER} days after the stale label).`
               });
               await github.rest.pulls.update({ owner, repo, pull_number: pr.number, state: "closed" });
             }
@@ -241,7 +240,6 @@ jobs:
           script: |
             const now = new Date();
             const { owner, repo } = context.repo;
-            const MAINTAINERS = ["OWNER", "MEMBER", "COLLABORATOR"];
             const CLOSE_AFTER = Number(process.env.ISSUE_CLOSE_AFTER_DAYS);
             const REMIND_BEFORE = Number(process.env.REMIND_BEFORE_DAYS);
             const REMINDER = "<!-- stale-reminder -->";
@@ -335,8 +333,8 @@ jobs:
               await github.rest.issues.createComment({
                 owner, repo, issue_number: issue.number,
                 body: s
-                  ? `@${issue.user.login} This issue has been marked as stale. If no new commit touches the script within ${CLOSE_AFTER} days, the issue will be closed and these files removed from the repository:\n\n${fileList(s)}\n\nAn open pull request that changes these files holds this back.\n\n${MARK}${JSON.stringify(s)} -->`
-                  : `@${issue.user.login} This issue has been marked as stale. It will be closed in ${CLOSE_AFTER} days.`
+                  ? `@${issue.user.login} This issue has been marked as stale. If there is no new commit to the script and no comment here within ${CLOSE_AFTER} days, the issue will be closed and these files removed from the repository:\n\n${fileList(s)}\n\nAn open pull request that changes these files holds this back.\n\n${MARK}${JSON.stringify(s)} -->`
+                  : `@${issue.user.login} This issue has been marked as stale. It will be closed in ${CLOSE_AFTER} days unless someone comments here.`
               });
               return;
             }
@@ -414,9 +412,10 @@ jobs:
                 }
               }
 
-              // A maintainer comment after the mark restarts the clock.
+              // Any human comment after the mark restarts the clock: test reports
+              // from users are the feedback this deadline is meant to draw out.
               const clockStart = latest([staleLabelDate, ...comments
-                .filter(c => c.user?.type !== "Bot" && MAINTAINERS.includes(c.author_association) && c.user?.login !== author)
+                .filter(c => c.user?.type !== "Bot")
                 .map(c => new Date(c.created_at))
                 .filter(d => d > staleLabelDate)]);
               const age = days(clockStart);
@@ -428,7 +427,8 @@ jobs:
                   await github.rest.issues.createComment({
                     owner, repo, issue_number: issue.number,
                     body: `${REMINDER}\n@${author} Reminder: this stale issue will be closed in ${left} day(s)` +
-                      (s ? " and the script's files removed, unless a commit or an open pull request touches them." : ".")
+                      (s ? " and the script's files removed, unless someone comments here or a commit or an open pull request touches them."
+                         : " unless someone comments here.")
                   });
                 }
                 continue;
@@ -437,8 +437,8 @@ jobs:
               await github.rest.issues.createComment({
                 owner, repo, issue_number: issue.number,
                 body: s
-                  ? `@${author} Closing stale issue due to inactivity (no commits to the script for ${CLOSE_AFTER} days after the stale label). The script's files are being removed from the repository.`
-                  : `@${author} Closing stale issue due to inactivity (${CLOSE_AFTER} days after the stale label).`
+                  ? `@${author} Closing stale issue due to inactivity (no commits to the script or comments for ${CLOSE_AFTER} days). The script's files are being removed from the repository.`
+                  : `@${author} Closing stale issue due to inactivity (no comments for ${CLOSE_AFTER} days).`
               });
               await github.rest.issues.update({
                 owner, repo, issue_number: issue.number, state: "closed", state_reason: "not_planned"
