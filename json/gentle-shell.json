@@ -1,0 +1,72 @@
+{
+  "name": "gentle-shell",
+  "slug": "gentle-shell",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-18",
+  "type": "ct",
+  "platforms": ["pve"],
+  "architectures": ["amd64"],
+  "updateable": true,
+  "privileged": false,
+  "interface_port": null,
+  "documentation": "https://github.com/Gentleman-Programming/gentle-shell",
+  "website": "https://gentlemanprogramming.com/",
+  "repository": "https://github.com/Gentleman-Programming/gentle-shell",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/gentle-shell.webp",
+  "description": "gentle-shell is a coding-agent workspace and TUI harness built for Pi: agent orchestration, ODD workflow tracking, native review, diff views and persistent memory, driven from the terminal. This script creates an LXC development server with gentle-shell, git and the GitHub CLI preinstalled, ready to be used over SSH.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/gentle-shell.sh",
+      "resources": {
+        "cpu": 2,
+        "ram": 4096,
+        "hdd": 10,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Run 'gentle-shell' from the Proxmox console or via SSH as root (key-based only); first launch asks for your provider API keys. Herdr uses the SSH key for Add Machine.",
+      "type": "info"
+    },
+    {
+      "text": "Projects live in /root/projects. To work on a host directory instead, add an mp0 bind mount to /root/projects from the Proxmox UI.",
+      "type": "info"
+    },
+    {
+      "text": "Without a GitHub token, run 'gh auth login' inside the container to authenticate the GitHub CLI.",
+      "type": "info"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_hostname",
+      "label": "Machine Name",
+      "type": "text",
+      "default": "gentle-shell",
+      "help": "Container hostname; Herdr shows it as the remote machine name"
+    },
+    {
+      "name": "var_authorized_key",
+      "label": "SSH Public Key",
+      "type": "text",
+      "help": "Contents of your ~/.ssh/id_ed25519.pub (one line). The container accepts key-based SSH only; Herdr connects with this key. Skip to add it later inside /root/.ssh/authorized_keys"
+    },
+    {
+      "name": "var_gh_token",
+      "label": "GitHub Token",
+      "type": "password",
+      "secret": true,
+      "help": "Optional GitHub Personal Access Token: create it at github.com -> Settings -> Developer settings -> Personal access tokens (scope 'repo'). When empty, authenticate later with 'gh auth login' inside the container"
+    }
+  ]
+}
