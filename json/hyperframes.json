@@ -1,0 +1,55 @@
+{
+  "name": "HyperFrames CLI",
+  "slug": "hyperframes",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-11-27",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "platforms": [
+    "pve"
+  ],
+  "architectures": [
+    "amd64",
+    "arm64"
+  ],
+  "interface_port": null,
+  "documentation": "https://github.com/heygen-com/hyperframes#readme",
+  "website": "https://hyperframes.heygen.com/",
+  "repository": "https://github.com/heygen-com/hyperframes",
+  "logo": "https://opengraph.githubassets.com/1/heygen-com/hyperframes",
+  "description": "HyperFrames is an open-source, code-first video editor that turns HTML, CSS and GSAP timelines with media assets into deterministic MP4 videos. Its CLI scaffolds projects, launches a local Studio preview, checks compositions and renders video with Chromium and FFmpeg.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/hyperframes.sh",
+      "resources": {
+        "cpu": 4,
+        "ram": 4096,
+        "hdd": 20,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "This is a CLI-only container; connect over SSH, work in /opt/hyperframes_data and create a project with `hyperframes init <name>`.",
+      "type": "info"
+    },
+    {
+      "text": "The Studio preview binds to 127.0.0.1:3002. Use an SSH tunnel to view it in a browser; no LAN-facing web service or login is created.",
+      "type": "warning"
+    },
+    {
+      "text": "On ARM64, the installer uses Debian Chromium because upstream does not publish Chrome Headless Shell for Linux ARM64; capture may use the slower screenshot fallback.",
+      "type": "info"
+    }
+  ]
+}
