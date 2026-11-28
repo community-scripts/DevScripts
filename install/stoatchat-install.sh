@@ -75,7 +75,7 @@ VITE_API_URL="https://${LOCAL_IP}/api" \
 msg_ok "Built Web Frontend"
 
 msg_info "Installing Garage"
-GARAGE_VERSION=$(curl -fsSL https://api.github.com/repos/deuxfleurs-org/garage/tags | jq -r '.[0].name')
+GARAGE_VERSION=$(curl -fsSL https://api.github.com/repos/deuxfleurs-org/garage/tags | jq -r '[.[].name | select(test("^v[0-9.]+$"))][0]')
 curl -fsSL "https://garagehq.deuxfleurs.fr/_releases/${GARAGE_VERSION}/x86_64-unknown-linux-musl/garage" -o /usr/local/bin/garage
 chmod +x /usr/local/bin/garage
 echo "${GARAGE_VERSION}" >~/.garage
