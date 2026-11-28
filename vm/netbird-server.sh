@@ -293,11 +293,13 @@ fi
 
 NETBIRD_ENV_TMP="$TEMP_DIR/netbird.env"
 cat >"$NETBIRD_ENV_TMP" <<ENVEOF
+NETBIRD_NON_INTERACTIVE="true"
 NETBIRD_DOMAIN="${NETBIRD_DOMAIN_INPUT}"
-NETBIRD_AUTO_PROXY_TYPE="${NETBIRD_PROXY_TYPE_INPUT}"
-NETBIRD_AUTO_EMAIL="${NETBIRD_EMAIL_INPUT}"
-NETBIRD_AUTO_ENABLE_PROXY="false"
-NETBIRD_AUTO_ENABLE_CROWDSEC="false"
+NETBIRD_REVERSE_PROXY_TYPE="${NETBIRD_PROXY_TYPE_INPUT}"
+NETBIRD_LETSENCRYPT_EMAIL="${NETBIRD_EMAIL_INPUT}"
+NETBIRD_ENABLE_PROXY="false"
+NETBIRD_ENABLE_CROWDSEC="false"
+NETBIRD_BIND_LOCALHOST_ONLY="false"
 ENVEOF
 vm_customize "NetBird configuration" "$WORK_FILE" \
   --upload "${NETBIRD_ENV_TMP}:/root/netbird.env" || exit 1
@@ -325,13 +327,6 @@ set +a
 
 curl -fsSL https://github.com/netbirdio/netbird/releases/latest/download/getting-started.sh \
   -o /root/getting-started.sh
-
-sed -i \
-  -e 's/REVERSE_PROXY_TYPE=$(read_reverse_proxy_type)/REVERSE_PROXY_TYPE="${NETBIRD_AUTO_PROXY_TYPE:-$(read_reverse_proxy_type)}"/' \
-  -e 's/TRAEFIK_ACME_EMAIL=$(read_traefik_acme_email)/TRAEFIK_ACME_EMAIL="${NETBIRD_AUTO_EMAIL:-$(read_traefik_acme_email)}"/' \
-  -e 's/ENABLE_PROXY=$(read_enable_proxy)/ENABLE_PROXY="${NETBIRD_AUTO_ENABLE_PROXY:-$(read_enable_proxy)}"/' \
-  -e 's/ENABLE_CROWDSEC=$(read_enable_crowdsec)/ENABLE_CROWDSEC="${NETBIRD_AUTO_ENABLE_CROWDSEC:-$(read_enable_crowdsec)}"/' \
-  /root/getting-started.sh
 
 echo "[$(date)] Running NetBird getting-started.sh"
 bash /root/getting-started.sh
@@ -410,7 +405,6 @@ qm set "$VMID" \
   --scsi0 "$ROOT_DISK" \
   --boot order=scsi0 \
   --serial0 socket >/dev/null
-qm set "$VMID" --agent enabled=1 >/dev/null
 msg_ok "Attached EFI and root disk"
 
 vm_resize_disk "scsi0" "$DISK_SIZE"
