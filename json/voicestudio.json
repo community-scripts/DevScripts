@@ -1,0 +1,61 @@
+{
+  "name": "VoiceStudio",
+  "slug": "voicestudio",
+  "categories": [
+    20
+  ],
+  "date_created": "2026-04-09",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "architectures": [
+    "amd64"
+  ],
+  "interface_port": 3900,
+  "documentation": "https://github.com/debpalash/VoiceStudio/blob/v0.5.8/docs/install/docker.md",
+  "website": "https://github.com/debpalash/VoiceStudio",
+  "repository": "https://github.com/debpalash/VoiceStudio",
+  "logo": "https://cdn.jsdelivr.net/gh/debpalash/VoiceStudio@v0.5.8/docs/assets/voicestudio-pro.svg",
+  "description": "VoiceStudio is a local-first studio for voice synthesis, voice cloning, dubbing, transcription, and audiobook production. It provides a browser-based interface backed by a local API.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/voicestudio.sh",
+      "config_path": "/opt/voicestudio_data/.env",
+      "resources": {
+        "cpu": 6,
+        "ram": 12288,
+        "hdd": 50,
+        "os": "Debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "Open http://<container-IP>:3900 and enter the API key stored in /opt/voicestudio_data/.env as OMNIVOICE_API_KEY.",
+      "type": "info"
+    },
+    {
+      "text": "Review and accept each model and dependency licence in VoiceStudio before downloading it.",
+      "type": "warning"
+    },
+    {
+      "text": "CPU inference is slower; GPU passthrough and accelerator-specific setup are not configured automatically.",
+      "type": "warning"
+    }
+  ],
+  "app_vars": [
+    {
+      "name": "var_voicestudio_hf_token",
+      "label": "Hugging Face Token (optional)",
+      "type": "password",
+      "secret": true,
+      "help": "Optional token for gated/private model repositories and higher download limits."
+    }
+  ]
+}
